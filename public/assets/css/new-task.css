@@ -297,3 +297,6 @@
 }
 .wizard-btn-primary{ background: linear-gradient(135deg, var(--pd), var(--p)); color: #fff; box-shadow: 0 4px 14px rgba(49,133,179,.3); margin-right: auto; }
 .wizard-btn-ghost{ background: #fff; color: #6b7280; border: 1px solid #e2e8f0; }
+
+/* إصلاح: التأكد إن الخطوة المخفية تختفي فعليًا (كانت .wizard-step تتغلب على [hidden]) */
+.wizard-step[hidden]{ display: none !important; }
