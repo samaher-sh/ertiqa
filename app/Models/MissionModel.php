@@ -13,14 +13,13 @@ class MissionModel extends Model
 
     protected $allowedFields = [
         'mission_code', 'title', 'year', 'audit_department_id', 'target_department_id',
-        'mission_head_id', 'dept_director_id', 'coordinator_id', 'current_stage',
-        'status', 'procedure_note', 'created_by',
+        'mission_head_id', 'dept_director_id', 'coordinator_id',
+        'reviewer_name', 'reviewer_email', 'reviewer_phone', 'director_name',
+        'current_stage', 'status', 'procedure_note', 'created_by',
     ];
 
     /**
-     * المهام "النشطة" (status=active) المرئية لمستخدم معيّن —
-     * حاليًا: كل المهام النشطة اللي هو رئيسها أو أحد أعضاء فريقها.
-     * (لاحقًا لو احتجنا صلاحيات أدق، نضيف شرط هنا فقط بدون ما نلمس أي مكان ثاني)
+     * المهام "النشطة" (status=active) المرئية لمستخدم معيّن
      */
     public function activeMissionsForUser(int $userId): array
     {
@@ -49,5 +48,24 @@ class MissionModel extends Model
             $this->activeMissionsForUser($userId),
             fn($m) => (int) $m['current_stage'] === $stage
         ));
+    }
+
+    /**
+     * يولّد كود مهمة فريد بصيغة AUD-{السنة}-{رقم تسلسلي 3 خانات}
+     * مثال: AUD-2026-001, AUD-2026-002 ...
+     */
+    public function generateMissionCode(string $year): string
+    {
+        $count = $this->where('year', $year)->countAllResults();
+        $seq   = str_pad((string) ($count + 1), 3, '0', STR_PAD_LEFT);
+        $code  = "AUD-{$year}-{$seq}";
+
+        // احتياط بسيط لو صار تعارض نادر (طلبين بنفس الثانية) — نزيد الرقم لين يصير فريد
+        while ($this->where('mission_code', $code)->first()) {
+            $seq  = str_pad((string) ((int) $seq + 1), 3, '0', STR_PAD_LEFT);
+            $code = "AUD-{$year}-{$seq}";
+        }
+
+        return $code;
     }
 }

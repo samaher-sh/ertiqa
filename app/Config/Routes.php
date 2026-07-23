@@ -12,4 +12,6 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('api/home-stats',        'DashboardController::homeStats');
     $routes->get('api/active-missions',   'DashboardController::activeMissions');
     $routes->get('api/scheduled-meetings','DashboardController::scheduledMeetings');
+    $routes->get('new-task',  'MissionController::newTask');
+    $routes->post('new-task', 'MissionController::store');
 });
