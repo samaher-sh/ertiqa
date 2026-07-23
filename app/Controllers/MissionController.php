@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Models\MissionModel;
 use App\Models\MissionStageHistoryModel;
 use App\Models\DepartmentModel;
+use App\Models\ServiceAgreementModel;
+use App\Models\ServiceAgreementResponseModel;
+use App\Models\DocumentRequestModel;
 
 class MissionController extends BaseController
 {
@@ -26,7 +29,35 @@ class MissionController extends BaseController
 
         $today = date('Y');
 
+        // بنود اتفاقية مستوى الخدمة - محتوى ثابت (نفس SLA_SECTIONS بالواجهة الأصلية بالضبط)
+        $slaSections = [
+            [
+                'title' => 'الحصول على المعلومات والتقارير والاجتماعات',
+                'rows'  => [
+                    'الوصول غير المقيد لجميع المعلومات والبيانات والوثائق والمستندات (اليدوية والإلكترونية) الخاصة لدى الجهة الخاضعة للمراجعة.',
+                    'تعيين منسق من الإدارة ليكون حلقة الوصل مع فريق المراجعة الداخلية.',
+                    'الحصول على المتطلبات الرئيسة الأولية بحد أقصى 5 أيام عمل.',
+                ],
+            ],
+            [
+                'title' => 'العمل الميداني',
+                'rows'  => [
+                    'الحصول على متطلبات المراجعة الداخلية خلال العمل الميداني كحد أقصى يومين.',
+                    'تعيين مكان للمراجع الداخلي خلال العمل الميداني داخل الإدارة.',
+                ],
+            ],
+            [
+                'title' => 'إصدار التقارير البدئي والنهائي',
+                'rows'  => [
+                    'تحديد اجتماع للمناقشة النهائية للملاحظات المكتوبة.',
+                    'الرد على التقرير النهائي الأولي خلال عشر أيام عمل.',
+                    'عدم الاعتراض على نشر التقرير النهائي بعد انتهاء مدة الرد.',
+                ],
+            ],
+        ];
+
         return view('dashboard/new-task', [
+            'slaSections'     => $slaSections,
             'full_name'       => session()->get('full_name'),
             'role_code'       => session()->get('role_code'),
             'role_name'       => session()->get('role_name'),
@@ -42,7 +73,8 @@ class MissionController extends BaseController
     }
 
     /**
-     * POST /dashboard/new-task — إنشاء المهمة فعليًا
+     * POST /dashboard/new-task — إنشاء المهمة كاملة (الخطوات الثلاث دفعة وحدة،
+     * لأن الإرسال الفعلي يصير مرة وحدة بعد آخر خطوة فقط - نفس سلوك الواجهة الأصلية)
      */
     public function store()
     {
@@ -66,6 +98,15 @@ class MissionController extends BaseController
             ]);
         }
 
+        // قائمة المستندات - لازم مستند واحد على الأقل، وكل الأسماء غير فاضية (نفس page3Valid بالأصل)
+        $docNames = array_values(array_filter(array_map('trim', $data['doc_names'] ?? [])));
+        if (count($docNames) === 0) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'يرجى إضافة مستند واحد على الأقل بقائمة المستندات.',
+            ]);
+        }
+
         $deptModel = new DepartmentModel();
         $targetDept = $deptModel->find((int) $data['target_dept_id']);
 
@@ -76,7 +117,6 @@ class MissionController extends BaseController
             ]);
         }
 
-        // الإدارة الرقابية (المراجعة الداخلية) ثابتة دائمًا - مو حسب اختيار المستخدم
         $auditDept = $deptModel->findByNameAr('المراجعة الداخلية');
         if (!$auditDept) {
             return $this->response->setStatusCode(500)->setJSON([
@@ -89,8 +129,14 @@ class MissionController extends BaseController
 
         $missionModel      = new MissionModel();
         $stageHistoryModel = new MissionStageHistoryModel();
+        $slaModel          = new ServiceAgreementModel();
+        $slaResponseModel  = new ServiceAgreementResponseModel();
+        $docRequestModel   = new DocumentRequestModel();
 
         $missionCode = $missionModel->generateMissionCode($data['year']);
+
+        $db = \Config\Database::connect();
+        $db->transStart();
 
         $missionId = $missionModel->insert([
             'mission_code'         => $missionCode,
@@ -111,11 +157,88 @@ class MissionController extends BaseController
 
         $stageHistoryModel->openStage($missionId, 1, $userId);
 
+        // اتفاقية مستوى الخدمة - رأس الاتفاقية + كل بنودها (Snapshot) بحالة فارغة
+        // (تُملأ فعليًا لاحقًا من قِبل ممثل الإدارة المستهدفة)
+        $slaId = $slaModel->insert(['mission_id' => $missionId, 'status' => 'pending'], true);
+
+        $slaSections = $this->slaSectionsSnapshot();
+        $sortOrder = 0;
+        $responseRows = [];
+        foreach ($slaSections as $sec) {
+            foreach ($sec['rows'] as $row) {
+                $sortOrder++;
+                $responseRows[] = [
+                    'service_agreement_id' => $slaId,
+                    'section_title'        => $sec['title'],
+                    'row_text'              => $row,
+                    'agree'                 => 0,
+                    'disagree'              => 0,
+                    'note'                  => null,
+                    'sort_order'            => $sortOrder,
+                ];
+            }
+        }
+        $slaResponseModel->insertBatch($responseRows);
+
+        // قائمة المستندات المطلوبة
+        $now = date('Y-m-d H:i:s');
+        $docRows = [];
+        foreach ($docNames as $i => $name) {
+            $docRows[] = [
+                'mission_id' => $missionId,
+                'doc_name'   => $name,
+                'sort_order' => $i + 1,
+                'created_at' => $now,
+            ];
+        }
+        $docRequestModel->insertBatch($docRows);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.',
+            ]);
+        }
+
         return $this->response->setJSON([
             'success'      => true,
             'mission_code' => $missionCode,
             'redirect'     => base_url('dashboard'),
         ]);
+    }
+
+    /**
+     * بنود اتفاقية مستوى الخدمة الثابتة - نفس SLA_SECTIONS بالواجهة الأصلية بالضبط
+     */
+    private function slaSectionsSnapshot(): array
+    {
+        return [
+            [
+                'title' => 'الحصول على المعلومات والتقارير والاجتماعات',
+                'rows'  => [
+                    'الوصول غير المقيد لجميع المعلومات والبيانات والوثائق والمستندات (اليدوية والإلكترونية) الخاصة لدى الجهة الخاضعة للمراجعة.',
+                    'تعيين منسق من الإدارة ليكون حلقة الوصل مع فريق المراجعة الداخلية.',
+                    'الحصول على المتطلبات الرئيسة الأولية بحد أقصى 5 أيام عمل.',
+                ],
+            ],
+            [
+                'title' => 'العمل الميداني',
+                'rows'  => [
+                    'الحصول على متطلبات المراجعة الداخلية خلال العمل الميداني كحد أقصى يومين.',
+                    'تعيين مكان للمراجع الداخلي خلال العمل الميداني داخل الإدارة.',
+                ],
+            ],
+            [
+                'title' => 'إصدار التقارير البدئي والنهائي',
+                'rows'  => [
+                    'تحديد اجتماع للمناقشة النهائية للملاحظات المكتوبة.',
+                    'الرد على التقرير النهائي الأولي خلال عشر أيام عمل.',
+                    'عدم الاعتراض على نشر التقرير النهائي بعد انتهاء مدة الرد.',
+                ],
+            ],
+        ];
     }
 
     /**
