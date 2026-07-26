@@ -86,6 +86,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             <p class="dp-row-title">${escapeHtml(m.target_department_name || '')}</p>
                             <p class="dp-row-sub">مرحلة ${escapeHtml(String(m.current_stage))}/7</p>
                         </div>
+                        <a href="${base}/dashboard/pdf/mission-letter/${m.id}" target="_blank" class="dp-pdf-link" title="تصدير خطاب PDF">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </a>
                     </div>
                 `).join('');
             })

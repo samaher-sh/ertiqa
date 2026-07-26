@@ -12,13 +12,38 @@ class MeetingModel extends Model
     protected $useTimestamps = true;
 
     protected $allowedFields = [
-        'mission_id', 'meeting_code', 'title', 'meeting_date', 'meeting_time',
+        'mission_id', 'title', 'objective', 'meeting_code', 'meeting_date', 'meeting_time',
         'location', 'meeting_type', 'minutes_text', 'status', 'created_by',
     ];
 
-    /**
-     * الاجتماعات المجدولة (status=scheduled) لمهام مستخدم معيّن، مرتبة بالأقرب أولًا
-     */
+    /** الاجتماع الأول (التمهيدي) المرتبط بمهمة - نفس مفهوم "ملخص الاجتماع" بصفحة واحدة لكل مهمة */
+    public function firstForMission(int $missionId): ?array
+    {
+        return $this->where('mission_id', $missionId)->orderBy('id', 'ASC')->first() ?: null;
+    }
+
+    public function findOrCreateForMission(int $missionId, int $userId): array
+    {
+        $existing = $this->firstForMission($missionId);
+        if ($existing) {
+            return $existing;
+        }
+
+        $code = 'M-' . str_pad((string) ($this->countAllResults() + 1), 3, '0', STR_PAD_LEFT);
+        $id = $this->insert([
+            'mission_id'   => $missionId,
+            'meeting_code' => $code,
+            'meeting_date' => null,
+            'meeting_time' => null,
+            'location'     => null,
+            'meeting_type' => 'in_person',
+            'status'       => 'scheduled',
+            'created_by'   => $userId,
+        ], true);
+
+        return $this->find($id);
+    }
+
     public function scheduledMeetingsForUser(int $userId): array
     {
         return $this->select('meetings.*')
@@ -32,7 +57,6 @@ class MeetingModel extends Model
             ->groupEnd()
             ->where('meetings.status', 'scheduled')
             ->orderBy('meetings.meeting_date', 'ASC')
-            ->orderBy('meetings.meeting_time', 'ASC')
             ->findAll();
     }
 

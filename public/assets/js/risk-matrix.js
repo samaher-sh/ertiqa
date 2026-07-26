@@ -25,8 +25,12 @@ document.addEventListener('DOMContentLoaded', function () {
         tsBadge.classList.toggle('hidden-badge', !locked);
     }
 
+    const pdfExportBtn = document.getElementById('pdfExportBtn');
+
     missionSelect.addEventListener('change', function () {
         currentMissionId = this.value || null;
+        if (pdfExportBtn) pdfExportBtn.href = currentMissionId ? (base + '/dashboard/pdf/risk-matrix/' + currentMissionId) : '#';
+        if (pdfExportBtn) pdfExportBtn.classList.toggle('disabled', !currentMissionId);
         updateLockState();
         if (currentMissionId) loadItems(currentMissionId);
         else { rows = []; renderRows(); }

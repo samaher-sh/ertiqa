@@ -17,4 +17,14 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('risk-matrix',            'RiskMatrixController::index');
     $routes->get('risk-matrix/api/items',  'RiskMatrixController::items');
     $routes->post('risk-matrix/api/save',  'RiskMatrixController::save');
+    $routes->get('pdf/mission-letter/(:num)',   'PdfController::missionLetter/$1');
+    $routes->get('pdf/risk-matrix/(:num)',      'PdfController::riskMatrix/$1');
+    $routes->get('pdf/meeting-summary/(:num)',  'PdfController::meetingSummary/$1');
+    $routes->get('meetings',                    'MeetingSummaryController::index');
+    $routes->get('meetings/api/data',           'MeetingSummaryController::data');
+    $routes->post('meetings/api/save',          'MeetingSummaryController::save');
+    $routes->post('meetings/api/upload',        'DocumentController::uploadMeetingAttachment');
+    $routes->get('meetings/api/attachments',    'DocumentController::meetingAttachments');
+    $routes->get('documents/download/(:num)',   'DocumentController::download/$1');
+    $routes->post('documents/delete/(:num)',    'DocumentController::delete/$1');
 });
