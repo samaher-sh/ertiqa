@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&family=Cairo:wght@300;400;500;600;700;800&display=swap');
 
 :root{
-    --p:  #196b7f;
+    --p:  #3185b3;
     --pd: #3185b3;
-    --pb: #b2d4de;
+    --pb: #b3d4e5;
 }
 
 *{ box-sizing: border-box; }
