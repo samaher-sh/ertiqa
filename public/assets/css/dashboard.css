@@ -339,3 +339,10 @@ body{
     .sidebar{ position: fixed; z-index: 50; height: 100%; }
     .action-grid{ grid-template-columns: 1fr; }
 }
+
+.dp-pdf-link{
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    color: #f59e0b; flex-shrink: 0;
+}
+.dp-pdf-link:hover{ background: #fffbeb; }
