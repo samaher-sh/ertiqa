@@ -6,8 +6,8 @@
 <title>مصفوفة المخاطر — ارتقاء</title>
 <meta name="csrf-token-name" content="<?= csrf_token() ?>">
 <meta name="csrf-token-value" content="<?= csrf_hash() ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/risk-matrix.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>?v=1785054377">
+<link rel="stylesheet" href="<?= base_url('assets/css/risk-matrix.css') ?>?v=1785054377">
 </head>
 <body>
 
@@ -155,7 +155,7 @@
 <script>
     window.APP = { baseUrl: "<?= rtrim(base_url(), '/') ?>", readOnly: <?= $readOnly ? 'true' : 'false' ?> };
 </script>
-<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
-<script src="<?= base_url('assets/js/risk-matrix.js') ?>"></script>
+<script src="<?= base_url('assets/js/dashboard.js') ?>?v=1785054377"></script>
+<script src="<?= base_url('assets/js/risk-matrix.js') ?>?v=1785054377"></script>
 </body>
 </html>

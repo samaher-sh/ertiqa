@@ -6,7 +6,7 @@
 <title>تسجيل الدخول — ارتقاء</title>
 <meta name="csrf-token-name" content="<?= csrf_token() ?>">
 <meta name="csrf-token-value" content="<?= csrf_hash() ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/auth-login.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/auth-login.css') ?>?v=1785054377">
 </head>
 <body>
 
@@ -74,6 +74,6 @@
     <p class="footer-note">© <span id="year"></span> مدينة الملك عبدالله الطبية — جميع الحقوق محفوظة</p>
 </div>
 
-<script src="<?= base_url('assets/js/auth-login.js') ?>"></script>
+<script src="<?= base_url('assets/js/auth-login.js') ?>?v=1785054377"></script>
 </body>
 </html>
