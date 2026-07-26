@@ -346,3 +346,6 @@ body{
     color: #f59e0b; flex-shrink: 0;
 }
 .dp-pdf-link:hover{ background: #fffbeb; }
+
+/* إصلاح: قائمة البروفايل ما تطلع برّا الشاشة بالموبايل */
+.profile-menu{ max-width: calc(100vw - 32px); }

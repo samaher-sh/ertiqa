@@ -90,13 +90,13 @@
                         <?php if ($isHrUser): ?>
                             <p class="auto-note">⚡ الإدارة محل المراجعة والعنوان والهدف تُملأ تلقائياً</p>
                         <?php endif; ?>
-                        <div class="nt-form" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div class="ms-info-grid">
                             <div class="field-group"><label>تاريخ الاجتماع</label><input type="date" id="mDate" class="nt-select"></div>
                             <div class="field-group"><label>الوقت</label><input type="time" id="mTime" class="nt-select"></div>
                             <div class="field-group"><label>مكان الاجتماع</label><input type="text" id="mLocation" class="nt-select" placeholder="أدخل مكان الاجتماع"></div>
                             <div class="field-group"><label>الإدارة محل المراجعة</label><input type="text" id="mDeptDisplay" class="nt-select" disabled></div>
-                            <div class="field-group" style="grid-column: span 2;"><label>عنوان المهمة</label><input type="text" id="mTitle" class="nt-select" placeholder="عنوان مهمة المراجعة"></div>
-                            <div class="field-group" style="grid-column: span 2;"><label>الهدف من الاجتماع</label><textarea id="mObjective" rows="2" class="nt-select"></textarea></div>
+                            <div class="field-group ms-full-row"><label>عنوان المهمة</label><input type="text" id="mTitle" class="nt-select" placeholder="عنوان مهمة المراجعة"></div>
+                            <div class="field-group ms-full-row"><label>الهدف من الاجتماع</label><textarea id="mObjective" rows="2" class="nt-select"></textarea></div>
                         </div>
                     </div>
 
@@ -127,8 +127,8 @@
                             <button type="button" id="addPointBtn" class="add-doc-btn" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3);">+ إضافة نقطة</button>
                         </div>
                         <div class="doc-table-wrap">
-                            <table class="doc-table">
-                                <thead><tr><th style="width:40%">النقطة</th><th>الرأي</th><th style="width:30%">السبب / التوضيح</th><th class="doc-th-del"></th></tr></thead>
+                            <table class="doc-table ms-points-table">
+                                <thead><tr><th class="col-point">النقطة</th><th>الرأي</th><th class="col-reason">السبب / التوضيح</th><th class="doc-th-del"></th></tr></thead>
                                 <tbody id="pointsBody"></tbody>
                             </table>
                         </div>
