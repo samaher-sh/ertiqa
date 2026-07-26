@@ -6,9 +6,9 @@
 <title>ملخص الاجتماع — ارتقاء</title>
 <meta name="csrf-token-name" content="<?= csrf_token() ?>">
 <meta name="csrf-token-value" content="<?= csrf_hash() ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/risk-matrix.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/meeting-summary.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>?v=1785054377">
+<link rel="stylesheet" href="<?= base_url('assets/css/risk-matrix.css') ?>?v=1785054377">
+<link rel="stylesheet" href="<?= base_url('assets/css/meeting-summary.css') ?>?v=1785054377">
 </head>
 <body>
 
@@ -187,7 +187,7 @@
         allReadOnly: <?= $allReadOnly ? 'true' : 'false' ?>
     };
 </script>
-<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
-<script src="<?= base_url('assets/js/meeting-summary.js') ?>"></script>
+<script src="<?= base_url('assets/js/dashboard.js') ?>?v=1785054377"></script>
+<script src="<?= base_url('assets/js/meeting-summary.js') ?>?v=1785054377"></script>
 </body>
 </html>

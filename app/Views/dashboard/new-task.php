@@ -6,8 +6,8 @@
 <title>بدء مهمة — ارتقاء</title>
 <meta name="csrf-token-name" content="<?= csrf_token() ?>">
 <meta name="csrf-token-value" content="<?= csrf_hash() ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/new-task.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>?v=1785054377">
+<link rel="stylesheet" href="<?= base_url('assets/css/new-task.css') ?>?v=1785054377">
 </head>
 <body>
 
@@ -339,7 +339,7 @@
     window.APP = { baseUrl: "<?= rtrim(base_url(), '/') ?>" };
     window.SUB_DEPTS_BY_PARENT = <?= json_encode($subsByParent, JSON_UNESCAPED_UNICODE) ?>;
 </script>
-<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
-<script src="<?= base_url('assets/js/new-task.js') ?>"></script>
+<script src="<?= base_url('assets/js/dashboard.js') ?>?v=1785054377"></script>
+<script src="<?= base_url('assets/js/new-task.js') ?>?v=1785054377"></script>
 </body>
 </html>
