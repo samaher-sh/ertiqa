@@ -38,7 +38,7 @@ class DashboardController extends BaseController
         } elseif ($isHrDept) {
             $keys = ['home', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
         } elseif ($isAuditHead) {
-            $keys = array_diff($keys, ['newTask']); // رئيس المراجعة ما يشوف "بدء مهمة"
+            $keys = ['home', 'finalReports'];
         }
 
         $result = [];

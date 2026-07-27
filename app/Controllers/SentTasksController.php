@@ -72,7 +72,7 @@ class SentTasksController extends BaseController
         } elseif ($isHrDept) {
             $keys = ['home', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
         } elseif ($isAuditHead) {
-            $keys = array_diff($keys, ['newTask']);
+            $keys = ['home', 'finalReports'];
         }
 
         $result = [];
