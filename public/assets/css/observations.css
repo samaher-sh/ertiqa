@@ -1,0 +1,98 @@
+.obs-wrap{ max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+.obs-card{
+    background: #fff; border-radius: 16px; overflow: hidden;
+    border: 1px solid #d8e6eb;
+    transition: opacity .2s ease;
+}
+.obs-card.is-locked{ opacity: .4; pointer-events: none; user-select: none; }
+
+.obs-head{
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; background: var(--p); flex-wrap: wrap;
+}
+.obs-head-title{ color: #fff; font-weight: 800; font-size: 15px; }
+.obs-back-btn{ background: none; border: none; color: rgba(255,255,255,.8); cursor: pointer; display:flex; }
+.obs-back-btn:hover{ color: #fff; }
+
+.obs-new-btn{
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 12px;
+    background: rgba(255,255,255,.15); color: #fff; border: 1.5px solid rgba(255,255,255,.4);
+    font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.obs-save-btn{
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 20px; border-radius: 12px;
+    background: rgba(255,255,255,.18); color: #fff; border: 1.5px solid rgba(255,255,255,.4);
+    font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.obs-ro-badge{
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.12); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.2);
+}
+.pdf-export-btn{
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 12px;
+    background: #f59e0b; color: #fff; border: none;
+    font-size: 12px; font-weight: 700; text-decoration: none;
+}
+.pdf-export-btn.disabled{ opacity: .5; pointer-events: none; }
+
+.obs-empty{ text-align: center; padding: 60px 20px; color: #6b8c95; font-size: 13px; font-weight: 600; }
+
+/* ══════ جدول الملاحظات ══════ */
+.obs-table-wrap{ overflow-x: auto; }
+.obs-table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+.obs-table thead tr{ background: #f0f8fd; border-bottom: 2px solid var(--pb); }
+.obs-table th{ padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 700; color: var(--pd); white-space: nowrap; }
+.obs-table .col-dept{ width: 160px; } .obs-table .col-date{ width: 110px; } .obs-table .col-risk{ width: 110px; } .obs-table .col-action{ width: 60px; text-align:center; }
+.obs-table td{ padding: 12px 16px; border-bottom: 1px solid rgba(179,212,229,.3); }
+.obs-table tbody tr:nth-child(even){ background: #f6fcfe; }
+.obs-table tbody tr:hover{ background: rgba(224,242,254,.4); }
+
+.obs-title-cell{ font-weight: 600; font-size: 13px; color: #152c33; }
+.obs-dept-cell{ display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--p); white-space: nowrap; }
+.obs-ref-badge{ font-size: 10px; font-weight: 700; color: #9ca3af; margin-right: 4px; }
+
+.risk-badge{ display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.risk-dot{ width: 6px; height: 6px; border-radius: 50%; }
+
+.obs-row-menu-btn{ background: none; border: none; color: #9ca3af; cursor: pointer; padding: 6px; border-radius: 8px; }
+.obs-row-menu-btn:hover{ background: #f3f4f6; }
+
+/* ══════ نموذج رصد/تعديل ══════ */
+.obs-form-body{ padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.obs-row-4{ display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px){ .obs-row-4{ grid-template-columns: repeat(4, 1fr); } }
+
+.obs-row-2{ display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px){ .obs-row-2{ grid-template-columns: 1fr 1fr; } }
+.obs-full-row{ grid-column: 1 / -1; }
+
+.obs-divider{ height: 1px; background: linear-gradient(90deg, transparent, var(--pb), transparent); }
+
+.field-group textarea{
+    width: 100%; padding: 10px 12px; border-radius: 12px;
+    border: 1px solid var(--pb); background: #f0f8fd;
+    font-family: inherit; font-size: 13px; line-height: 1.9; resize: none; outline: none;
+}
+
+.risk-btns{ display: flex; gap: 8px; height: 42px; }
+.risk-btn{
+    flex: 1; border-radius: 12px; font-size: 12px; font-weight: 700;
+    background: #f3f4f6; color: #9ca3af; border: 1px solid #e2e8f0; cursor: pointer;
+}
+.risk-btn[data-risk="عالي"].active{ background:#fee2e2; color:#b91c1c; border-color:#fca5a5; box-shadow:0 0 0 2px #ef444425; }
+.risk-btn[data-risk="متوسط"].active{ background:#fef9c3; color:#a16207; border-color:#fde047; box-shadow:0 0 0 2px #eab30825; }
+.risk-btn[data-risk="منخفض"].active{ background:#dcfce7; color:#15803d; border-color:#86efac; box-shadow:0 0 0 2px #22c55e25; }
+
+.obs-attach-row{ display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+.attach-list{ display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.attach-chip{ display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background: #f0fdf9; border: 1px solid var(--pb); font-size: 11px; color: var(--pd); }
+.attach-chip button{ background: none; border: none; color: #fca5a5; cursor: pointer; margin-right: auto; }
+
+.radio-row{ display: flex; gap: 16px; }
+.radio-row label{ display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #4a6b74; cursor: pointer; }
