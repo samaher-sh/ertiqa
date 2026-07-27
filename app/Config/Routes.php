@@ -27,4 +27,15 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('meetings/api/attachments',    'DocumentController::meetingAttachments');
     $routes->get('documents/download/(:num)',   'DocumentController::download/$1');
     $routes->post('documents/delete/(:num)',    'DocumentController::delete/$1');
+    $routes->get('observations',                'ObservationController::index');
+    $routes->get('observations/api/list',       'ObservationController::list');
+    $routes->post('observations/api/save',      'ObservationController::save');
+    $routes->post('observations/api/delete/(:num)', 'ObservationController::delete/$1');
+    $routes->post('observations/api/status/(:num)', 'ObservationController::updateStatus/$1');
+    $routes->get('reports',                      'ReportController::index');
+    $routes->get('reports/api/checklist',        'ReportController::checklist');
+    $routes->post('reports/api/toggle-check',    'ReportController::toggleCheck');
+    $routes->post('reports/api/finalize',        'ReportController::finalize');
+    $routes->get('sent-tasks',                   'SentTasksController::index');
+    $routes->get('sent-tasks/api/timeline',      'SentTasksController::timeline');
 });
