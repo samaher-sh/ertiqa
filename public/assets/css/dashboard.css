@@ -249,7 +249,7 @@ img{ max-width:100%; }
 .stat-card-chevron{ width:11px;height:11px; color:var(--p); }
 .stat-label{ font-size:10px; font-weight:700; color:#4b5563; margin:0; }
 .stat-sub{ font-size:9px; color:#9ca3af; margin:2px 0 0; }
-.stat-value{ font-size:24px; font-weight:800; color:var(--p); line-height:1; margin:0; }
+.stat-value{ font-size:24px; font-weight:800; color:var(--p); line-height:1; margin:4px 0 0; text-align:center; }
 
 /* Incomplete tasks alert */
 .alert-card{
@@ -357,6 +357,7 @@ img{ max-width:100%; }
 /* Home top notification banner */
 .home-banner{ border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 4px 20px rgba(13,132,181,.08); border:1px solid #d8e6eb; }
 .home-banner-head{ display:flex; align-items:center; gap:12px; padding:16px 24px; background:var(--p); }
+.home-banner-head i{ width:18px; height:18px; color:rgba(255,255,255,.85); flex-shrink:0; }
 .home-banner-head-icon{ width:16px; height:16px; color:rgba(255,255,255,.8); flex-shrink:0; }
 .home-banner-head-text{ flex:1; min-width:0; }
 .home-banner-head-text .t1{ color:#fff; font-weight:800; font-size:14px; margin:0; line-height:1.3; }

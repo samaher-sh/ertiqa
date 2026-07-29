@@ -59,10 +59,6 @@
 
           <p id="errorMessage" class="error-message"></p>
 
-          <div class="forgot-password">
-            <a href="#">نسيت كلمة المرور؟</a>
-          </div>
-
           <button type="submit" id="submitBtn" class="submit-btn">تسجيل الدخول</button>
 
           <p class="support-text">للدعم الفني تواصل مع إدارة تقنية المعلومات</p>

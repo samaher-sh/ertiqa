@@ -7,6 +7,7 @@
 /* ===== Header card (shared) ===== */
 .fr-header-card{ border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(13,132,181,.1); border:1px solid #d8e6eb; }
 .fr-header-bar{ padding:16px 24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:var(--p); }
+.fr-header-bar i{ width:18px; height:18px; color:rgba(255,255,255,.85); flex-shrink:0; }
 .fr-header-bar i.main{ width:18px; height:18px; color:rgba(255,255,255,.8); }
 .fr-header-bar h2{ color:#fff; font-weight:700; font-size:14px; margin:0; line-height:1; }
 .fr-header-bar p{ color:rgba(255,255,255,.6); font-size:11px; margin:2px 0 0; }
@@ -185,7 +186,7 @@ table.fr-doc-table td:last-child, table.fr-risk-table td:last-child, table.fr-me
 .fr-active-step-count{ margin-right:auto; font-size:10px; font-weight:600; color:#9ca3af; }
 
 .fr-nav-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-.fr-export-pdf-btn{ display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#f59e0b; border:none; }
+.fr-export-pdf-btn{ display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; }
 .fr-nav-btns{ flex:1; display:flex; align-items:center; justify-content:space-between; min-width:220px; }
 .fr-nav-btn{ display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:12px; font-size:13px; font-weight:700; border:1.5px solid var(--pb); background:var(--pl); color:var(--pd); }
 .fr-nav-btn:disabled{ background:#f1f5f9; color:#9ca3af; border-color:#e2e8f0; cursor:not-allowed; }

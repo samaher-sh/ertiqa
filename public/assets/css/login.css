@@ -37,7 +37,7 @@ body {
   gap: 1.5rem;
   padding: 3rem 2.5rem;
   flex-shrink: 0;
-  background: linear-gradient(160deg, #3185b3 0%, #196b7f 60%, #134f60 100%);
+  background: linear-gradient(160deg, #3185b3 0%, #3185b3 60%, #1f5f7a 100%);
 }
 @media (min-width: 640px) {
   .panel-right { width: 42%; }
@@ -128,7 +128,7 @@ body {
   right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #196b7f;
+  color: #3185b3;
 }
 .input-wrapper input {
   width: 100%;
@@ -173,7 +173,7 @@ body {
 .forgot-password a {
   font-size: 11px;
   font-weight: 700;
-  color: #196b7f;
+  color: #3185b3;
   text-decoration: none;
 }
 .forgot-password a:hover { text-decoration: underline; }
@@ -184,7 +184,7 @@ body {
   font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-  background: linear-gradient(135deg, #3185b3, #196b7f);
+  background: linear-gradient(135deg, #3185b3, #3185b3);
   box-shadow: 0 4px 14px rgba(25, 107, 127, 0.27);
   border: none;
   cursor: pointer;

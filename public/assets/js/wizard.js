@@ -142,6 +142,7 @@ function bindWizardEvents() {
   document.querySelectorAll("[data-goto-step]").forEach(btn => {
     btn.addEventListener("click", () => {
       wizardPage = parseInt(btn.dataset.gotoStep, 10);
+      if (wizardPage === 2 && !wizP2.subjectDept) { wizP2.subjectDept = wizP1.targetName; }
       rerenderWizardContent();
     });
   });
@@ -163,6 +164,7 @@ function bindWizardEvents() {
     }
     const idx = STEPS.findIndex(s => s.n === wizardPage);
     wizardPage = STEPS[Math.min(STEPS.length - 1, idx + 1)].n;
+    if (wizardPage === 2 && !wizP2.subjectDept) { wizP2.subjectDept = wizP1.targetName; }
     rerenderWizardContent();
   });
 
@@ -307,7 +309,7 @@ function renderWizPage1() {
           <div class="wiz-field">
             <label class="wiz-label ${err("email") ? "error" : ""}">البريد الإلكتروني ${err("email") ? '<span class="wiz-req">*</span>' : ""}</label>
             <div class="wiz-input-icon-wrap"><i data-lucide="mail"></i>
-              <input id="p1Email" type="email" class="wiz-input plain ${err("email") ? "err" : ""}" placeholder="example@kamc.med.sa" value="${escHtml(s.email)}">
+              <input id="p1Email" type="email" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("email") ? "err" : ""}" placeholder="example@kamc.med.sa" value="${escHtml(s.email)}">
             </div>
             ${err("email") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
@@ -520,36 +522,6 @@ function renderWizPage2() {
     </div>
     <div class="wiz-table-footnote">تُملأ خانتا "موافق / غير موافق" من قِبل ممثل الإدارة المستهدفة عند الاستلام</div>
   </div>
-
-  <div class="wiz-card">
-    <div class="wiz-card-head"><i data-lucide="file-text"></i><span style="color:#fff;font-weight:700;font-size:14px;">التوقيعات</span></div>
-    <div class="wiz-sig-grid">
-      <div class="wiz-sig-card active">
-        <p class="wiz-sig-title">المراجع الرئيسي</p>
-        <div class="wiz-input-icon-wrap">
-          <input id="p2SigName" type="text" class="wiz-input plain" placeholder="بكرين أحمد موسوي" value="${escHtml(s.sigName)}">
-        </div>
-        <div class="wiz-sig-row2">
-          <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-pad-placeholder">توقيع</div></div>
-          <div><p class="wiz-sig-mini-label">التاريخ</p>
-            <input id="p2SigDate" type="date" class="wiz-input" style="height:48px;" value="${s.sigDate}"
-              onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-          </div>
-        </div>
-      </div>
-      <div class="wiz-sig-card locked">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <p class="wiz-sig-title">ممثل الإدارة</p>
-          <span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span>
-        </div>
-        <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
-        <div class="wiz-sig-row2">
-          <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-blank-box"></div></div>
-          <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
   `;
 }
 
@@ -559,7 +531,8 @@ function bindWizPage2() {
 
   $("p2SubjectDept").addEventListener("change", e => { s.subjectDept = e.target.value; rerenderWizardContent(); });
   $("p2Date").addEventListener("change", e => { s.date = e.target.value; rerenderWizardContent(); });
-  $("p2Desc").addEventListener("input", e => { s.desc = e.target.value; rerenderWizardContent(); });
+  $("p2Desc").addEventListener("input", e => { s.desc = e.target.value; autoGrowTextarea(e.target); });
+  autoGrowTextarea($("p2Desc"));
 
   document.querySelectorAll("[data-ch-toggle]").forEach(el => {
     el.addEventListener("click", () => {
@@ -574,11 +547,6 @@ function bindWizPage2() {
       rerenderWizardContent();
     });
   });
-
-  const sigName = $("p2SigName");
-  if (sigName) sigName.addEventListener("input", e => { s.sigName = e.target.value; rerenderWizardContent(); });
-  const sigDate = $("p2SigDate");
-  if (sigDate) sigDate.addEventListener("change", e => { s.sigDate = e.target.value; rerenderWizardContent(); });
 }
 
 /* ============================================================
@@ -606,7 +574,7 @@ function renderWizPage3() {
         <thead><tr>
           <th style="width:60px;text-align:center;">الرقم</th>
           <th style="text-align:right;min-width:320px;">المستند</th>
-          <th class="locked" style="width:170px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> توجد / لا توجد</span></th>
+          <th class="locked" style="width:170px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> يوجد / لا يوجد</span></th>
           <th class="locked" style="width:180px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> رفع الملف</span></th>
           <th class="locked" style="width:240px;text-align:right;"><span style="display:flex;align-items:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> الملاحظات</span></th>
           <th style="width:44px;"></th>
@@ -620,14 +588,14 @@ function renderWizPage3() {
             <tr>
               <td style="text-align:center;"><span class="wiz-doc-row-num">${i + 1}</span></td>
               <td>
-                <input type="text" class="wiz-doc-name-input ${s.touched && !row.name.trim() ? "err" : ""}"
+                <input type="text" id="doc-${row.id}-name" class="wiz-doc-name-input ${s.touched && !row.name.trim() ? "err" : ""}"
                   data-doc-name="${row.id}" placeholder="أدخل اسم المستند..." value="${escHtml(row.name)}">
                 ${s.touched && !row.name.trim() ? '<p class="wiz-error-text" style="padding:4px 4px 0;">اسم المستند مطلوب</p>' : ""}
               </td>
               <td style="text-align:center;background:#fafafa;">
                 <div class="wiz-locked-cell">
                   <div class="inner" style="display:flex;justify-content:center;gap:8px;">
-                    <span class="wiz-pill">توجد</span><span class="wiz-pill">لا توجد</span>
+                    <span class="wiz-pill">يوجد</span><span class="wiz-pill">لا يوجد</span>
                   </div>
                   <div class="overlay"><i data-lucide="lock"></i></div>
                 </div>
@@ -690,4 +658,11 @@ function bindWizPage3() {
 
   const saveBtn = document.getElementById("wizSaveDocsBtn");
   if (saveBtn) saveBtn.addEventListener("click", () => { s.saved = true; rerenderWizardContent(); });
+}
+
+/* ═══ تمدد تلقائي للـ textarea بدل ظهور شريط تمرير داخلي ═══ */
+function autoGrowTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = (el.scrollHeight) + "px";
 }

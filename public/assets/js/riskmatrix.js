@@ -90,7 +90,7 @@ function renderRiskMatrixPage() {
               return `
               <tr style="background:${rowBg};">
                 <td style="text-align:center;"><span class="rm-row-num">${i + 1}</span></td>
-                <td><textarea rows="2" class="rm-cell-textarea ${row.risk ? "filled" : ""}" placeholder="أدخل وصف الخطر..." data-rm-field="risk" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.risk)}</textarea></td>
+                <td><textarea rows="2" id="rm-${row.id}-risk" class="rm-cell-textarea ${row.risk ? "filled" : ""}" placeholder="أدخل وصف الخطر..." data-rm-field="risk" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.risk)}</textarea></td>
                 <td>
                   <div class="rm-rating-wrap">
                     ${rc ? `<span class="rm-rating-dot" style="background:${rc.dot};"></span>` : ""}
@@ -103,8 +103,8 @@ function renderRiskMatrixPage() {
                     </select>
                   </div>
                 </td>
-                <td><textarea rows="2" class="rm-cell-textarea ${row.controls ? "filled" : ""}" placeholder="وصف الضوابط الرقابية..." data-rm-field="controls" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.controls)}</textarea></td>
-                <td><input type="text" class="rm-cell-input ${row.activity ? "filled" : ""}" placeholder="نوع النشاط..." data-rm-field="activity" data-rm-id="${row.id}" value="${escHtmlRM(row.activity)}" ${readOnly ? "readonly" : ""}></td>
+                <td><textarea rows="2" id="rm-${row.id}-controls" class="rm-cell-textarea ${row.controls ? "filled" : ""}" placeholder="وصف الضوابط الرقابية..." data-rm-field="controls" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.controls)}</textarea></td>
+                <td><input type="text" id="rm-${row.id}-activity" class="rm-cell-input ${row.activity ? "filled" : ""}" placeholder="نوع النشاط..." data-rm-field="activity" data-rm-id="${row.id}" value="${escHtmlRM(row.activity)}" ${readOnly ? "readonly" : ""}></td>
                 <td style="text-align:center;">${!readOnly ? `<button class="rm-del-btn" data-rm-del="${row.id}"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>` : ""}</td>
               </tr>`;
             }).join("")}

@@ -41,7 +41,7 @@
 .wiz-page-container{ display:flex; flex-direction:column; gap:20px; }
 
 /* ===== Generic card ===== */
-.wiz-card{ background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(13,132,181,.1); border:1px solid #d8e6eb; display:flex; flex-direction:column; }
+.wiz-card{ background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(13,132,181,.1); border:1px solid #d8e6eb; display:flex; flex-direction:column; min-width:0; min-height:0; }
 .wiz-card-head{ padding:16px 24px; display:flex; align-items:center; gap:12px; background:var(--p); flex-shrink:0; }
 .wiz-card-head i{ width:18px; height:18px; color:rgba(255,255,255,.8); flex-shrink:0; }
 .wiz-card-head h2{ color:#fff; font-weight:700; font-size:14px; margin:0; line-height:1; }
@@ -50,6 +50,7 @@
 
 /* ===== Page 1 layout ===== */
 .wiz-page1-grid{ display:grid; grid-template-columns:1fr 1.7fr; gap:20px; align-items:stretch; }
+.wiz-page1-grid > *{ min-width:0; }
 @media (max-width:900px){ .wiz-page1-grid{ grid-template-columns:1fr; } }
 
 .wiz-section{ border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; background:var(--pl); border:1px solid var(--pb); }
@@ -75,7 +76,25 @@ select.wiz-select{
 }
 .wiz-textarea{ resize:none; line-height:1.9; }
 .wiz-select:disabled{ background-color:#f9fafb; color:#9ca3af; cursor:not-allowed; opacity:.6; }
-.wiz-select:focus, .wiz-input:focus, .wiz-textarea:focus{ border:2px solid #2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+.wiz-select:focus, .wiz-input:focus, .wiz-textarea:focus{ border:2px solid var(--p); box-shadow:0 0 0 3px rgba(49,133,179,.12); }
+
+/* ═══ حقول التاريخ - مطابقة الهوية البصرية بدل شكل المتصفح الافتراضي ═══ */
+.wiz-input[type="date"]{
+  position:relative; cursor:pointer;
+  color-scheme: light;
+}
+.wiz-input[type="date"]::-webkit-calendar-picker-indicator{
+  filter: invert(46%) sepia(41%) saturate(668%) hue-rotate(160deg) brightness(94%) contrast(89%);
+  cursor:pointer; padding:4px; border-radius:6px;
+}
+.wiz-input[type="date"]::-webkit-calendar-picker-indicator:hover{ background:var(--pl); }
+
+.wiz-input[type="time"]{ cursor:pointer; color-scheme: light; }
+.wiz-input[type="time"]::-webkit-calendar-picker-indicator{
+  filter: invert(46%) sepia(41%) saturate(668%) hue-rotate(160deg) brightness(94%) contrast(89%);
+  cursor:pointer; padding:4px; border-radius:6px;
+}
+.wiz-input[type="time"]::-webkit-calendar-picker-indicator:hover{ background:var(--pl); }
 .wiz-select.filled{ color:#111827; font-weight:600; }
 .wiz-input.plain, .wiz-textarea.plain{ background:#f0f8fd; border-color:var(--pb); }
 .wiz-input.err, .wiz-textarea.err{ border-color:#fca5a5 !important; background:#fff5f5 !important; }
@@ -108,7 +127,7 @@ select.wiz-select{
 .wiz-procedure-head{ padding:8px 16px; display:flex; align-items:center; gap:8px; background:var(--pl); border-bottom:1px solid var(--pb); }
 .wiz-procedure-head i{ width:13px; height:13px; color:var(--p); }
 .wiz-procedure-head span{ font-size:12px; font-weight:700; color:var(--pd); }
-.wiz-procedure-body{ padding:12px 16px; background:#f6fcfe; font-size:13px; color:#374151; line-height:1.9; margin:0; white-space:pre-wrap; }
+.wiz-procedure-body{ padding:12px 16px; background:#f6fcfe; font-size:13px; color:#374151; line-height:1.9; margin:0; white-space:pre-wrap; overflow-wrap:break-word; word-break:break-word; }
 .wiz-contact-row{ display:flex; align-items:center; gap:8px; font-size:13px; color:#374151; }
 .wiz-contact-row i{ width:13px; height:13px; color:var(--p); }
 .wiz-contact-row .val{ font-weight:700; color:var(--pd); }

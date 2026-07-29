@@ -183,8 +183,9 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
 /* ============================================================
    شريط اختيار المهمة المرتبطة (LinkedTaskSelector) — مشترك مع باقي الصفحات
    ============================================================ */
-function renderLinkedTaskSelector(value, selectId) {
-  const selected = missionsForSelector.find(m => String(m.id) === String(value));
+function renderLinkedTaskSelector(value, selectId, list) {
+  const missions = list || missionsForSelector;
+  const selected = missions.find(m => String(m.id) === String(value));
   return `
   <div class="obs-linked-card" style="border-color:${value ? "var(--pb)" : "#fbbf24"};">
     <div class="obs-linked-band" style="background:${value ? "var(--p)" : "#fffbeb"};border-bottom-color:${value ? "var(--pb)" : "#fde68a"};">
@@ -197,7 +198,7 @@ function renderLinkedTaskSelector(value, selectId) {
       <label class="wiz-label">اختر المهمة / الإدارة المرتبطة <span class="wiz-req">*</span></label>
       <select id="${selectId}" class="wiz-select ${value ? "filled" : ""}" style="${!value ? "border-color:#fcd34d;background:#fffbeb;" : ""}">
         <option value="">— اختر المهمة المرتبطة —</option>
-        ${missionsForSelector.map(m => `<option value="${m.id}" ${String(value) === String(m.id) ? "selected" : ""}>${escHtml2(m.mission_code)} · ${escHtml2(m.target_department_name || "")} (${m.year})</option>`).join("")}
+        ${missions.map(m => `<option value="${m.id}" ${String(value) === String(m.id) ? "selected" : ""}>${escHtml2(m.mission_code)} · ${escHtml2(m.target_department_name || "")} (${m.year})</option>`).join("")}
       </select>
       ${!value ? '<p class="wiz-error-text" style="color:#b45309;">يرجى تحديد المهمة المرتبطة قبل تعبئة النموذج</p>' : ""}
     </div>
@@ -264,6 +265,7 @@ function renderObsListMode() {
         </div>
 
         <div class="obs-filters-bar">
+          ${isAuditMember ? "" : `
           <div class="obs-filter-field grow-2">
             <span class="obs-filter-label">بحث</span>
             <div class="obs-search-wrap">
@@ -277,7 +279,7 @@ function renderObsListMode() {
               <option value="">كل الإدارات</option>
               ${depts.map(d => `<option value="${escHtml2(d)}" ${obsFilterDept === d ? "selected" : ""}>${escHtml2(d)}</option>`).join("")}
             </select>
-          </div>
+          </div>`}
           <div class="obs-filter-field">
             <span class="obs-filter-label">مستوى الخطر</span>
             <div class="obs-risk-toggle">
@@ -745,18 +747,18 @@ function renderSubObservations() {
           <div class="obs-grid-4">
             <div class="wiz-field">
               <label class="wiz-label">تاريخ المراجعة</label>
-              <input type="date" class="wiz-input plain" data-sub-field="date" data-sub-id="${item.id}" value="${item.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+              <input type="date" id="sub-${item.id}-date" class="wiz-input plain" data-sub-field="date" data-sub-id="${item.id}" value="${item.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
             </div>
             <div class="wiz-field">
               <label class="wiz-label">الإدارة محل المراجعة <span class="wiz-req">*</span></label>
-              <select class="wiz-select ${item.deptId ? "filled" : ""}" data-sub-select-dept="${item.id}">
+              <select id="sub-${item.id}-dept" class="wiz-select ${item.deptId ? "filled" : ""}" data-sub-select-dept="${item.id}">
                 <option value="">--- اختر ---</option>
                 ${renderDeptOptions(item.deptId)}
               </select>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">عنوان الملاحظة</label>
-              <input type="text" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escHtml2(item.title)}">
+              <input type="text" id="sub-${item.id}-title" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escHtml2(item.title)}">
             </div>
             <div class="wiz-field">
               <label class="wiz-label">مستوى الخطر</label>
@@ -771,23 +773,23 @@ function renderSubObservations() {
           <div class="obs-grid-2">
             <div class="wiz-field">
               <label class="wiz-label">الملاحظة <span class="wiz-req">*</span></label>
-              <textarea rows="4" class="wiz-textarea plain" data-sub-field="observation" data-sub-id="${item.id}" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escHtml2(item.observation)}</textarea>
+              <textarea rows="4" id="sub-${item.id}-observation" class="wiz-textarea plain" data-sub-field="observation" data-sub-id="${item.id}" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escHtml2(item.observation)}</textarea>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">المعيار أو النظام <span class="wiz-req">*</span></label>
-              <textarea rows="4" class="wiz-textarea plain" data-sub-field="standard" data-sub-id="${item.id}" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escHtml2(item.standard)}</textarea>
+              <textarea rows="4" id="sub-${item.id}-standard" class="wiz-textarea plain" data-sub-field="standard" data-sub-id="${item.id}" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escHtml2(item.standard)}</textarea>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">السبب</label>
-              <textarea rows="3" class="wiz-textarea plain" data-sub-field="reason" data-sub-id="${item.id}" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escHtml2(item.reason)}</textarea>
+              <textarea rows="3" id="sub-${item.id}-reason" class="wiz-textarea plain" data-sub-field="reason" data-sub-id="${item.id}" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escHtml2(item.reason)}</textarea>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">الأثر</label>
-              <textarea rows="3" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escHtml2(item.impact)}</textarea>
+              <textarea rows="3" id="sub-${item.id}-impact" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escHtml2(item.impact)}</textarea>
             </div>
             <div class="wiz-field" style="grid-column:1/-1;">
               <label class="wiz-label">التوصيات</label>
-              <textarea rows="2" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escHtml2(item.recommendations)}</textarea>
+              <textarea rows="2" id="sub-${item.id}-recommendations" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escHtml2(item.recommendations)}</textarea>
             </div>
           </div>
 
