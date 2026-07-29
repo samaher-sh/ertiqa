@@ -137,6 +137,7 @@ function renderMeetingSummaryPage() {
           <i data-lucide="file-text"></i>
           <div><h2>ملخص الاجتماع</h2><p>Meeting Summary</p></div>
           ${allReadOnly ? `<span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>` : ""}
+          <button class="obs-btn-pdf" id="msumExportBtn" style="margin-right:auto;" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
         </div>
         ${hrUser ? `<div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div>` : ""}
 
@@ -280,7 +281,6 @@ function renderMeetingSummaryPage() {
     </div>
 
     <div class="msum-bottom-row">
-      <button class="msum-export-btn" id="msumExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
       ${!allReadOnly ? `
       <div class="msum-submit-wrap">
         <button class="msum-submit-btn ${msumDirty && !locked ? "dirty" : ""}" id="msumSubmitBtn" ${(!msumDirty || locked) ? "disabled" : ""}>

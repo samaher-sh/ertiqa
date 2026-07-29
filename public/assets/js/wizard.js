@@ -456,12 +456,7 @@ function renderWizPage2() {
     <div class="wiz-sla-grid">
       <div class="wiz-field">
         <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
-        <select id="p2SubjectDept" class="wiz-select ${s.subjectDept ? "filled" : ""}">
-          <option value="">— اختر —</option>
-          ${WIZ_MAIN_DEPTS.map(g => `<optgroup label="── ${escHtml(g.name_ar)}">
-            ${wizSubDepts(g.id).map(sub => `<option value="${escHtml(sub.name_ar)}" ${s.subjectDept === sub.name_ar ? "selected" : ""}>${escHtml(sub.name_ar)}</option>`).join("")}
-          </optgroup>`).join("")}
-        </select>
+        <div class="msum-auto-field plain"><i data-lucide="lock"></i><span class="val">${escHtml(s.subjectDept) || "— يُحدَّد تلقائيًا من الخطوة السابقة —"}</span></div>
       </div>
       <div class="wiz-field">
         <label class="wiz-label">تاريخ الاتفاقية</label>
@@ -522,6 +517,32 @@ function renderWizPage2() {
     </div>
     <div class="wiz-table-footnote">تُملأ خانتا "موافق / غير موافق" من قِبل ممثل الإدارة المستهدفة عند الاستلام</div>
   </div>
+
+  <div class="wiz-card">
+    <div class="wiz-card-head"><i data-lucide="file-text"></i><span style="color:#fff;font-weight:700;font-size:14px;">التوقيعات</span></div>
+    <div class="wiz-sig-grid">
+      <div class="wiz-sig-card active">
+        <p class="wiz-sig-title">المراجع الرئيسي</p>
+        <div class="wiz-input-icon-wrap">
+          <input id="p2SigName" type="text" class="wiz-input plain" placeholder="اسم المراجع الرئيسي" value="${escHtml(s.sigName)}">
+        </div>
+        <div>
+          <p class="wiz-sig-mini-label">التاريخ</p>
+          <input id="p2SigDate" type="date" class="wiz-input plain" value="${s.sigDate}"
+            onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+        </div>
+      </div>
+      <div class="wiz-sig-card locked">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <p class="wiz-sig-title">ممثل الإدارة</p>
+          <span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span>
+        </div>
+        <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
+        <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
+      </div>
+    </div>
+  </div>
+
   `;
 }
 
@@ -529,10 +550,9 @@ function bindWizPage2() {
   const $ = id => document.getElementById(id);
   const s = wizP2;
 
-  $("p2SubjectDept").addEventListener("change", e => { s.subjectDept = e.target.value; rerenderWizardContent(); });
   $("p2Date").addEventListener("change", e => { s.date = e.target.value; rerenderWizardContent(); });
   $("p2Desc").addEventListener("input", e => { s.desc = e.target.value; autoGrowTextarea(e.target); });
-  autoGrowTextarea($("p2Desc"));
+  requestAnimationFrame(() => autoGrowTextarea($("p2Desc")));
 
   document.querySelectorAll("[data-ch-toggle]").forEach(el => {
     el.addEventListener("click", () => {
@@ -547,6 +567,11 @@ function bindWizPage2() {
       rerenderWizardContent();
     });
   });
+
+  const sigName = $("p2SigName");
+  if (sigName) sigName.addEventListener("input", e => { s.sigName = e.target.value; });
+  const sigDate = $("p2SigDate");
+  if (sigDate) sigDate.addEventListener("change", e => { s.sigDate = e.target.value; rerenderWizardContent(); });
 }
 
 /* ============================================================
