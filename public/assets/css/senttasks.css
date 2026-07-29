@@ -1,0 +1,71 @@
+/* ============================================================
+   المراسلات المشتركة (Sent Tasks & Communications)
+   منقول عن SentTasksView في AdminDashboard.tsx
+   يعيد استخدام td-timeline من taskdetail.css لسجل النشاط
+   ============================================================ */
+
+.st-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 4px 20px rgba(13,132,181,.06); }
+.st-card-head{ padding:16px 24px; display:flex; align-items:center; justify-content:space-between; background:var(--p); }
+.st-card-head-left{ display:flex; align-items:center; gap:12px; }
+.st-card-head-left i{ width:18px; height:18px; color:rgba(255,255,255,.8); }
+.st-card-head h2{ color:#fff; font-weight:700; font-size:14px; margin:0; line-height:1; }
+.st-card-head p{ color:rgba(255,255,255,.6); font-size:11px; margin:2px 0 0; }
+.st-count-badge{ font-size:12px; font-weight:700; padding:4px 12px; border-radius:9999px; background:rgba(255,255,255,.18); color:#fff; }
+
+table.st-table{ width:100%; text-align:right; border-collapse:collapse; }
+table.st-table thead tr{ background:#f9fafb; border-bottom:1px solid #f3f4f6; }
+table.st-table th{ padding:12px 24px; font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; }
+table.st-table th.center{ text-align:center; }
+table.st-table tbody tr{ border-bottom:1px solid #f9fafb; transition:background .15s; }
+table.st-table tbody tr:hover{ background:#fafafa; }
+table.st-table td{ padding:16px 24px; font-size:12px; }
+.st-id-cell{ font-weight:700; color:#1f2937; }
+.st-title-cell{ color:#374151; }
+.st-dept-cell{ color:#6b7280; }
+.st-sentby-cell{ color:#4b5563; }
+.st-sentat-cell{ color:#9ca3af; }
+.st-status-pill{ display:inline-flex; align-items:center; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:600; background:var(--pl); color:var(--pd); }
+.st-view-btn{ display:inline-flex; align-items:center; justify-content:center; padding:6px 16px; border-radius:8px; font-size:12px; font-weight:700; color:#fff; background:var(--p); border:1px solid var(--pd); transition:all .15s; }
+.st-view-btn:hover{ opacity:.9; }
+.st-empty-row{ padding:32px 0; text-align:center; color:#9ca3af; font-size:13px; }
+
+/* ===== Detail view ===== */
+.st-detail-header{ display:flex; align-items:center; gap:12px; }
+.st-detail-back{ width:32px; height:32px; border-radius:9999px; background:#fff; display:flex; align-items:center; justify-content:center; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,.04); color:var(--p); }
+.st-detail-back:hover{ background:#f9fafb; }
+.st-detail-back i{ width:18px; height:18px; }
+.st-detail-icon{ width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--pl); color:var(--p); flex-shrink:0; }
+.st-detail-icon i{ width:18px; height:18px; }
+.st-detail-title{ font-size:18px; font-weight:800; color:#111827; margin:0; line-height:1; }
+.st-detail-sub{ font-size:12px; color:#9ca3af; margin:2px 0 0; }
+.st-detail-status{ margin-right:auto; font-size:11px; font-weight:700; padding:4px 12px; border-radius:9999px; background:var(--pl); color:var(--pd); }
+
+.st-detail-grid{ display:grid; grid-template-columns:1fr 380px; gap:20px; align-items:start; }
+@media (max-width:1000px){ .st-detail-grid{ grid-template-columns:1fr; } }
+.st-detail-left{ display:flex; flex-direction:column; gap:16px; }
+
+.st-phase-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.05); }
+.st-phase-head{ padding:12px 20px; display:flex; align-items:center; gap:8px; background:#f0f8fd; border-bottom:1px solid #d8e6eb; }
+.st-phase-icon{ width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:var(--pl); border:1px solid var(--pb); flex-shrink:0; color:var(--p); }
+.st-phase-icon i{ width:13px; height:13px; }
+.st-phase-head span{ font-size:12px; font-weight:700; color:var(--pd); }
+.st-phase-head span b{ font-weight:800; color:#1f2937; }
+.st-phase-fields{ padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:600px){ .st-phase-fields{ grid-template-columns:1fr; } }
+.st-phase-field{ display:flex; flex-direction:column; gap:4px; padding:14px; border-radius:12px; background:#f8fbfd; border:1px solid #e8f2f8; }
+.st-phase-field .lbl{ font-size:10px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:.02em; }
+.st-phase-field .val{ font-size:13px; font-weight:700; color:#1f2937; line-height:1.5; }
+
+.st-complete-card{ background:#fff; border-radius:16px; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border:1px solid #d8e6eb; }
+.st-complete-hint{ display:flex; align-items:center; gap:8px; }
+.st-complete-hint i{ width:14px; height:14px; color:var(--p); }
+.st-complete-hint span{ font-size:12px; color:#6b7280; }
+.st-complete-btn{ display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; transition:all .15s; }
+.st-complete-btn:hover{ box-shadow:0 4px 12px rgba(49,133,179,.3); }
+.st-complete-btn i{ width:14px; height:14px; }
+
+.st-log-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.05); }
+.st-log-head{ padding:12px 20px; display:flex; align-items:center; gap:8px; background:#f8fbfd; border-bottom:1px solid #d8e6eb; }
+.st-log-head i{ width:15px; height:15px; color:#f59e0b; }
+.st-log-head p.t{ font-size:12px; font-weight:700; color:#1f2937; margin:0; }
+.st-log-head p.s{ font-size:10px; color:#9ca3af; margin:2px 0 0; }

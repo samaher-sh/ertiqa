@@ -1,0 +1,14 @@
+/* ============================================================
+   جدولة الاجتماع (Meeting Schedule Form)
+   منقول عن MeetingScheduleForm في AdminDashboard.tsx
+   يعيد استخدام wiz-card / wiz-field / wiz-input من wizard.css
+   ============================================================ */
+
+.ms-grid{ padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:700px){ .ms-grid{ grid-template-columns:1fr; } }
+.ms-grid .span2{ grid-column:1/-1; }
+.ms-footer{ padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border-top:1px solid #e9f2f5; }
+.ms-footer-hint{ font-size:11px; color:#9ca3af; }
+.ms-send-btn{ display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; box-shadow:0 3px 10px rgba(49,133,179,.3); transition:all .15s; }
+.ms-send-btn.sent{ background:linear-gradient(135deg,#166534,#15803d); box-shadow:0 3px 10px rgba(21,128,61,.3); }
+.ms-send-btn i{ width:14px; height:14px; }

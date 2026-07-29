@@ -1,0 +1,210 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  position: relative;
+}
+.login-card {
+  width: 100%;
+  max-width: 820px;
+  border-radius: 24px;
+  box-shadow: 0 8px 48px rgba(25,107,127,.13), 0 2px 12px rgba(0,0,0,.06);
+  border: 1px solid #e2ecf0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #ffffff;
+  z-index: 10;
+}
+@media (min-width: 640px) {
+  .login-card { flex-direction: row-reverse; }
+}
+
+/* RIGHT PANEL */
+.panel-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 3rem 2.5rem;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, #3185b3 0%, #196b7f 60%, #134f60 100%);
+}
+@media (min-width: 640px) {
+  .panel-right { width: 42%; }
+}
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+.kamc-logo { width: 72px; height: 72px; object-fit: contain; }
+.brand-text { text-align: center; }
+.brand-text h1 {
+  color: #fff;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.brand-text .subtitle {
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.brand-text .sub-subtitle {
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+}
+.divider {
+  width: 2.5rem;
+  height: 1px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.25);
+}
+.description {
+  text-align: center;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+/* LEFT PANEL */
+.panel-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  background-color: #ffffff;
+}
+.form-header { margin-bottom: 1.75rem; }
+.form-header h2 {
+  color: #152c33;
+  font-size: 20px;
+  font-weight: 800;
+}
+.form-header p {
+  margin-top: 0.25rem;
+  font-size: 12px;
+  font-weight: 500;
+  color: #7a9da7;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.input-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a6b74;
+}
+.input-wrapper { position: relative; }
+.input-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #196b7f;
+}
+.input-wrapper input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 0.875rem;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  border: 1.5px solid #b2d4de;
+  background: #f4f9fb;
+  font-family: inherit;
+  color: #152c33;
+}
+.input-wrapper input.has-error { border-color: #f87171; }
+.toggle-password {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toggle-password:hover { color: #4b5563; }
+.error-message {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ef4444;
+  margin-top: -0.25rem;
+  min-height: 18px;
+}
+.forgot-password {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -0.25rem;
+}
+.forgot-password a {
+  font-size: 11px;
+  font-weight: 700;
+  color: #196b7f;
+  text-decoration: none;
+}
+.forgot-password a:hover { text-decoration: underline; }
+.submit-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3185b3, #196b7f);
+  box-shadow: 0 4px 14px rgba(25, 107, 127, 0.27);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.25rem;
+  font-family: inherit;
+}
+.submit-btn:active { transform: scale(0.98); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.support-text {
+  text-align: center;
+  font-size: 11px;
+  color: #b0c8d0;
+  margin-top: 0.25rem;
+}
+.footer-text {
+  position: absolute;
+  bottom: 1rem;
+  font-size: 11px;
+  color: #c8dde3;
+  width: 100%;
+  text-align: center;
+}

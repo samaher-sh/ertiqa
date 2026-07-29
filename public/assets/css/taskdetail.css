@@ -1,0 +1,49 @@
+/* ============================================================
+   عرض تفاصيل المهمة (Task Detail View)
+   منقول عن TaskDetailView في AdminDashboard.tsx
+   ============================================================ */
+
+.td-header{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.td-header-left{ display:flex; align-items:center; gap:12px; }
+.td-back-btn{ width:32px; height:32px; border-radius:9999px; background:#fff; display:flex; align-items:center; justify-content:center; border:1px solid #e5e7eb; box-shadow:0 1px 4px rgba(0,0,0,.04); color:var(--p); }
+.td-back-btn:hover{ background:#f9fafb; }
+.td-back-btn i{ width:18px; height:18px; }
+.td-title{ font-size:20px; font-weight:800; color:#111827; margin:0; }
+.td-year{ font-size:14px; font-weight:700; color:#9ca3af; }
+.td-export-btn{ display:flex; align-items:center; gap:8px; padding:9px 18px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#f59e0b; border:none; transition:all .15s; }
+.td-export-btn:hover{ box-shadow:0 4px 12px rgba(245,158,11,.3); }
+.td-export-btn i{ width:16px; height:16px; }
+
+.td-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 1px 6px rgba(0,0,0,.03); }
+.td-card-head{ padding:16px 24px; display:flex; align-items:center; justify-content:space-between; background:#f8fbfd; border-bottom:1px solid #d8e6eb; }
+.td-card-head-left{ display:flex; align-items:center; gap:10px; }
+.td-card-icon{ width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.04); border:1px solid #f3f4f6; color:var(--p); flex-shrink:0; }
+.td-card-icon i{ width:16px; height:16px; }
+.td-card-head h3{ font-size:13px; font-weight:700; color:#1f2937; margin:0; }
+.td-card-head p{ font-size:11px; color:#6b7280; margin:2px 0 0; }
+
+.td-fields-grid{ padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+@media (max-width:700px){ .td-fields-grid{ grid-template-columns:1fr; } }
+.td-field-box{ display:flex; flex-direction:column; gap:6px; padding:16px; border-radius:12px; background:#f9fafb; border:1px solid #f3f4f6; }
+.td-field-box .lbl{ font-size:11px; font-weight:600; color:#6b7280; }
+.td-field-box .val{ font-size:13px; font-weight:700; color:#1f2937; }
+.td-field-box .val.link{ color:var(--p); text-decoration:underline; cursor:pointer; }
+
+.td-complete-footer{ padding:18px 20px; display:flex; justify-content:flex-end; background:#fcfdfe; border-top:1px solid #d8e6eb; }
+.td-complete-btn{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; transition:all .15s; }
+.td-complete-btn:hover{ background:#286f96; box-shadow:0 4px 12px rgba(49,133,179,.25); }
+.td-complete-btn i{ width:16px; height:16px; }
+
+/* Activity timeline (shared look for TaskDetail + SentTasks) */
+.td-timeline{ padding:24px; position:relative; display:flex; flex-direction:column; gap:24px; }
+.td-timeline-rail{ position:absolute; top:8px; bottom:8px; right:39px; width:1px; background:#e5e7eb; }
+.td-activity-row{ display:flex; gap:16px; position:relative; z-index:1; }
+.td-activity-avatar{ width:40px; height:40px; border-radius:9999px; background:#fff; border:3px solid #f0f8fd; box-shadow:0 1px 4px rgba(0,0,0,.04); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--p); flex-shrink:0; }
+.td-activity-body{ display:flex; flex-direction:column; justify-content:center; padding-bottom:4px; }
+.td-activity-user{ font-size:13px; font-weight:700; color:#1f2937; }
+.td-activity-user .role{ font-weight:400; color:#6b7280; font-size:12px; }
+.td-activity-meta{ font-size:11px; color:#4b5563; margin-top:4px; display:flex; align-items:center; flex-wrap:wrap; gap:6px; line-height:1.7; }
+.td-activity-btn-tag{ font-weight:700; color:#f59e0b; background:#fffbeb; padding:2px 8px; border-radius:6px; white-space:nowrap; }
+.td-activity-sep{ color:#9ca3af; }
+.td-activity-phase{ font-weight:700; color:#374151; white-space:nowrap; }
+.td-activity-time{ color:#6b7280; white-space:nowrap; }
