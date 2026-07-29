@@ -35,6 +35,18 @@ class ReportModel extends Model
         return $builder->orderBy('reports.created_at', 'DESC')->findAll();
     }
 
+    /**
+     * عدد التقارير حسب الحالة على مستوى إدارة المراجعة الداخلية كاملة
+     * (يُستخدم لإحصائيات رئيس إدارة المراجعة الداخلية، اللي يشرف على كل التقارير مو بس تقاريره)
+     */
+    public function countForDepartmentByStatus(int $auditDepartmentId, string $status): int
+    {
+        return $this->join('missions m', 'm.id = reports.mission_id')
+            ->where('m.audit_department_id', $auditDepartmentId)
+            ->where('reports.status', $status)
+            ->countAllResults();
+    }
+
     public function findOrCreateForMission(int $missionId, int $userId): array
     {
         $existing = $this->where('mission_id', $missionId)->first();

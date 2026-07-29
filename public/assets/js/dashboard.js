@@ -225,6 +225,10 @@ async function renderContent() {
   } else if (activeContent === "meetingSchedule") {
     el.innerHTML = renderMeetingSchedulePage();
     bindMeetingScheduleEvents();
+  } else if (activeContent === "notifications") {
+    await loadNotifications();
+    el.innerHTML = renderNotificationsPage();
+    bindNotificationsEvents();
   } else {
     el.innerHTML = renderPlaceholder(activeContent);
   }
@@ -268,17 +272,87 @@ function incompleteMissions() {
   return activeMissions.filter(m => !dismissedMissionIds.includes(m.id));
 }
 
+/* مصفوفة بطاقات الإحصائيات تختلف حسب الدور: رئيس المراجعة يشرف على التقارير
+   (لا مهام شخصية له)، بينما بقية الأدوار ترى اجتماعاتها/مهامها النشطة */
+function homeStatsCards() {
+  return isAuditHead
+    ? [
+        { label: "تقارير تحتاج اعتماد", sub: "Reports Requiring Approval", value: homeStats.reports_pending_count || 0 },
+        { label: "التقارير المعتمدة",   sub: "Approved Reports",           value: homeStats.reports_approved_count || 0 },
+      ]
+    : [
+        { label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
+        { label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
+      ];
+}
+
+/* بطاقة/شريط الإخطار العلوي بالرئيسية — يختلف حسب الدور، ويعتمد فقط على بيانات حقيقية
+   (لا يظهر شيء إن ما كان فيه محتوى حقيقي ليعرضه) */
+function renderHomeBanner() {
+  if (isAuditHead) {
+    const pending = homeStats.reports_pending_count || 0;
+    if (pending === 0) return "";
+    return `
+    <div class="home-banner">
+      <div class="home-banner-head">
+        <i data-lucide="clipboard-check" class="home-banner-head-icon"></i>
+        <div class="home-banner-head-text">
+          <p class="t1">التقارير التي تحتاج اعتماد</p>
+          <p class="t2">يوجد تقارير نهائية قيد الانتظار لاعتمادها</p>
+        </div>
+        <span class="home-banner-badge">تقارير جديدة</span>
+      </div>
+      <div class="home-banner-body">
+        <div class="home-banner-icon-box"><i data-lucide="file-text"></i></div>
+        <div class="home-banner-content">
+          <div class="home-banner-title-row">
+            <span class="home-banner-item-title">تقارير تحتاج اعتماد — المراجعة الداخلية</span>
+            <span class="home-banner-dot"></span>
+            <span class="home-banner-tag">بانتظار الاعتماد</span>
+          </div>
+          <p class="home-banner-desc">يوجد ${pending} ${pending === 1 ? "تقرير" : "تقارير"} جاهزة وتنتظر اعتمادك للبدء بتعميمها بشكل نهائي.</p>
+        </div>
+        <button class="home-banner-open-btn" id="homeBannerOpenBtn">عرض التقارير</button>
+      </div>
+    </div>`;
+  }
+
+  if (isHrDept || isHrCoordinator) {
+    const n = homeStats.latest_notification;
+    if (!n) return "";
+    return `
+    <div class="home-banner">
+      <div class="home-banner-head">
+        <i data-lucide="bell" class="home-banner-head-icon"></i>
+        <div class="home-banner-head-text">
+          <p class="t1">لديك إخطارات جديدة</p>
+          <p class="t2">${escapeHtml(n.title)}</p>
+        </div>
+        <span class="home-banner-badge">${homeStats.unread_notifications_count || 1} غير مقروء</span>
+      </div>
+      <div class="home-banner-body">
+        <div class="home-banner-icon-box"><i data-lucide="bell"></i></div>
+        <div class="home-banner-content">
+          <div class="home-banner-title-row">
+            <span class="home-banner-item-title">${escapeHtml(n.title)}</span>
+          </div>
+          <p class="home-banner-desc">${escapeHtml(n.body || "")}</p>
+        </div>
+        <button class="home-banner-open-btn" id="homeBannerOpenBtn">فتح</button>
+      </div>
+    </div>`;
+  }
+
+  return "";
+}
+
 function renderHomeTab() {
   const incomplete = incompleteMissions();
+  const STATS = homeStatsCards();
 
-  const STATS = [
-    { label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
-    { label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
-  ];
+  let html = renderHomeBanner();
 
-  let html = "";
-
-  html += `<div class="stats-grid">`;
+  html += `<div class="stats-grid ${isAuditMember ? "" : "two-col"}">`;
   STATS.forEach((s, i) => {
     html += `
       <button class="stat-card ${activeStatCard === i ? "active" : ""}" data-stat="${i}">
@@ -293,7 +367,7 @@ function renderHomeTab() {
         <p class="stat-value">${s.value}</p>
       </button>
     `;
-    if (i === 0) {
+    if (i === 0 && isAuditMember) {
       html += `
         <button class="stat-action-card" id="homeNewTaskCard">
           <div class="stat-action-top"><span class="stat-dot light"></span></div>
@@ -308,7 +382,7 @@ function renderHomeTab() {
   });
   html += `</div>`;
 
-  if (incomplete.length > 0) {
+  if (isAuditMember && incomplete.length > 0) {
     html += `
       <div class="alert-card">
         <div class="alert-head">
@@ -348,8 +422,29 @@ function renderHomeTab() {
 }
 
 function renderStatDetailPanel(idx) {
-  const labels = ["اجتماعات مجدولة", "المهام النشطة"];
-  const label = labels[idx];
+  const cards = homeStatsCards();
+  const label = cards[idx] ? cards[idx].label : "";
+
+  if (isAuditHead) {
+    return `
+      <div class="detail-panel" style="border-color:var(--pb);">
+        <div class="detail-head" style="background:var(--pl); border-color:var(--pb);">
+          <span class="detail-dot" style="background:var(--p);"></span>
+          <p class="detail-title" style="color:var(--p);">${label}</p>
+          <button class="detail-close" id="closeDetailBtn" style="color:var(--p);"><i data-lucide="x"></i></button>
+        </div>
+        <div class="detail-body">
+          <button class="task-row" id="statGoReportsBtn">
+            <div class="task-row-icon"><i data-lucide="file-text"></i></div>
+            <div class="task-row-body">
+              <p class="task-row-title">عرض تفاصيل التقارير</p>
+              <p class="task-row-sub">الانتقال إلى صفحة التقارير النهائية</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    `;
+  }
 
   let bodyHtml;
   if (idx === 0) {
@@ -397,6 +492,18 @@ function bindHomeEvents() {
   const newTaskCard = document.getElementById("homeNewTaskCard");
   if (newTaskCard) newTaskCard.addEventListener("click", async () => {
     activeContent = "newTask";
+    renderSidebar(); await renderContent(); lucide.createIcons();
+  });
+
+  const bannerOpenBtn = document.getElementById("homeBannerOpenBtn");
+  if (bannerOpenBtn) bannerOpenBtn.addEventListener("click", async () => {
+    activeContent = isAuditHead ? "finalReports" : "notifications";
+    renderSidebar(); await renderContent(); lucide.createIcons();
+  });
+
+  const statGoReportsBtn = document.getElementById("statGoReportsBtn");
+  if (statGoReportsBtn) statGoReportsBtn.addEventListener("click", async () => {
+    activeContent = "finalReports";
     renderSidebar(); await renderContent(); lucide.createIcons();
   });
 
