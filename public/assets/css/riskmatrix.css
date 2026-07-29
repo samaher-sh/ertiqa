@@ -34,8 +34,7 @@ select.rm-rating-select.set{ font-weight:700; padding:6px 24px 6px 10px; }
 tr:hover .rm-del-btn{ opacity:1; }
 .rm-del-btn:hover{ background:#fef2f2; }
 .rm-empty{ padding:80px 0; text-align:center; }
-.rm-empty-icon{ width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:var(--pl); margin:0 auto 16px; }
-.rm-empty-icon i{ width:32px; height:32px; color:var(--p); opacity:.45; }
+.rm-empty-icon{ width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:var(--pl); margin:0 auto 16px; }.rm-empty-icon i, .rm-empty-icon svg{ width:32px; height:32px; color:var(--p); opacity:.45; }
 .rm-empty p{ font-size:13px; font-weight:600; color:#6b7280; margin:0; }
 
 .rm-footer{ padding:14px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#f7faf9; border-top:1.5px solid var(--pb); }
