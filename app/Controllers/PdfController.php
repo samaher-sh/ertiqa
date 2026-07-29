@@ -9,36 +9,35 @@ use App\Models\MeetingModel;
 use App\Models\MeetingAttendeeModel;
 use App\Models\MeetingSummaryPointModel;
 use App\Models\MeetingApprovalModel;
-use Dompdf\Dompdf;
-use Dompdf\Options;
+use Mpdf\Mpdf;
 
 class PdfController extends BaseController
 {
     /**
-     * يبني كائن Dompdf جاهز بإعدادات تدعم العربي (خط Amiri/DejaVu Sans مدمج بالمكتبة)
+     * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
+     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف
      */
-    private function makeDompdf(): Dompdf
+    private function makeMpdf(): Mpdf
     {
-        $options = new Options();
-        $options->set('isRemoteEnabled', true);
-        $options->set('defaultFont', 'DejaVu Sans'); // يدعم العربي أصلًا بدون تثبيت خط إضافي
-
-        $dompdf = new Dompdf($options);
-        return $dompdf;
+        return new Mpdf([
+            'mode'            => 'utf-8',
+            'format'          => 'A4',
+            'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
+            'directionality'  => 'rtl',
+            'margin_left'     => 15,
+            'margin_right'    => 15,
+            'margin_top'      => 15,
+            'margin_bottom'   => 15,
+        ]);
     }
 
-    private function streamPdf(Dompdf $dompdf, string $html, string $filename)
+    private function streamPdf(Mpdf $mpdf, string $html, string $filename)
     {
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        $dompdf->stream($filename, ['Attachment' => true]);
-        exit; // Dompdf يرسل الهيدرز مباشرة، لازم نوقف تنفيذ CI4 بعدها
+        $mpdf->WriteHTML($html);
+        $mpdf->Output($filename, 'D'); // D = تحميل مباشر (Download)
+        exit;
     }
 
-    /**
-     * يتحقق إن المستخدم الحالي له صلاحية الوصول لهذي المهمة (رئيسها أو أحد أعضاء فريقها)
-     */
     private function assertMissionAccess(array $mission): void
     {
         $userId = (int) session()->get('user_id');
@@ -51,9 +50,6 @@ class PdfController extends BaseController
         }
     }
 
-    /**
-     * GET /dashboard/pdf/mission-letter/{missionId}
-     */
     public function missionLetter(int $missionId)
     {
         $missionModel = new MissionModel();
@@ -71,12 +67,9 @@ class PdfController extends BaseController
             'targetDept' => $targetDept,
         ]);
 
-        $this->streamPdf($this->makeDompdf(), $html, 'خطاب-' . $mission['mission_code'] . '.pdf');
+        $this->streamPdf($this->makeMpdf(), $html, 'خطاب-' . $mission['mission_code'] . '.pdf');
     }
 
-    /**
-     * GET /dashboard/pdf/risk-matrix/{missionId}
-     */
     public function riskMatrix(int $missionId)
     {
         $missionModel = new MissionModel();
@@ -96,12 +89,9 @@ class PdfController extends BaseController
             'items'      => $items,
         ]);
 
-        $this->streamPdf($this->makeDompdf(), $html, 'مصفوفة-مخاطر-' . $mission['mission_code'] . '.pdf');
+        $this->streamPdf($this->makeMpdf(), $html, 'مصفوفة-مخاطر-' . $mission['mission_code'] . '.pdf');
     }
 
-    /**
-     * GET /dashboard/pdf/meeting-summary/{missionId}
-     */
     public function meetingSummary(int $missionId)
     {
         $missionModel = new MissionModel();
@@ -112,7 +102,7 @@ class PdfController extends BaseController
         $deptModel = new DepartmentModel();
         $targetDept = $deptModel->find($mission['target_department_id']);
 
-        $meetingModel  = new MeetingModel();
+        $meetingModel = new MeetingModel();
         $meeting = $meetingModel->firstForMission($missionId);
 
         $attendees = [];
@@ -134,6 +124,6 @@ class PdfController extends BaseController
             'approvals'  => $approvals,
         ]);
 
-        $this->streamPdf($this->makeDompdf(), $html, 'ملخص-اجتماع-' . $mission['mission_code'] . '.pdf');
+        $this->streamPdf($this->makeMpdf(), $html, 'ملخص-اجتماع-' . $mission['mission_code'] . '.pdf');
     }
 }
