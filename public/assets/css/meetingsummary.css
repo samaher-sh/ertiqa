@@ -18,8 +18,7 @@
 
 .msum-auto-field{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; font-size:13px; color:#152c33; }
 .msum-auto-field.hr{ border:1px solid #bae6fd; background:#f0f9ff; }
-.msum-auto-field.plain{ border:1px solid var(--pb); background:#f0f8fd; }
-.msum-auto-field i{ width:12px; height:12px; color:#0369a1; flex-shrink:0; }
+.msum-auto-field.plain{ border:1px solid var(--pb); background:#f0f8fd; }.msum-auto-field i, .msum-auto-field svg{ width:12px; height:12px; color:#0369a1; flex-shrink:0; }
 .msum-auto-field input{ flex:1; border:none; outline:none; background:transparent; font-size:13px; font-family:inherit; color:#152c33; }
 .msum-auto-field span.val{ font-weight:600; }
 

@@ -1,7 +1,6 @@
 .notif-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 4px 20px rgba(13,132,181,.1); }
 
-.notif-head{ padding:16px 24px; display:flex; align-items:center; gap:12px; background:var(--p); }
-.notif-head i{ width:18px; height:18px; color:rgba(255,255,255,.85); flex-shrink:0; }
+.notif-head{ padding:16px 24px; display:flex; align-items:center; gap:12px; background:var(--p); }.notif-head i, .notif-head svg{ width:18px; height:18px; color:rgba(255,255,255,.85); flex-shrink:0; }
 .notif-head h2{ color:#fff; font-weight:700; font-size:14px; margin:0; }
 .notif-head p{ color:rgba(255,255,255,.6); font-size:11px; margin:2px 0 0; }
 .notif-unread-badge{ margin-right:auto; font-size:11px; font-weight:700; padding:4px 12px; border-radius:999px; background:rgba(255,255,255,.2); color:#fff; }
