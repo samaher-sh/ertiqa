@@ -281,8 +281,8 @@ function homeStatsCards() {
         { label: "التقارير المعتمدة",   sub: "Approved Reports",           value: homeStats.reports_approved_count || 0 },
       ]
     : [
-        { label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
         { label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
+        { label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
       ];
 }
 
@@ -353,6 +353,18 @@ function renderHomeTab() {
   let html = renderHomeBanner();
 
   html += `<div class="stats-grid ${isAuditMember ? "" : "two-col"}">`;
+  if (isAuditMember) {
+    html += `
+      <button class="stat-action-card" id="homeNewTaskCard">
+        <div class="stat-action-top"><span class="stat-dot light"></span></div>
+        <div>
+          <p class="stat-action-label">بدء مهمة</p>
+          <p class="stat-action-sub">New Audit Task</p>
+        </div>
+        <p class="stat-action-cta"><i data-lucide="plus"></i> ابدأ</p>
+      </button>
+    `;
+  }
   STATS.forEach((s, i) => {
     html += `
       <button class="stat-card ${activeStatCard === i ? "active" : ""}" data-stat="${i}">
@@ -367,18 +379,6 @@ function renderHomeTab() {
         <p class="stat-value">${s.value}</p>
       </button>
     `;
-    if (i === 0 && isAuditMember) {
-      html += `
-        <button class="stat-action-card" id="homeNewTaskCard">
-          <div class="stat-action-top"><span class="stat-dot light"></span></div>
-          <div>
-            <p class="stat-action-label">بدء مهمة</p>
-            <p class="stat-action-sub">New Audit Task</p>
-          </div>
-          <p class="stat-action-cta"><i data-lucide="plus"></i> ابدأ</p>
-        </button>
-      `;
-    }
   });
   html += `</div>`;
 
@@ -448,18 +448,6 @@ function renderStatDetailPanel(idx) {
 
   let bodyHtml;
   if (idx === 0) {
-    bodyHtml = scheduledMeetings.length === 0
-      ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
-      : scheduledMeetings.map(m => `
-        <div class="task-row">
-          <div class="task-row-icon"><i data-lucide="calendar"></i></div>
-          <div class="task-row-body">
-            <p class="task-row-title">${escapeHtml(m.title || m.meeting_code)}</p>
-            <p class="task-row-sub">${escapeHtml(m.meeting_date || "")} ${escapeHtml(m.meeting_time || "")}</p>
-          </div>
-        </div>
-      `).join("");
-  } else {
     bodyHtml = activeMissions.length === 0
       ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
       : activeMissions.map(m => `
@@ -473,6 +461,18 @@ function renderStatDetailPanel(idx) {
             <span class="task-phase-badge">المرحلة ${m.current_stage}</span>
           </div>
         </button>
+      `).join("");
+  } else {
+    bodyHtml = scheduledMeetings.length === 0
+      ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
+      : scheduledMeetings.map(m => `
+        <div class="task-row">
+          <div class="task-row-icon"><i data-lucide="calendar"></i></div>
+          <div class="task-row-body">
+            <p class="task-row-title">${escapeHtml(m.title || m.meeting_code)}</p>
+            <p class="task-row-sub">${escapeHtml(m.meeting_date || "")} ${escapeHtml(m.meeting_time || "")}</p>
+          </div>
+        </div>
       `).join("");
   }
 

@@ -74,7 +74,10 @@ function renderRiskMatrixPage() {
           <div><h2>مصفوفة المخاطر</h2><p>Risk Matrix Form</p></div>
           ${readOnly ? `<span class="rm-readonly-badge"><i data-lucide="lock" style="width:10px;height:10px;"></i> عرض فقط</span>` : ""}
         </div>
-        ${!readOnly ? `<button class="rm-add-btn" id="rmAddBtn"><i data-lucide="plus"></i> إضافة مخاطر</button>` : ""}
+        <div style="display:flex;gap:8px;">
+          <button class="obs-btn-pdf" id="rmExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
+          ${!readOnly ? `<button class="rm-add-btn" id="rmAddBtn"><i data-lucide="plus"></i> إضافة مخاطر</button>` : ""}
+        </div>
       </div>
 
       <div class="rm-table-wrap">
@@ -128,7 +131,6 @@ function renderRiskMatrixPage() {
     </div>
 
     <div class="rm-bottom-row">
-      <button class="rm-export-btn" id="rmExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
       ${!readOnly ? `
       <div class="rm-submit-wrap">
         <button class="rm-submit-btn ${rmDirty && !locked ? "dirty" : ""}" id="rmSubmitBtn" ${(!rmDirty || locked) ? "disabled" : ""}>

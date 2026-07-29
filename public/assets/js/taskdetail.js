@@ -76,7 +76,7 @@ function renderTaskDetailPage() {
         <h2 class="td-title">تفاصيل المهمة: ${escHtmlTD(task.dept)}</h2>
         <span class="td-year">(${task.year})</span>
       </div>
-      <button class="td-export-btn" id="tdExportBtn"><i data-lucide="file-text"></i> تصدير PDF</button>
+      <button class="obs-btn-pdf" id="tdExportBtn"><i data-lucide="file-text"></i> تصدير PDF</button>
     </div>
 
     <div class="td-card">
