@@ -26,7 +26,7 @@ class RiskMatrixController extends BaseController
     public function save()
     {
         $roleCode = session()->get('role_code');
-        if (in_array($roleCode, ['hr_coordinator', 'audit_head'], true)) {
+        if (in_array($roleCode, ['dept_coordinator', 'audit_head'], true)) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
         }
 

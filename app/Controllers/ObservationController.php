@@ -9,7 +9,7 @@ class ObservationController extends BaseController
     private function roleFlags(): array
     {
         $roleCode = session()->get('role_code');
-        $isHrUser = in_array($roleCode, ['hr_coordinator', 'dept_manager', 'specialized_manager'], true);
+        $isHrUser = in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
         return [
             'isHrUser'   => $isHrUser,
             'obsReadOnly'=> $isHrUser || $roleCode === 'audit_head',

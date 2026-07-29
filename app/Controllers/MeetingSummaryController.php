@@ -13,7 +13,7 @@ class MeetingSummaryController extends BaseController
     {
         $roleCode = session()->get('role_code');
         return [
-            'isHrUser'    => in_array($roleCode, ['hr_coordinator', 'dept_manager', 'specialized_manager'], true),
+            'isHrUser'    => in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true),
             'allReadOnly' => $roleCode === 'audit_head',
         ];
     }
