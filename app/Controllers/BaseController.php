@@ -94,7 +94,7 @@ abstract class BaseController extends Controller
 
         return $this->navItemsForRole(
             $roleCode === 'top_management',
-            in_array($roleCode, ['hr_coordinator', 'dept_manager', 'specialized_manager'], true),
+            in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true),
             $roleCode === 'audit_head'
         );
     }

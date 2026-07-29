@@ -32,7 +32,7 @@ class RolePermissionSeeder extends Seeder
                 'signatures.sign',
                 'corrective_actions.view',
             ],
-            'hr_coordinator' => [
+            'dept_coordinator' => [
                 'missions.view',
                 'sla.view', 'sla.respond',
                 'documents.view', 'documents.respond',

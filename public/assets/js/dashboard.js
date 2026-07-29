@@ -44,10 +44,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const roleCode = currentUser.role_code;
   isPresident     = roleCode === "top_management";
-  isHrDept        = ["hr_coordinator", "dept_manager", "specialized_manager"].includes(roleCode);
+  isHrDept        = ["dept_coordinator", "dept_manager", "specialized_manager"].includes(roleCode);
   isAuditHead     = roleCode === "audit_head";
   isAuditMember   = roleCode === "audit_member";
-  isHrCoordinator = roleCode === "hr_coordinator";
+  isHrCoordinator = roleCode === "dept_coordinator";
 
   try {
     const navRes = await fetch(base + "/api/nav-items");
