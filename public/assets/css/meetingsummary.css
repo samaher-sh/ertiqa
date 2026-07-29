@@ -1,0 +1,67 @@
+/* ============================================================
+   ملخص الاجتماع (Meeting Summary)
+   منقول عن MeetingSummary في AdminDashboard.tsx
+   يعيد استخدام wiz-card / wiz-field / wiz-input من wizard.css
+   ============================================================ */
+
+.msum-locked-wrap{ display:flex; flex-direction:column; gap:20px; transition:opacity .15s; }
+.msum-locked-wrap.locked{ opacity:.4; pointer-events:none; user-select:none; }
+
+.msum-auto-chip{ display:inline-flex; align-items:center; gap:4px; font-size:9px; font-weight:800; padding:2px 6px; border-radius:9999px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; margin-right:4px; }
+.msum-auto-chip i{ width:8px; height:8px; }
+.msum-auto-banner{ padding:10px 24px 4px; display:flex; align-items:center; gap:8px; }
+.msum-auto-banner span{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; }
+.msum-auto-banner i{ width:10px; height:10px; }
+
+.msum-readonly-badge{ display:flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:rgba(255,255,255,.18); color:#fff; margin-right:auto; }
+.msum-readonly-badge i{ width:10px; height:10px; }
+
+.msum-auto-field{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; font-size:13px; color:#152c33; }
+.msum-auto-field.hr{ border:1px solid #bae6fd; background:#f0f9ff; }
+.msum-auto-field.plain{ border:1px solid var(--pb); background:#f0f8fd; }
+.msum-auto-field i{ width:12px; height:12px; color:#0369a1; flex-shrink:0; }
+.msum-auto-field input{ flex:1; border:none; outline:none; background:transparent; font-size:13px; font-family:inherit; color:#152c33; }
+.msum-auto-field span.val{ font-weight:600; }
+
+.msum-table-wrap{ overflow-x:auto; }
+table.msum-table{ width:100%; font-size:13px; border-collapse:collapse; }
+table.msum-table thead tr{ background:#ebf6f9; }
+table.msum-table th{ padding:12px 16px; text-align:right; font-size:12px; font-weight:700; color:var(--pd); border-bottom:1.5px solid var(--pb); }
+table.msum-table th.c{ text-align:center; }
+table.msum-table th:not(:last-child){ border-left:1px solid #d8e6eb; }
+table.msum-table td{ padding:8px 12px; border-bottom:1px solid #e9f2f5; }
+table.msum-table td:not(:last-child){ border-left:1px solid #d8e6eb; }
+.msum-row-num{ text-align:center; font-weight:600; color:#6b7280; }
+.msum-plain-input{ width:100%; padding:8px 12px; border-radius:12px; font-size:13px; outline:none; background:transparent; border:1px solid transparent; font-family:inherit; }
+.msum-plain-input:hover, .msum-plain-input:focus{ background:#fff; border-color:#e2e8f0; }
+.msum-del-btn{ padding:8px; border-radius:8px; background:none; border:none; color:#f87171; }
+.msum-del-btn:hover{ background:#fef2f2; color:#ef4444; }
+
+/* summary points */
+.msum-point-hr-box{ display:flex; align-items:flex-start; gap:8px; padding:10px 12px; border-radius:12px; background:#f0f9ff; border:1px solid #bae6fd; }
+.msum-point-num{ width:20px; height:20px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; background:var(--pl); color:var(--pd); flex-shrink:0; margin-top:2px; }
+.msum-point-hr-box span{ font-size:13px; font-weight:600; color:#152c33; line-height:1.6; }
+.msum-opinion-readonly{ padding:8px 12px; border-radius:8px; font-size:13px; min-height:36px; }
+.msum-opinion-readonly.has{ background:#f0fdf4; border:1px solid #86efac; color:#166534; }
+.msum-opinion-readonly.empty{ background:#f8fafc; border:1px solid #e2e8f0; color:#9ca3af; }
+.msum-empty-points{ text-align:center; padding:32px 0; font-size:13px; font-weight:600; color:#9ca3af; background:#f9fafb; }
+
+/* signature pad */
+.msum-sig-wrap{ height:40px; border-radius:12px; position:relative; overflow:hidden; border:1.5px dashed #d1d5db; background:#f8fafc; }
+.msum-sig-wrap canvas{ width:100%; height:100%; cursor:crosshair; touch-action:none; }
+.msum-sig-hint{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; color:#d1d5db; pointer-events:none; }
+.msum-sig-clear{ position:absolute; top:50%; left:6px; transform:translateY(-50%); background:rgba(255,255,255,.9); border:none; border-radius:9999px; padding:3px; color:#ef4444; display:none; }
+.msum-sig-wrap.has-sig .msum-sig-clear{ display:flex; }
+.msum-sig-readonly{ height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#9ca3af; border:1px solid #e2e8f0; background:#f8fafc; }
+
+.msum-approve-footer{ padding:18px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#f0f8fd; border-top:1.5px solid var(--pb); }
+.msum-attach-btn{ display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; box-shadow:0 4px 12px rgba(49,133,179,.3); }
+.msum-attach-empty{ font-size:11px; color:#9ca3af; margin-right:12px; }
+.msum-approve-meta{ text-align:left; font-size:11px; font-weight:600; color:#6b7280; line-height:1.6; }
+
+.msum-bottom-row{ display:flex; align-items:center; justify-content:space-between; padding-top:4px; flex-wrap:wrap; gap:12px; }
+.msum-export-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#f59e0b; border:none; }
+.msum-submit-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.msum-submit-btn{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#d1d5db; border:none; cursor:not-allowed; }
+.msum-submit-btn.dirty{ background:var(--p); box-shadow:0 4px 12px rgba(49,133,179,.3); cursor:pointer; }
+.msum-submit-hint{ font-size:10px; color:#9ca3af; font-weight:500; }

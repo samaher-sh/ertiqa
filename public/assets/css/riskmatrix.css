@@ -1,0 +1,58 @@
+/* ============================================================
+   مصفوفة المخاطر (Risk Matrix)
+   منقول عن Page4 / RatingSelect في AdminDashboard.tsx
+   ============================================================ */
+
+.rm-card{ background:#fff; border-radius:16px; overflow:hidden; transition:all .15s; box-shadow:0 4px 24px rgba(49,133,179,.1); border:1px solid var(--pb); }
+.rm-card.locked{ opacity:.4; pointer-events:none; user-select:none; }
+.rm-head{ padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border-bottom:1.5px solid var(--pb); }
+.rm-head-left{ display:flex; align-items:center; gap:12px; }
+.rm-head-icon{ width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--pl); color:var(--p); }
+.rm-head-icon i{ width:18px; height:18px; }
+.rm-head h2{ font-size:15px; font-weight:800; color:var(--pd); margin:0; line-height:1; }
+.rm-head p{ font-size:11px; font-weight:600; color:#4a6b74; margin:2px 0 0; }
+.rm-readonly-badge{ display:flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:#fef9ec; color:#b45309; border:1px solid #fde68a; margin-right:8px; }
+.rm-add-btn{ display:flex; align-items:center; gap:8px; padding:10px 20px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; box-shadow:0 4px 14px rgba(49,133,179,.3); }
+
+.rm-table-wrap{ max-height:560px; overflow:auto; }
+.rm-table-wrap::-webkit-scrollbar{ display:none; }
+table.rm-table{ width:100%; border-collapse:collapse; min-width:780px; }
+table.rm-table thead{ position:sticky; top:0; z-index:10; }
+table.rm-table th{ padding:14px 16px; font-size:14px; font-weight:700; background:#f0f8fd; color:var(--pd); border-bottom:2px solid var(--pb); white-space:nowrap; }
+table.rm-table th:not(:first-child){ border-left:1px solid rgba(179,212,229,.3); }
+table.rm-table th.c{ text-align:center; }
+table.rm-table td{ padding:10px 12px; border-bottom:1px solid #eaf2ef; }
+.rm-row-num{ width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; background:var(--pl); color:var(--p); margin:0 auto; }
+.rm-cell-input, .rm-cell-textarea{ width:100%; outline:none; resize:none; font-size:13px; border-radius:8px; padding:7px 10px; font-family:inherit; color:#152c33; line-height:1.7; transition:all .15s; border:1px solid #e9edf0; background:#fafafa; }
+.rm-cell-input.filled, .rm-cell-textarea.filled{ border-color:var(--pb); background:#f4fbf8; }
+.rm-cell-input[readonly], .rm-cell-textarea[readonly]{ background:#f8fafc; cursor:default; }
+.rm-rating-wrap{ position:relative; }
+.rm-rating-dot{ position:absolute; right:10px; top:50%; transform:translateY(-50%); width:8px; height:8px; border-radius:50%; pointer-events:none; }
+select.rm-rating-select{ width:100%; font-size:13px; outline:none; appearance:none; border-radius:8px; font-family:inherit; font-weight:400; padding:6px 10px; border:1px solid #e2e8f0; background:#f9fafb; color:#9ca3af; }
+select.rm-rating-select.set{ font-weight:700; padding:6px 24px 6px 10px; }
+.rm-del-btn{ width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto; background:none; border:none; color:#f87171; opacity:0; transition:opacity .15s; }
+tr:hover .rm-del-btn{ opacity:1; }
+.rm-del-btn:hover{ background:#fef2f2; }
+.rm-empty{ padding:80px 0; text-align:center; }
+.rm-empty-icon{ width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:var(--pl); margin:0 auto 16px; }
+.rm-empty-icon i{ width:32px; height:32px; color:var(--p); opacity:.45; }
+.rm-empty p{ font-size:13px; font-weight:600; color:#6b7280; margin:0; }
+
+.rm-footer{ padding:14px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#f7faf9; border-top:1.5px solid var(--pb); }
+.rm-footer-stats{ display:flex; align-items:center; gap:20px; font-size:12px; flex-wrap:wrap; }
+.rm-footer-stats .total{ color:#9ca3af; }
+.rm-footer-stats .total strong{ color:#374151; }
+.rm-footer-stat-item{ display:flex; align-items:center; gap:6px; font-weight:600; }
+.rm-footer-stat-item .dot{ width:8px; height:8px; border-radius:50%; }
+.rm-footer-save-btn{ display:flex; align-items:center; gap:8px; padding:8px 20px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; box-shadow:0 3px 10px rgba(49,133,179,.25); }
+
+.rm-bottom-row{ display:flex; align-items:center; justify-content:space-between; padding-top:4px; flex-wrap:wrap; gap:12px; }
+.rm-export-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#f59e0b; border:none; }
+.rm-submit-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.rm-submit-btn{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#d1d5db; border:none; cursor:not-allowed; transition:all .15s; }
+.rm-submit-btn.dirty{ background:var(--p); box-shadow:0 4px 12px rgba(49,133,179,.3); cursor:pointer; }
+.rm-submit-hint{ font-size:10px; color:#9ca3af; font-weight:500; }
+
+.rm-toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; align-items:center; gap:10px; padding:14px 24px; border-radius:16px; color:#fff; font-size:13px; font-weight:700; background:linear-gradient(135deg,var(--pd),var(--p)); box-shadow:0 8px 32px rgba(49,133,179,.35); animation:rmToastIn .3s ease; }
+.rm-toast i{ width:18px; height:18px; }
+@keyframes rmToastIn{ from{ opacity:0; transform:translate(-50%,10px); } to{ opacity:1; transform:translate(-50%,0); } }

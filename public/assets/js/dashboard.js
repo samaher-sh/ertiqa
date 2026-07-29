@@ -1,130 +1,489 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const base = window.APP.baseUrl;
+/* ============================================================
+   منطق لوحة المراجع الداخلي - متصل بالـ API الحقيقي
+   (base معرّفة بملف shell.php مباشرة، متاحة لكل ملفات الصفحات)
+   ============================================================ */
 
-    /* ── طي/فتح الشريط الجانبي ── */
-    const sidebar = document.getElementById('sidebar');
-    document.getElementById('sidebarToggle').addEventListener('click', function () {
-        sidebar.classList.toggle('collapsed');
-    });
+/* ---------- بيانات المستخدم والقائمة الجانبية (تُجلب من السيرفر) ---------- */
+let currentUser = null;
+let navItemsData = [];
 
-    /* ── قائمة البروفايل ── */
-    const profileBtn   = document.getElementById('profileBtn');
-    const profileMenu  = document.getElementById('profileMenu');
-    const profileChevron = document.getElementById('profileChevron');
+let isAuditHead     = false;
+let isAuditMember   = false;
+let isHrCoordinator = false;
+let isHrDept        = false;
+let isPresident      = false;
 
-    profileBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        const isHidden = profileMenu.hidden;
-        profileMenu.hidden = !isHidden;
-        profileChevron.style.transform = isHidden ? 'rotate(180deg)' : 'none';
-    });
+/* ---------- الحالة العامة ---------- */
+let navOpen        = true;
+let mobileOpen      = false;
+let profileOpen     = false;
+let activeContent   = "home";
+let activeStatCard  = null;
+let dismissedMissionIds = [];
 
-    document.addEventListener('click', function () {
-        profileMenu.hidden = true;
-        profileChevron.style.transform = 'none';
-    });
+/* بيانات الرئيسية الحقيقية - تُملأ بعد fetch */
+let homeStats    = { active_count: 0, review_count: 0, meetings_count: 0 };
+let activeMissions = [];
+let scheduledMeetings = [];
 
-    profileMenu.addEventListener('click', function (e) { e.stopPropagation(); });
+function csrfName()  { return document.querySelector('meta[name="csrf-token-name"]').content; }
+function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }
 
-    /* ── محتوى عضو المراجعة فقط ── */
-    if (!window.APP.isAuditMember) return;
+/* ============================================================
+   تهيئة الصفحة
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch(base + "/api/session");
+    if (res.status === 401) { window.location.href = base + "/"; return; }
+    currentUser = await res.json();
+  } catch (e) {
+    window.location.href = base + "/";
+    return;
+  }
 
-    const activeCountVal   = document.getElementById('activeCountVal');
-    const meetingsCountVal = document.getElementById('meetingsCountVal');
-    const panelActiveTasks = document.getElementById('panelActiveTasks');
-    const panelMeetings    = document.getElementById('panelMeetings');
-    const activeTasksList  = document.getElementById('activeTasksList');
-    const meetingsList     = document.getElementById('meetingsList');
+  const roleCode = currentUser.role_code;
+  isPresident     = roleCode === "top_management";
+  isHrDept        = ["hr_coordinator", "dept_manager", "specialized_manager"].includes(roleCode);
+  isAuditHead     = roleCode === "audit_head";
+  isAuditMember   = roleCode === "audit_member";
+  isHrCoordinator = roleCode === "hr_coordinator";
 
-    /* جلب الإحصائيات */
-    fetch(base + '/dashboard/api/home-stats')
-        .then(r => r.json())
-        .then(data => {
-            activeCountVal.textContent   = data.active_count;
-            meetingsCountVal.textContent = data.meetings_count;
-        })
-        .catch(() => {
-            activeCountVal.textContent   = '0';
-            meetingsCountVal.textContent = '0';
-        });
+  try {
+    const navRes = await fetch(base + "/api/nav-items");
+    const navData = await navRes.json();
+    navItemsData = navData.items || [];
+  } catch (e) {
+    navItemsData = [];
+  }
 
-    function togglePanel(panel, otherPanel) {
-        const willOpen = panel.hidden;
-        otherPanel.hidden = true;
-        panel.hidden = !willOpen;
-        return willOpen;
-    }
-
-    document.getElementById('btnActiveTasks').addEventListener('click', function () {
-        const opened = togglePanel(panelActiveTasks, panelMeetings);
-        if (opened && activeTasksList.dataset.loaded !== '1') {
-            loadActiveTasks();
-        }
-    });
-
-    document.getElementById('btnMeetings').addEventListener('click', function () {
-        const opened = togglePanel(panelMeetings, panelActiveTasks);
-        if (opened && meetingsList.dataset.loaded !== '1') {
-            loadMeetings();
-        }
-    });
-
-    function loadActiveTasks() {
-        fetch(base + '/dashboard/api/active-missions')
-            .then(r => r.json())
-            .then(data => {
-                activeTasksList.dataset.loaded = '1';
-                const missions = data.missions || [];
-                if (missions.length === 0) {
-                    activeTasksList.innerHTML = '<p class="dp-empty">لا توجد مهام نشطة حالياً</p>';
-                    return;
-                }
-                activeTasksList.innerHTML = missions.map(m => `
-                    <div class="dp-row">
-                        <span class="dp-badge">${escapeHtml(m.mission_code)}</span>
-                        <div class="dp-row-main">
-                            <p class="dp-row-title">${escapeHtml(m.target_department_name || '')}</p>
-                            <p class="dp-row-sub">مرحلة ${escapeHtml(String(m.current_stage))}/7</p>
-                        </div>
-                        <a href="${base}/dashboard/pdf/mission-letter/${m.id}" target="_blank" class="dp-pdf-link" title="تصدير خطاب PDF">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        </a>
-                    </div>
-                `).join('');
-            })
-            .catch(() => {
-                activeTasksList.innerHTML = '<p class="dp-empty">تعذّر تحميل البيانات</p>';
-            });
-    }
-
-    function loadMeetings() {
-        fetch(base + '/dashboard/api/scheduled-meetings')
-            .then(r => r.json())
-            .then(data => {
-                meetingsList.dataset.loaded = '1';
-                const meetings = data.meetings || [];
-                if (meetings.length === 0) {
-                    meetingsList.innerHTML = '<p class="dp-empty">لا توجد اجتماعات مجدولة حالياً</p>';
-                    return;
-                }
-                meetingsList.innerHTML = meetings.map(m => `
-                    <div class="dp-row">
-                        <span class="dp-badge">${escapeHtml(m.meeting_code)}</span>
-                        <div class="dp-row-main">
-                            <p class="dp-row-title">${escapeHtml(m.title)}</p>
-                            <p class="dp-row-sub">${escapeHtml(m.meeting_date)} — ${escapeHtml(m.meeting_time)}</p>
-                        </div>
-                    </div>
-                `).join('');
-            })
-            .catch(() => {
-                meetingsList.innerHTML = '<p class="dp-empty">تعذّر تحميل البيانات</p>';
-            });
-    }
-
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str ?? '';
-        return div.innerHTML;
-    }
+  renderSidebar();
+  renderProfile();
+  await renderContent();
+  bindGlobalEvents();
+  lucide.createIcons();
 });
+
+/* ============================================================
+   الشريط الجانبي
+   ============================================================ */
+function renderSidebar() {
+  const sidebar     = document.getElementById("sidebar");
+  const logoRow     = document.getElementById("sidebarLogoRow");
+  const nav         = document.getElementById("sidebarNav");
+  const bottom      = document.getElementById("sidebarBottom");
+
+  sidebar.classList.toggle("collapsed", !navOpen);
+  sidebar.classList.toggle("mobile-open", mobileOpen);
+
+  const logoUrl = base + "/assets/images/kamc.png";
+
+  /* Logo row */
+  if (navOpen) {
+    logoRow.innerHTML = `
+      <div class="logo-info">
+        <div class="logo-box"><img src="${logoUrl}" alt="KAMC"></div>
+        <div class="logo-title">
+          <p class="t1">ارتقاء</p>
+          <p class="t2">مدينة الملك عبدالله الطبية</p>
+        </div>
+      </div>
+      <button class="sidebar-toggle-btn" id="toggleNavBtn" title="طي القائمة">
+        <i data-lucide="panel-left-close"></i>
+      </button>
+    `;
+  } else {
+    logoRow.innerHTML = `
+      <button class="sidebar-toggle-collapsed" id="toggleNavBtn" title="فتح القائمة">
+        <img src="${logoUrl}" alt="KAMC">
+      </button>
+    `;
+  }
+
+  /* Nav items - القائمة جاهزة ومفلترة حسب الدور فعليًا من السيرفر (GET /api/nav-items) */
+  nav.innerHTML = navItemsData.map(item => `
+    <button class="nav-item ${activeContent === item.key ? "active" : ""}" data-nav="${item.key}">
+      <div class="nav-icon-box"><i data-lucide="${item.icon}"></i></div>
+      <div class="nav-text">
+        <span class="nav-label">${item.label}</span>
+        <span class="nav-desc">${item.desc}</span>
+      </div>
+      ${!navOpen ? `<span class="nav-tooltip">${item.label}</span>` : ""}
+    </button>
+  `).join("");
+
+  bottom.innerHTML = `
+    <button class="sidebar-logout-btn" id="sidebarLogoutBtn" title="تسجيل الخروج">
+      <i data-lucide="log-out"></i>
+      <span>تسجيل الخروج</span>
+    </button>
+  `;
+
+  document.getElementById("toggleNavBtn").addEventListener("click", () => {
+    navOpen = !navOpen;
+    renderSidebar();
+    lucide.createIcons();
+  });
+
+  nav.querySelectorAll(".nav-item").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      activeContent = btn.dataset.nav;
+      activeStatCard = null;
+      renderSidebar();
+      await renderContent();
+      lucide.createIcons();
+    });
+  });
+
+  document.getElementById("sidebarLogoutBtn").addEventListener("click", logout);
+
+  lucide.createIcons();
+}
+
+/* ============================================================
+   بطاقة الملف الشخصي (الهيدر) - بيانات حقيقية من /api/session
+   ============================================================ */
+function renderProfile() {
+  const initial = (currentUser.full_name || currentUser.role_name || "م").charAt(0);
+  document.getElementById("avatarInitial").textContent   = initial;
+  document.getElementById("avatarInitialLg").textContent = initial;
+  document.getElementById("profileName").textContent      = currentUser.full_name || "المستخدم";
+  document.getElementById("profileRoleLabel").textContent = currentUser.role_name || "—";
+  document.getElementById("ddName").textContent            = currentUser.full_name || "المستخدم";
+  document.getElementById("ddRole").textContent            = currentUser.role_name || "—";
+  document.getElementById("ddEmail").textContent           = currentUser.email || "—";
+  // لا يوجد "رقم وظيفي" منفصل بجدول users فعليًا - نعرض رقم الهوية (المعرّف الحقيقي المستخدم بالنظام) بدلاً منه
+  document.getElementById("ddEmpId").textContent           = currentUser.national_id || "—";
+  document.getElementById("ddFullName").textContent        = currentUser.full_name || "—";
+  document.getElementById("ddEmpId2").textContent          = currentUser.national_id || "—";
+  document.getElementById("ddPhone").textContent           = currentUser.phone || "—";
+  document.getElementById("ddDept").textContent             = currentUser.department_parent_name || currentUser.department_name || "—";
+  document.getElementById("ddSubDept").textContent          = currentUser.department_parent_name ? (currentUser.department_name || "—") : "";
+
+  const profileBtn  = document.getElementById("profileBtn");
+  const profileWrap = document.getElementById("profileWrap");
+
+  profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileOpen = !profileOpen;
+    profileWrap.classList.toggle("open", profileOpen);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!profileWrap.contains(e.target)) {
+      profileOpen = false;
+      profileWrap.classList.remove("open");
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+}
+
+function logout() {
+  window.location.href = base + "/auth/logout";
+}
+
+/* ============================================================
+   منطقة المحتوى الرئيسية
+   ============================================================ */
+async function renderContent() {
+  const el = document.getElementById("contentArea");
+
+  if (activeContent === "home") {
+    await loadHomeData();
+    el.innerHTML = renderHomeTab();
+    bindHomeEvents();
+  } else if (activeContent === "riskMatrix") {
+    await loadMissionsForSelector();
+    el.innerHTML = renderRiskMatrixPage();
+    bindRiskMatrixEvents();
+  } else if (activeContent === "meetingSummary") {
+    await loadMissionsForSelector();
+    el.innerHTML = renderMeetingSummaryPage();
+    bindMeetingSummaryEvents();
+  } else if (activeContent === "newTask") {
+    await initWizardData();
+    el.innerHTML = renderWizardPage();
+    bindWizardEvents();
+  } else if (activeContent === "observations") {
+    await loadMissionsForSelector();
+    await initObservationsData();
+    el.innerHTML = renderObservationsPage();
+    bindObservationsEvents();
+  } else if (activeContent === "taskDetail" && typeof selectedTaskDetail !== "undefined" && selectedTaskDetail) {
+    el.innerHTML = renderTaskDetailPage();
+    bindTaskDetailEvents();
+  } else if (activeContent === "sentTasks") {
+    await loadMissionsForSelector();
+    el.innerHTML = renderSentTasksPage();
+    bindSentTasksEvents();
+  } else if (activeContent === "finalReports") {
+    await loadMissionsForSelector();
+    await initFinalReportsData();
+    el.innerHTML = renderFinalReportsPage();
+    bindFinalReportsEvents();
+  } else if (activeContent === "meetingSchedule") {
+    el.innerHTML = renderMeetingSchedulePage();
+    bindMeetingScheduleEvents();
+  } else {
+    el.innerHTML = renderPlaceholder(activeContent);
+  }
+  lucide.createIcons();
+}
+
+/* ---------- قائمة المهام النشطة المشتركة (تستخدمها كل صفحة فيها "اختر المهمة المرتبطة") ---------- */
+let missionsForSelector = [];
+
+async function loadMissionsForSelector() {
+  try {
+    const res = await fetch(base + "/dashboard/api/active-missions");
+    const data = await res.json();
+    missionsForSelector = data.missions || [];
+  } catch (e) {
+    missionsForSelector = [];
+  }
+}
+
+/* ---------- تبويب الرئيسية ---------- */
+async function loadHomeData() {
+  try {
+    const [statsRes, missionsRes, meetingsRes] = await Promise.all([
+      fetch(base + "/dashboard/api/home-stats"),
+      fetch(base + "/dashboard/api/active-missions"),
+      fetch(base + "/dashboard/api/scheduled-meetings"),
+    ]);
+    homeStats = await statsRes.json();
+    const missionsData = await missionsRes.json();
+    const meetingsData = await meetingsRes.json();
+    activeMissions = missionsData.missions || [];
+    scheduledMeetings = meetingsData.meetings || [];
+  } catch (e) {
+    homeStats = { active_count: 0, review_count: 0, meetings_count: 0 };
+    activeMissions = [];
+    scheduledMeetings = [];
+  }
+}
+
+function incompleteMissions() {
+  return activeMissions.filter(m => !dismissedMissionIds.includes(m.id));
+}
+
+function renderHomeTab() {
+  const incomplete = incompleteMissions();
+
+  const STATS = [
+    { label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
+    { label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
+  ];
+
+  let html = "";
+
+  html += `<div class="stats-grid">`;
+  STATS.forEach((s, i) => {
+    html += `
+      <button class="stat-card ${activeStatCard === i ? "active" : ""}" data-stat="${i}">
+        <div class="stat-card-top">
+          <span class="stat-dot"></span>
+          ${activeStatCard === i ? `<i data-lucide="chevron-down" class="stat-card-chevron"></i>` : ""}
+        </div>
+        <div>
+          <p class="stat-label">${s.label}</p>
+          <p class="stat-sub">${s.sub}</p>
+        </div>
+        <p class="stat-value">${s.value}</p>
+      </button>
+    `;
+    if (i === 0) {
+      html += `
+        <button class="stat-action-card" id="homeNewTaskCard">
+          <div class="stat-action-top"><span class="stat-dot light"></span></div>
+          <div>
+            <p class="stat-action-label">بدء مهمة</p>
+            <p class="stat-action-sub">New Audit Task</p>
+          </div>
+          <p class="stat-action-cta"><i data-lucide="plus"></i> ابدأ</p>
+        </button>
+      `;
+    }
+  });
+  html += `</div>`;
+
+  if (incomplete.length > 0) {
+    html += `
+      <div class="alert-card">
+        <div class="alert-head">
+          <div class="alert-icon"><i data-lucide="alert-triangle"></i></div>
+          <div>
+            <p class="alert-title">لديك ${incomplete.length} ${incomplete.length === 1 ? "مهمة نشطة" : "مهام نشطة"}</p>
+            <p class="alert-sub">يرجى إكمال هذه المهام في أقرب وقت لتجنب التأخير في سير العمل واعتماد النماذج.</p>
+          </div>
+        </div>
+        <div class="alert-list">
+          ${incomplete.map(m => `
+            <div class="alert-item">
+              <button class="alert-item-btn" data-mission="${m.id}">
+                <div class="alert-item-icon"><i data-lucide="file-text"></i></div>
+                <div class="alert-item-body">
+                  <p class="alert-item-title">${escapeHtml(m.target_department_name || "")}</p>
+                  <div class="alert-item-meta">
+                    <span>${escapeHtml(m.mission_code)}</span>
+                    <span><i data-lucide="clock"></i>المرحلة ${m.current_stage}</span>
+                  </div>
+                </div>
+                <span class="resume-badge">استئناف العمل</span>
+              </button>
+              <button class="alert-item-remove" data-dismiss="${m.id}"><i data-lucide="trash-2"></i></button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  if (activeStatCard !== null) {
+    html += renderStatDetailPanel(activeStatCard);
+  }
+
+  return html;
+}
+
+function renderStatDetailPanel(idx) {
+  const labels = ["اجتماعات مجدولة", "المهام النشطة"];
+  const label = labels[idx];
+
+  let bodyHtml;
+  if (idx === 0) {
+    bodyHtml = scheduledMeetings.length === 0
+      ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
+      : scheduledMeetings.map(m => `
+        <div class="task-row">
+          <div class="task-row-icon"><i data-lucide="calendar"></i></div>
+          <div class="task-row-body">
+            <p class="task-row-title">${escapeHtml(m.title || m.meeting_code)}</p>
+            <p class="task-row-sub">${escapeHtml(m.meeting_date || "")} ${escapeHtml(m.meeting_time || "")}</p>
+          </div>
+        </div>
+      `).join("");
+  } else {
+    bodyHtml = activeMissions.length === 0
+      ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
+      : activeMissions.map(m => `
+        <button class="task-row" data-mission="${m.id}">
+          <div class="task-row-icon"><i data-lucide="eye"></i></div>
+          <div class="task-row-body">
+            <p class="task-row-title">${escapeHtml(m.target_department_name || "")}</p>
+            <p class="task-row-sub">${escapeHtml(m.mission_code)} · ${escapeHtml(String(m.year))}</p>
+          </div>
+          <div class="task-row-badges">
+            <span class="task-phase-badge">المرحلة ${m.current_stage}</span>
+          </div>
+        </button>
+      `).join("");
+  }
+
+  return `
+    <div class="detail-panel" style="border-color:var(--pb);">
+      <div class="detail-head" style="background:var(--pl); border-color:var(--pb);">
+        <span class="detail-dot" style="background:var(--p);"></span>
+        <p class="detail-title" style="color:var(--p);">${label}</p>
+        <button class="detail-close" id="closeDetailBtn" style="color:var(--p);"><i data-lucide="x"></i></button>
+      </div>
+      <div class="detail-body">${bodyHtml}</div>
+    </div>
+  `;
+}
+
+function bindHomeEvents() {
+  const newTaskCard = document.getElementById("homeNewTaskCard");
+  if (newTaskCard) newTaskCard.addEventListener("click", async () => {
+    activeContent = "newTask";
+    renderSidebar(); await renderContent(); lucide.createIcons();
+  });
+
+  document.querySelectorAll(".stat-card").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const i = parseInt(btn.dataset.stat, 10);
+      activeStatCard = activeStatCard === i ? null : i;
+      const el = document.getElementById("contentArea");
+      el.innerHTML = renderHomeTab();
+      bindHomeEvents();
+      lucide.createIcons();
+    });
+  });
+
+  const closeBtn = document.getElementById("closeDetailBtn");
+  if (closeBtn) closeBtn.addEventListener("click", async () => {
+    activeStatCard = null;
+    const el = document.getElementById("contentArea");
+    el.innerHTML = renderHomeTab();
+    bindHomeEvents();
+    lucide.createIcons();
+  });
+
+  document.querySelectorAll("[data-dismiss]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      dismissedMissionIds.push(Number(btn.dataset.dismiss));
+      const el = document.getElementById("contentArea");
+      el.innerHTML = renderHomeTab();
+      bindHomeEvents();
+      lucide.createIcons();
+    });
+  });
+
+  document.querySelectorAll("[data-mission]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      showToast("عرض تفاصيل المهمة " + btn.dataset.mission + " — سيتوفر في المرحلة القادمة", "default");
+    });
+  });
+}
+
+/* ---------- صفحة "قيد الإنشاء" لبقية الأقسام ---------- */
+function renderPlaceholder(key) {
+  const item = navItemsData.find(n => n.key === key) || { label: "الصفحة", desc: "" };
+  return `
+    <div class="placeholder-card">
+      <div class="placeholder-head">
+        <i data-lucide="${item.icon || "settings"}"></i>
+        <div>
+          <h2>${item.label}</h2>
+          <p>${item.desc}</p>
+        </div>
+      </div>
+      <div class="placeholder-body">
+        <div class="placeholder-icon"><i data-lucide="${item.icon || "settings"}"></i></div>
+        <p class="msg">هذا القسم قيد التحويل حالياً</p>
+        <p class="hint">سيتم إضافته في المرحلة القادمة من التحويل</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   إشعارات Toast بسيطة (بديل sonner)
+   ============================================================ */
+function showToast(message, type) {
+  const container = document.getElementById("toastContainer");
+  const el = document.createElement("div");
+  el.className = "toast" + (type === "success" ? " success" : type === "error" ? " error" : "");
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function escapeHtml(str) { const div = document.createElement("div"); div.textContent = str ?? ""; return div.innerHTML; }
+
+/* ============================================================
+   أحداث عامة (موبايل)
+   ============================================================ */
+function bindGlobalEvents() {
+  document.getElementById("mobileMenuBtn").addEventListener("click", () => {
+    mobileOpen = true;
+    document.getElementById("mobileOverlay").classList.add("show");
+    renderSidebar();
+  });
+  document.getElementById("mobileOverlay").addEventListener("click", () => {
+    mobileOpen = false;
+    document.getElementById("mobileOverlay").classList.remove("show");
+    renderSidebar();
+  });
+}
