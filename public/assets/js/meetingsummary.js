@@ -113,14 +113,21 @@ function attachSignaturePad(canvasId, wrapId, onSign) {
 /* ============================================================
    الحاوية العامة
    ============================================================ */
+function msumVisibleMissions() {
+  if (!msumIsHrUser()) return missionsForSelector;
+  const deptId = currentUser && currentUser.department_id;
+  return missionsForSelector.filter(m => String(m.target_department_id) === String(deptId));
+}
+
 function renderMeetingSummaryPage() {
   const hrUser = msumIsHrUser();
   const allReadOnly = msumAllReadOnly();
   const locked = !msumSelectedTaskId;
+  const visibleTasks = msumVisibleMissions();
 
   return `
   <div class="flex flex-col gap-5">
-    ${renderLinkedTaskSelector(msumSelectedTaskId, "msumTaskSelect")}
+    ${renderLinkedTaskSelector(msumSelectedTaskId, "msumTaskSelect", visibleTasks)}
 
     <div class="msum-locked-wrap ${locked ? "locked" : ""}">
 
@@ -149,7 +156,7 @@ function renderMeetingSummaryPage() {
 
           <div class="wiz-field">
             <label class="wiz-label">الإدارة محل المراجعة <span class="msum-auto-chip"><i data-lucide="zap"></i>تلقائي</span></label>
-            <div class="msum-auto-field hr"><i data-lucide="lock"></i><span class="val">${escHtmlMSum(msumDept || "—")}</span></div>
+            <div class="msum-auto-field hr"><i data-lucide="lock"></i><span class="val">${escHtmlMSum(msumDept) || "— اختر المهمة أولاً —"}</span></div>
           </div>
 
           <div class="wiz-field" style="grid-column:1/-1;">
@@ -177,9 +184,9 @@ function renderMeetingSummaryPage() {
               ${msumAttendance.map((row, i) => `
                 <tr>
                   <td class="msum-row-num">${i + 1}</td>
-                  <td><input type="text" class="msum-plain-input" placeholder="أدخل الاسم" data-att-field="name" data-att-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" class="msum-plain-input" placeholder="أدخل الإدارة" data-att-field="dept" data-att-id="${row.id}" value="${escHtmlMSum(row.dept)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" class="msum-plain-input" placeholder="أدخل الوظيفة" data-att-field="position" data-att-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="att-${row.id}-name" class="msum-plain-input" placeholder="أدخل الاسم" data-att-field="name" data-att-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="att-${row.id}-dept" class="msum-plain-input" placeholder="أدخل الإدارة" data-att-field="dept" data-att-id="${row.id}" value="${escHtmlMSum(row.dept)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="att-${row.id}-position" class="msum-plain-input" placeholder="أدخل الوظيفة" data-att-field="position" data-att-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td style="text-align:center;">${!allReadOnly ? `<button class="msum-del-btn" data-att-del="${row.id}"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>` : ""}</td>
                 </tr>
               `).join("")}
@@ -209,16 +216,16 @@ function renderMeetingSummaryPage() {
                   <td>
                     ${hrUser
                       ? `<div class="msum-point-hr-box"><span class="msum-point-num">${i + 1}</span><span>${escHtmlMSum(pt.text)}</span></div>`
-                      : `<textarea rows="2" class="wiz-textarea plain" placeholder="النقطة ${i + 1}..." data-pt-field="text" data-pt-id="${pt.id}" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(pt.text)}</textarea>`}
+                      : `<textarea rows="2" id="pt-${pt.id}-text" class="wiz-textarea plain" placeholder="النقطة ${i + 1}..." data-pt-field="text" data-pt-id="${pt.id}" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(pt.text)}</textarea>`}
                   </td>
                   <td>
                     ${(hrUser && !allReadOnly)
-                      ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#86efac" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escHtmlMSum(pt.opinion)}</textarea>`
+                      ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#86efac" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" id="pt-${pt.id}-opinion" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escHtmlMSum(pt.opinion)}</textarea>`
                       : `<div class="msum-opinion-readonly ${pt.opinion ? "has" : "empty"}">${escHtmlMSum(pt.opinion || "—")}</div>`}
                   </td>
                   <td>
                     ${(hrUser && !allReadOnly)
-                      ? `<textarea rows="2" class="wiz-textarea plain" placeholder="اكتب السبب أو التوضيح..." data-pt-field="reason" data-pt-id="${pt.id}">${escHtmlMSum(pt.reason)}</textarea>`
+                      ? `<textarea rows="2" class="wiz-textarea plain" id="pt-${pt.id}-reason" placeholder="اكتب السبب أو التوضيح..." data-pt-field="reason" data-pt-id="${pt.id}">${escHtmlMSum(pt.reason)}</textarea>`
                       : `<div class="msum-opinion-readonly empty" style="color:${pt.reason ? "#152c33" : "#9ca3af"};">${escHtmlMSum(pt.reason || "—")}</div>`}
                   </td>
                   ${(!hrUser && !allReadOnly) ? `<td style="text-align:center;"><button class="msum-del-btn" data-pt-del="${pt.id}"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td>` : ""}
@@ -240,9 +247,9 @@ function renderMeetingSummaryPage() {
             <tbody>
               ${msumApprovals.map(row => `
                 <tr>
-                  <td><input type="text" class="msum-plain-input" data-ap-field="statement" data-ap-id="${row.id}" value="${escHtmlMSum(row.statement)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" class="msum-plain-input" placeholder="الاسم" data-ap-field="name" data-ap-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" class="msum-plain-input" data-ap-field="position" data-ap-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="ap-${row.id}-statement" class="msum-plain-input" data-ap-field="statement" data-ap-id="${row.id}" value="${escHtmlMSum(row.statement)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="ap-${row.id}-name" class="msum-plain-input" placeholder="الاسم" data-ap-field="name" data-ap-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="ap-${row.id}-position" class="msum-plain-input" data-ap-field="position" data-ap-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td>
                     ${!allReadOnly ? (
                       row.signature
@@ -250,7 +257,7 @@ function renderMeetingSummaryPage() {
                         : `<div class="msum-sig-wrap" id="sigWrap-${row.id}"><canvas id="sigCanvas-${row.id}"></canvas><span class="msum-sig-hint">وقّع هنا</span></div>`
                     ) : `<div class="msum-sig-readonly">—</div>`}
                   </td>
-                  <td><input type="date" class="msum-plain-input" data-ap-field="date" data-ap-id="${row.id}" value="${row.date}" ${allReadOnly ? "readonly" : ""} onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
+                  <td><input type="date" id="ap-${row.id}-date" class="msum-plain-input" data-ap-field="date" data-ap-id="${row.id}" value="${row.date}" ${allReadOnly ? "readonly" : ""} onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
                 </tr>
               `).join("")}
             </tbody>

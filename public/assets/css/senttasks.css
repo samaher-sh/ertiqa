@@ -6,6 +6,7 @@
 
 .st-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 4px 20px rgba(13,132,181,.06); }
 .st-card-head{ padding:16px 24px; display:flex; align-items:center; justify-content:space-between; background:var(--p); }
+.st-card-head i{ width:17px; height:17px; color:rgba(255,255,255,.85); flex-shrink:0; }
 .st-card-head-left{ display:flex; align-items:center; gap:12px; }
 .st-card-head-left i{ width:18px; height:18px; color:rgba(255,255,255,.8); }
 .st-card-head h2{ color:#fff; font-weight:700; font-size:14px; margin:0; line-height:1; }
