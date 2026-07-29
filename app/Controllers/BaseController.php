@@ -57,6 +57,7 @@ abstract class BaseController extends Controller
             'observations'   => ['label' => 'الملاحظات',          'desc' => 'Observations',     'url' => base_url('dashboard/observations'),  'icon' => 'book-open'],
             'finalReports'   => ['label' => 'تقرير نهائي',        'desc' => 'Final Reports',    'url' => base_url('dashboard/reports'),       'icon' => 'file-text'],
             'sentTasks'      => ['label' => 'المراسلات المشتركة', 'desc' => 'Sent Tasks',       'url' => base_url('dashboard/sent-tasks'),    'icon' => 'send'],
+            'notifications'  => ['label' => 'الإخطارات',          'desc' => 'Notifications',   'url' => base_url('dashboard/notifications'), 'icon' => 'bell'],
         ];
     }
 
@@ -71,7 +72,7 @@ abstract class BaseController extends Controller
         if ($isPresident) {
             $keys = ['home', 'finalReports'];
         } elseif ($isHrDept) {
-            $keys = ['home', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
+            $keys = ['home', 'notifications', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
         } elseif ($isAuditHead) {
             $keys = ['home', 'finalReports'];
         }

@@ -38,4 +38,6 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('reports/api/toggle-check',    'ReportController::toggleCheck');
     $routes->post('reports/api/finalize',        'ReportController::finalize');
     $routes->get('sent-tasks/api/timeline',      'SentTasksController::timeline');
+    $routes->get('notifications/api/list',           'NotificationController::list');
+    $routes->post('notifications/api/mark-read/(:num)', 'NotificationController::markRead/$1');
 });

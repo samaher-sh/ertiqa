@@ -234,6 +234,7 @@ img{ max-width:100%; }
 
 /* Stat cards */
 .stats-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.stats-grid.two-col{ grid-template-columns:repeat(2,1fr); }
 .stat-card{
   border-radius:12px; padding:12px; text-align:right;
   background:var(--pl); border:1px solid rgba(179,212,229,.6);

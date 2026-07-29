@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Models\MissionModel;
 use App\Models\MeetingModel;
+use App\Models\ReportModel;
+use App\Models\NotificationModel;
 
 class DashboardController extends BaseController
 {
@@ -21,16 +23,34 @@ class DashboardController extends BaseController
      */
     public function homeStats()
     {
-        $userId = (int) session()->get('user_id');
+        $userId   = (int) session()->get('user_id');
+        $roleCode = session()->get('role_code');
 
         $missionModel = new MissionModel();
         $meetingModel = new MeetingModel();
 
-        return $this->response->setJSON([
+        $data = [
             'active_count'   => $missionModel->countActiveForUser($userId),
             'review_count'   => $missionModel->countInStageForUser($userId, 2),
             'meetings_count' => $meetingModel->countScheduledForUser($userId),
-        ]);
+        ];
+
+        // رئيس إدارة المراجعة الداخلية يشرف على كل تقارير الإدارة، مو فقط مهامه هو
+        if ($roleCode === 'audit_head') {
+            $reportModel   = new ReportModel();
+            $departmentId  = (int) session()->get('department_id');
+            $data['reports_pending_count']  = $reportModel->countForDepartmentByStatus($departmentId, 'pending_signatures');
+            $data['reports_approved_count'] = $reportModel->countForDepartmentByStatus($departmentId, 'sent');
+        }
+
+        // مستخدمو الإدارة الخاضعة للمراجعة يحتاجون بيانات شريط الإخطارات بالرئيسية
+        if (in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true)) {
+            $notifModel = new NotificationModel();
+            $data['unread_notifications_count'] = $notifModel->unreadCountForUser($userId);
+            $data['latest_notification']        = $notifModel->latestUnreadForUser($userId);
+        }
+
+        return $this->response->setJSON($data);
     }
 
     /**
