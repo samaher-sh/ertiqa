@@ -56,6 +56,14 @@ class MissionController extends BaseController
             ]);
         }
 
+        $mainDept = $deptModel->find((int) $data['main_dept_id']);
+        if (!$mainDept) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'الإدارة غير صحيحة.',
+            ]);
+        }
+
         $auditDept = $deptModel->findByNameAr('المراجعة الداخلية');
         if (!$auditDept) {
             return $this->response->setStatusCode(500)->setJSON([
@@ -72,7 +80,7 @@ class MissionController extends BaseController
         $slaResponseModel  = new ServiceAgreementResponseModel();
         $docRequestModel   = new DocumentRequestModel();
 
-        $missionCode = $missionModel->generateMissionCode($data['year']);
+        $missionCode = $missionModel->generateMissionCode($mainDept['name_ar']);
 
         $db = \Config\Database::connect();
         $db->transStart();
