@@ -143,6 +143,8 @@ body {
   color: #152c33;
 }
 .input-wrapper input.has-error { border-color: #f87171; }
+.input-wrapper input:focus { border-color: #3185b3; background: #fff; box-shadow: 0 0 0 3px rgba(49,133,179,.12); }
+.input-wrapper input:not(:placeholder-shown) { border-color: #3185b3; background: #fff; }
 .toggle-password {
   position: absolute;
   left: 0.75rem;

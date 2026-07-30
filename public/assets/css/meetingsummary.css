@@ -16,11 +16,11 @@
 .msum-readonly-badge{ display:flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:rgba(255,255,255,.18); color:#fff; margin-right:auto; }
 .msum-readonly-badge i{ width:10px; height:10px; }
 
-.msum-auto-field{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; font-size:13px; color:#152c33; }
-.msum-auto-field.hr{ border:1px solid #bae6fd; background:#f0f9ff; }
-.msum-auto-field.plain{ border:1px solid var(--pb); background:#f0f8fd; }.msum-auto-field i, .msum-auto-field svg{ width:12px; height:12px; color:#0369a1; flex-shrink:0; }
-.msum-auto-field input{ flex:1; border:none; outline:none; background:transparent; font-size:13px; font-family:inherit; color:#152c33; }
-.msum-auto-field span.val{ font-weight:600; }
+.msum-auto-field{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; font-size:13px; color:#6b7280; background:#f3f4f6; border:1px solid #e5e7eb; }
+.msum-auto-field.hr{ border:1px solid #e5e7eb; background:#f3f4f6; }
+.msum-auto-field.plain{ border:1px solid #e5e7eb; background:#f3f4f6; }
+.msum-auto-field input{ flex:1; border:none; outline:none; background:transparent; font-size:13px; font-family:inherit; color:#6b7280; cursor:not-allowed; }
+.msum-auto-field span.val{ font-weight:600; color:#6b7280; }
 
 .msum-table-wrap{ overflow-x:auto; }
 table.msum-table{ width:100%; font-size:13px; border-collapse:collapse; }
@@ -58,9 +58,16 @@ table.msum-table td:not(:last-child){ border-left:1px solid #d8e6eb; }
 .msum-attach-empty{ font-size:11px; color:#9ca3af; margin-right:12px; }
 .msum-approve-meta{ text-align:left; font-size:11px; font-weight:600; color:#6b7280; line-height:1.6; }
 
-.msum-bottom-row{ display:flex; align-items:center; justify-content:space-between; padding-top:4px; flex-wrap:wrap; gap:12px; }
+.msum-bottom-row{ display:flex; align-items:center; justify-content:flex-end; padding-top:4px; flex-wrap:wrap; gap:12px; }
 .msum-export-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; }
 .msum-submit-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
 .msum-submit-btn{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#d1d5db; border:none; cursor:not-allowed; }
 .msum-submit-btn.dirty{ background:var(--p); box-shadow:0 4px 12px rgba(49,133,179,.3); cursor:pointer; }
 .msum-submit-hint{ font-size:10px; color:#9ca3af; font-weight:500; }
+
+/* ══════ حقل عنوان المهمة القابل للتعديل (منفصل عن الحقول المقفولة الرمادية) ══════ */
+.msum-edit-wrap{ border:1px solid var(--pb); background:#f0f8fd; border-radius:12px; padding:2px 12px; }
+.msum-edit-wrap .msum-growfield{ border:none; background:transparent; width:100%; padding:8px 0; }
+
+/* ══════ حقول متمددة تلقائيًا بدون سكرول (مكان الاجتماع/عنوان المهمة) ══════ */
+.msum-growfield{ resize:none; overflow-y:hidden; font-size:14px; font-family:inherit; outline:none; line-height:1.7; color:#152c33; }

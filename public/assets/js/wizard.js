@@ -247,6 +247,8 @@ function renderWizPage1() {
   const todayD = new Date();
   const currentYear = todayD.getFullYear().toString();
   const refNumber = String((todayD.getMonth() + 1) * 100 + todayD.getDate()).padStart(4, "0");
+  const deptAbbr = DEPT_ABBR[s.deptName] || "AUD";
+  const missionCode = deptAbbr + refNumber;
 
   return `
   <div class="wiz-page1-grid">
@@ -316,7 +318,7 @@ function renderWizPage1() {
           <div class="wiz-field">
             <label class="wiz-label ${err("phone") ? "error" : ""}">رقم الجوال ${err("phone") ? '<span class="wiz-req">*</span>' : ""}</label>
             <div class="wiz-input-icon-wrap"><i data-lucide="phone"></i>
-              <input id="p1Phone" type="tel" class="wiz-input plain ${err("phone") ? "err" : ""}" placeholder="05XXXXXXXX" value="${escHtml(s.phone)}">
+              <input id="p1Phone" type="tel" inputmode="numeric" maxlength="10" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("phone") ? "err" : ""}" placeholder="05XXXXXXXX" value="${escHtml(s.phone)}">
             </div>
             ${err("phone") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
@@ -353,7 +355,7 @@ function renderWizPage1() {
               </div>
               <div class="wiz-letterhead-meta">
                 <p>التاريخ: ${todayD.toLocaleDateString("en-GB")}</p>
-                <p>الرقم: م.م / ${currentYear} / ${refNumber}</p>
+                <p>رقم المهمة: <strong dir="ltr" style="display:inline-block;">${missionCode}</strong></p>
               </div>
             </div>
             <div class="wiz-divider-fade"></div>
@@ -378,8 +380,8 @@ function renderWizPage1() {
             <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small">${escHtml(s.reviewer || "...............")}</mark></p>
             <p class="wiz-p" style="margin-bottom:2px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
             <div style="display:flex;flex-direction:column;gap:8px;">
-              <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val">${escHtml(s.email || "........................")}</span></div>
-              <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val">${escHtml(s.phone || "........................")}</span></div>
+              <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.email || "........................")}</span></div>
+              <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.phone || "........................")}</span></div>
             </div>
             <p class="wiz-p" style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
             ${s.director ? `<p class="wiz-p" style="font-weight:800;color:var(--pd);">${escHtml(s.director)}</p>` : ""}
@@ -426,7 +428,9 @@ function bindWizPage1() {
     rerenderWizardContent();
   });
   $("p1Phone").addEventListener("input", e => {
-    wizP1.phone = e.target.value;
+    const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
+    e.target.value = digitsOnly;
+    wizP1.phone = digitsOnly;
     rerenderWizardContent();
   });
   $("p1Director").addEventListener("input", e => {
@@ -456,7 +460,7 @@ function renderWizPage2() {
     <div class="wiz-sla-grid">
       <div class="wiz-field">
         <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
-        <div class="msum-auto-field plain"><i data-lucide="lock"></i><span class="val">${escHtml(s.subjectDept) || "— يُحدَّد تلقائيًا من الخطوة السابقة —"}</span></div>
+        <div class="msum-auto-field plain"><span class="val">${escHtml(s.subjectDept) || "— يُحدَّد تلقائيًا من الخطوة السابقة —"}</span></div>
       </div>
       <div class="wiz-field">
         <label class="wiz-label">تاريخ الاتفاقية</label>
@@ -481,8 +485,8 @@ function renderWizPage2() {
           </div>
           ${active ? `<div class="wiz-channel-body">
             ${c.type === "textarea"
-              ? `<textarea rows="3" class="wiz-textarea" style="background:#fff;border:1px solid var(--pb);" data-ch-val="${c.key}" placeholder="${c.ph}">${escHtml(s.chVals[c.key])}</textarea>`
-              : `<input type="${c.type}" class="wiz-input" style="background:#fff;border:1px solid var(--pb);" data-ch-val="${c.key}" placeholder="${c.ph}" value="${escHtml(s.chVals[c.key])}">`}
+              ? `<textarea id="wizCh-${c.key}" rows="3" class="wiz-textarea" style="background:#fff;border:1px solid var(--pb);" data-ch-val="${c.key}" placeholder="${c.ph}">${escHtml(s.chVals[c.key])}</textarea>`
+              : `<input id="wizCh-${c.key}" type="${c.type}" ${c.type === "email" || c.type === "tel" ? 'dir="ltr" style="background:#fff;border:1px solid var(--pb);text-align:left;"' : 'style="background:#fff;border:1px solid var(--pb);"'} ${c.type === "tel" ? 'inputmode="numeric"' : ""} data-ch-val="${c.key}" placeholder="${c.ph}" value="${escHtml(s.chVals[c.key])}">`}
           </div>` : ""}
         </div>`;
       }).join("")}
@@ -563,8 +567,12 @@ function bindWizPage2() {
   });
   document.querySelectorAll("[data-ch-val]").forEach(el => {
     el.addEventListener("input", () => {
-      s.chVals[el.dataset.chVal] = el.value;
-      rerenderWizardContent();
+      let v = el.value;
+      if (el.dataset.chVal === "phone") {
+        v = v.replace(/[^0-9+\-\s]/g, "");
+        el.value = v;
+      }
+      s.chVals[el.dataset.chVal] = v;
     });
   });
 
@@ -599,9 +607,9 @@ function renderWizPage3() {
         <thead><tr>
           <th style="width:60px;text-align:center;">الرقم</th>
           <th style="text-align:right;min-width:320px;">المستند</th>
-          <th class="locked" style="width:170px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> يوجد / لا يوجد</span></th>
-          <th class="locked" style="width:180px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> رفع الملف</span></th>
-          <th class="locked" style="width:240px;text-align:right;"><span style="display:flex;align-items:center;gap:4px;"><i data-lucide="lock" style="width:10px;height:10px;"></i> الملاحظات</span></th>
+          <th class="locked" style="width:170px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;">يوجد / لا يوجد</span></th>
+          <th class="locked" style="width:180px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;">رفع الملف</span></th>
+          <th class="locked" style="width:240px;text-align:right;"><span style="display:flex;align-items:center;gap:4px;">الملاحظات</span></th>
           <th style="width:44px;"></th>
         </tr></thead>
         <tbody>
@@ -622,19 +630,19 @@ function renderWizPage3() {
                   <div class="inner" style="display:flex;justify-content:center;gap:8px;">
                     <span class="wiz-pill">يوجد</span><span class="wiz-pill">لا يوجد</span>
                   </div>
-                  <div class="overlay"><i data-lucide="lock"></i></div>
+                  <div class="overlay"></div>
                 </div>
               </td>
               <td style="text-align:center;background:#fafafa;">
                 <div class="wiz-locked-cell">
                   <div class="inner"><span class="wiz-upload-pill"><i data-lucide="upload"></i> رفع</span></div>
-                  <div class="overlay"><i data-lucide="lock"></i></div>
+                  <div class="overlay"></div>
                 </div>
               </td>
               <td style="background:#fafafa;">
                 <div class="wiz-locked-cell">
                   <div class="inner"><input type="text" class="wiz-doc-note-input" readonly placeholder="ملاحظة..."></div>
-                  <div class="overlay"><i data-lucide="lock"></i></div>
+                  <div class="overlay"></div>
                 </div>
               </td>
               <td style="text-align:center;"><button class="wiz-doc-del-btn" data-doc-del="${row.id}"><i data-lucide="trash-2"></i></button></td>
