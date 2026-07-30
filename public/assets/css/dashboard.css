@@ -392,3 +392,9 @@ img{ max-width:100%; }
   .sidebar.mobile-open{ transform:translateX(0); }
   .stats-grid{ grid-template-columns:1fr; }
 }
+
+/* ══════ إصلاح جذري: كلاسات مساعدة كانت تُستخدم بالكود بدون أي تعريف فعلي (Tailwind غير محمّل) ══════ */
+.flex{ display:flex; }
+.flex-col{ flex-direction:column; }
+.gap-4{ gap:16px; }
+.gap-5{ gap:20px; }

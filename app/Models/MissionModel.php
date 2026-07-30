@@ -50,20 +50,39 @@ class MissionModel extends Model
         ));
     }
 
-    /**
-     * يولّد كود مهمة فريد بصيغة AUD-{السنة}-{رقم تسلسلي 3 خانات}
-     * مثال: AUD-2026-001, AUD-2026-002 ...
-     */
-    public function generateMissionCode(string $year): string
-    {
-        $count = $this->where('year', $year)->countAllResults();
-        $seq   = str_pad((string) ($count + 1), 3, '0', STR_PAD_LEFT);
-        $code  = "AUD-{$year}-{$seq}";
+    /** اختصارات الإدارات الرئيسية لبناء رقم المهمة — نفس القائمة المستخدمة بالواجهة بالضبط */
+    private const DEPT_ABBR = [
+        'الإدارة التنفيذية'                 => 'EXE',
+        'الأبحاث والابتكار'                  => 'RI',
+        'الشؤون المالية والإدارية'           => 'FA',
+        'الموارد البشرية'                    => 'HR',
+        'تقنية المعلومات والاتصالات'         => 'ICT',
+        'الشؤون الأكاديمية والتدريب'         => 'AT',
+        'شؤون التمريض'                       => 'NUR',
+        'العمليات'                           => 'OPS',
+        'شؤون المرضى'                        => 'PA',
+        'الخدمات الطبية والإكلينيكية'        => 'MED',
+    ];
 
-        // احتياط بسيط لو صار تعارض نادر (طلبين بنفس الثانية) — نزيد الرقم لين يصير فريد
+    /**
+     * يولّد كود مهمة فريد بصيغة [اختصار الإدارة][4 أرقام تسلسلية]
+     * مثال: HR0001, MED0042 — الترقيم تسلسلي داخل كل إدارة لحالها (مو عام لكل النظام)
+     *
+     * @param string $mainDeptNameAr اسم الإدارة الرئيسية بالعربي بالضبط كما بجدول departments
+     */
+    public function generateMissionCode(string $mainDeptNameAr): string
+    {
+        $abbr = self::DEPT_ABBR[$mainDeptNameAr] ?? 'AUD';
+
+        // نعد كم مهمة موجودة أصلاً بنفس الاختصار (يعني بنفس الإدارة) لنولّد الرقم التالي
+        $count = $this->like('mission_code', $abbr, 'after')->countAllResults();
+        $seq   = str_pad((string) ($count + 1), 4, '0', STR_PAD_LEFT);
+        $code  = $abbr . $seq;
+
+        // احتياط لو صار تعارض نادر
         while ($this->where('mission_code', $code)->first()) {
-            $seq  = str_pad((string) ((int) $seq + 1), 3, '0', STR_PAD_LEFT);
-            $code = "AUD-{$year}-{$seq}";
+            $seq  = str_pad((string) ((int) $seq + 1), 4, '0', STR_PAD_LEFT);
+            $code = $abbr . $seq;
         }
 
         return $code;

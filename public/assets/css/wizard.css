@@ -32,7 +32,7 @@
 .wiz-btn-outline{ background:#fff; color:var(--p); border:1px solid var(--pb); }
 .wiz-btn-outline:disabled{ opacity:.3; cursor:not-allowed; }
 .wiz-btn-primary{ background:var(--p); color:#fff; box-shadow:0 4px 12px rgba(49,133,179,.3); }
-.wiz-btn-success{ background:#16a34a; color:#fff; box-shadow:0 4px 12px rgba(22,163,74,.3); }
+.wiz-btn-success{ background:var(--p); color:#fff; box-shadow:0 4px 12px rgba(49,133,179,.3); }
 .wiz-btn i{ width:14px; height:14px; }
 .wiz-dots{ display:flex; align-items:center; gap:8px; }
 .wiz-dot{ height:10px; border-radius:9999px; background:#c0d8d3; width:10px; border:none; padding:0; transition:all .2s; cursor:pointer; }

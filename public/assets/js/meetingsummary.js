@@ -152,17 +152,17 @@ function renderMeetingSummaryPage() {
           </div>
           <div class="wiz-field">
             <label class="wiz-label">مكان الاجتماع</label>
-            <input id="msumLocation" type="text" class="wiz-input plain" placeholder="أدخل مكان الاجتماع" value="${escHtmlMSum(msumLocation)}" ${allReadOnly ? "readonly" : ""}>
+            <textarea id="msumLocation" rows="1" class="wiz-textarea plain msum-growfield" placeholder="أدخل مكان الاجتماع" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(msumLocation)}</textarea>
           </div>
 
           <div class="wiz-field">
-            <label class="wiz-label">الإدارة محل المراجعة <span class="msum-auto-chip"><i data-lucide="zap"></i>تلقائي</span></label>
-            <div class="msum-auto-field hr"><i data-lucide="lock"></i><span class="val">${escHtmlMSum(msumDept) || "— اختر المهمة أولاً —"}</span></div>
+            <label class="wiz-label">الإدارة محل المراجعة</label>
+            <div class="msum-auto-field hr"><span class="val">${escHtmlMSum(msumDept) || "— اختر المهمة أولاً —"}</span></div>
           </div>
 
           <div class="wiz-field" style="grid-column:1/-1;">
             <label class="wiz-label">عنوان المهمة</label>
-            <div class="msum-auto-field plain"><input id="msumTitle" type="text" placeholder="عنوان مهمة المراجعة" value="${escHtmlMSum(msumTitle)}" ${allReadOnly ? "readonly" : ""}></div>
+            <div class="msum-edit-wrap"><textarea id="msumTitle" rows="1" class="msum-growfield" placeholder="عنوان مهمة المراجعة" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(msumTitle)}</textarea></div>
           </div>
 
           <div class="wiz-field" style="grid-column:1/-1;">
@@ -265,6 +265,7 @@ function renderMeetingSummaryPage() {
           </table>
         </div>
         <div class="msum-approve-footer">
+          <div class="msum-approve-meta">الرقم: م.م / ${new Date().getFullYear()} / .... <br> التاريخ: ${new Date().toLocaleDateString("en-GB")}</div>
           <div style="display:flex;align-items:center;gap:12px;">
             <label class="msum-attach-btn" style="cursor:pointer;">
               <i data-lucide="upload"></i> إرفاق ملفات
@@ -274,7 +275,6 @@ function renderMeetingSummaryPage() {
               ? `<span class="msum-attach-empty">لا يوجد مرفقات</span>`
               : `<span class="msum-attach-empty">${msumAttachments.map(d => `<a href="${base}/dashboard/documents/download/${d.id}" target="_blank" style="color:var(--p);text-decoration:underline;">${escHtmlMSum(d.file_name)}</a>`).join("، ")}</span>`}
           </div>
-          <div class="msum-approve-meta">الرقم: م.م / ${new Date().getFullYear()} / .... <br> التاريخ: ${new Date().toLocaleDateString("en-GB")}</div>
         </div>
       </div>` : ""}
 
@@ -304,13 +304,32 @@ function bindMeetingSummaryEvents() {
     rerenderMSumContent();
   });
 
-  const mark = () => { msumDirty = true; };
+  const mark = () => {
+    msumDirty = true;
+    const isLocked = !msumSelectedTaskId;
+    const btn = $("msumSubmitBtn");
+    if (btn) { btn.disabled = isLocked; btn.classList.toggle("dirty", !isLocked); }
+    const hint = document.querySelector(".msum-submit-hint");
+    if (hint) hint.hidden = true;
+  };
 
   const dateEl = $("msumDate"); if (dateEl && !allReadOnly) dateEl.addEventListener("change", e => { msumDate = e.target.value; mark(); rerenderMSumContent(); });
   const timeEl = $("msumTime"); if (timeEl && !allReadOnly) timeEl.addEventListener("change", e => { msumTime = e.target.value; mark(); rerenderMSumContent(); });
-  const locEl = $("msumLocation"); if (locEl && !allReadOnly) locEl.addEventListener("input", e => { msumLocation = e.target.value; mark(); rerenderMSumContent(); });
-  const titleEl = $("msumTitle"); if (titleEl && !allReadOnly) titleEl.addEventListener("input", e => { msumTitle = e.target.value; mark(); rerenderMSumContent(); });
-  const objEl = $("msumObjective"); if (objEl && !allReadOnly) objEl.addEventListener("input", e => { msumObjective = e.target.value; mark(); rerenderMSumContent(); });
+  const locEl = $("msumLocation");
+  if (locEl) {
+    autoGrowTextarea(locEl);
+    if (!allReadOnly) locEl.addEventListener("input", e => { msumLocation = e.target.value; mark(); autoGrowTextarea(e.target); });
+  }
+  const titleEl = $("msumTitle");
+  if (titleEl) {
+    autoGrowTextarea(titleEl);
+    if (!allReadOnly) titleEl.addEventListener("input", e => { msumTitle = e.target.value; mark(); autoGrowTextarea(e.target); });
+  }
+  const objEl = $("msumObjective");
+  if (objEl) {
+    autoGrowTextarea(objEl);
+    if (!allReadOnly) objEl.addEventListener("input", e => { msumObjective = e.target.value; mark(); autoGrowTextarea(e.target); });
+  }
 
   const addAttBtn = $("msumAddAttendanceBtn");
   if (addAttBtn) addAttBtn.addEventListener("click", () => { msumAttendance.push({ id: "new-" + Date.now(), name: "", dept: "", position: "" }); mark(); rerenderMSumContent(); });
@@ -327,10 +346,14 @@ function bindMeetingSummaryEvents() {
   document.querySelectorAll("[data-pt-del]").forEach(btn => btn.addEventListener("click", () => {
     msumSummaryPoints = msumSummaryPoints.filter(p => String(p.id) !== String(btn.dataset.ptDel)); mark(); rerenderMSumContent();
   }));
-  document.querySelectorAll("[data-pt-field]").forEach(el => el.addEventListener("input", () => {
-    const pt = msumSummaryPoints.find(p => String(p.id) === String(el.dataset.ptId));
-    if (pt) { pt[el.dataset.ptField] = el.value; mark(); rerenderMSumContent(); }
-  }));
+  document.querySelectorAll("[data-pt-field]").forEach(el => {
+    if (el.tagName === "TEXTAREA") autoGrowTextarea(el);
+    el.addEventListener("input", () => {
+      const pt = msumSummaryPoints.find(p => String(p.id) === String(el.dataset.ptId));
+      if (pt) { pt[el.dataset.ptField] = el.value; mark(); }
+      if (el.tagName === "TEXTAREA") autoGrowTextarea(el);
+    });
+  });
 
   document.querySelectorAll("[data-ap-field]").forEach(el => {
     const evt = el.tagName === "INPUT" && el.type === "date" ? "change" : "input";

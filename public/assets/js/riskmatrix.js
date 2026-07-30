@@ -16,6 +16,23 @@ function escHtmlRM(str) {
     .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
     .replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+function autoGrowTextareaRM(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = (el.scrollHeight) + "px";
+}
+
+function updateSaveBtnStateRM() {
+  const submitBtn = document.getElementById("rmSubmitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = !rmDirty || !rmSelectedTaskId;
+    submitBtn.classList.toggle("dirty", rmDirty && !!rmSelectedTaskId);
+  }
+  const hint = document.querySelector(".rm-submit-hint");
+  if (hint) hint.hidden = rmDirty;
+  const footerSaveBtn = document.getElementById("rmFooterSaveBtn");
+  if (footerSaveBtn) footerSaveBtn.disabled = !rmDirty;
+}
 function rerenderRMContent() {
   const active = document.activeElement;
   const activeId = active && active.id;
@@ -57,9 +74,9 @@ function renderRiskMatrixPage() {
   const COLS = [
     { label: "م", w: "52px", c: true },
     { label: "المخاطر" },
-    { label: "تقييم المخاطر", w: "148px" },
-    { label: "وصف الضوابط", w: "210px" },
-    { label: "نوع النشاط", w: "170px" },
+    { label: "تقييم المخاطر", w: "180px" },
+    { label: "وصف الضوابط", w: "180px" },
+    { label: "نوع النشاط", w: "180px" },
     { label: "", w: "52px", c: true },
   ];
 
@@ -89,7 +106,7 @@ function renderRiskMatrixPage() {
               <tr><td colspan="6"><div class="rm-empty"><div class="rm-empty-icon"><i data-lucide="shield-alert"></i></div><p>لا توجد مخاطر</p></div></td></tr>
             ` : rmRows.map((row, i) => {
               const rc = row.riskRating ? CLASS_COLORS[row.riskRating] : null;
-              const rowBg = row.riskRating === "عالي" ? "#fff8f8" : row.riskRating === "متوسط" ? "#fffceb" : row.riskRating === "منخفض" ? "#f0fdf6" : (i % 2 === 0 ? "#fff" : "#f6fcfe");
+              const rowBg = i % 2 === 0 ? "#fff" : "#f6fcfe";
               return `
               <tr style="background:${rowBg};">
                 <td style="text-align:center;"><span class="rm-row-num">${i + 1}</span></td>
@@ -117,16 +134,7 @@ function renderRiskMatrixPage() {
 
       ${rmRows.length > 0 ? `
       <div class="rm-footer">
-        <div class="rm-footer-stats">
-          <span class="total">الإجمالي: <strong>${rmRows.length}</strong></span>
-          ${["عالي", "متوسط", "منخفض"].map(level => {
-            const count = rmRows.filter(r => r.riskRating === level).length;
-            if (!count) return "";
-            const c = CLASS_COLORS[level];
-            return `<span class="rm-footer-stat-item" style="color:${c.text};"><span class="dot" style="background:${c.dot};"></span>${level}: ${count}</span>`;
-          }).join("")}
-        </div>
-        ${!readOnly ? `<button class="rm-footer-save-btn" id="rmFooterSaveBtn" ${!rmDirty ? "disabled" : ""}><i data-lucide="check"></i> حفظ</button>` : ""}
+        ${!readOnly ? `<button class="rm-footer-save-btn" id="rmFooterSaveBtn"><i data-lucide="check"></i> حفظ</button>` : ""}
       </div>` : ""}
     </div>
 
@@ -172,9 +180,12 @@ function bindRiskMatrixEvents() {
   });
 
   document.querySelectorAll("[data-rm-field]").forEach(el => {
+    if (el.tagName === "TEXTAREA") { autoGrowTextareaRM(el); }
     el.addEventListener("input", () => {
       const row = rmRows.find(r => String(r.id) === String(el.dataset.rmId));
-      if (row) { row[el.dataset.rmField] = el.value; rmDirty = true; rerenderRMContent(); }
+      if (row) { row[el.dataset.rmField] = el.value; rmDirty = true; }
+      if (el.tagName === "TEXTAREA") { autoGrowTextareaRM(el); updateSaveBtnStateRM(); }
+      else { rerenderRMContent(); }
     });
   });
 
@@ -196,6 +207,8 @@ function bindRiskMatrixEvents() {
     if (!rmSelectedTaskId) return;
     window.open(base + "/dashboard/pdf/risk-matrix/" + rmSelectedTaskId, "_blank");
   });
+
+  updateSaveBtnStateRM();
 }
 
 async function rmHandleSave() {
