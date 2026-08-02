@@ -71,8 +71,10 @@ async function rmLoadItems(missionId) {
 function renderRiskMatrixPage() {
   const readOnly = rmIsReadOnly();
   const locked = !rmSelectedTaskId;
+  const selectedTask = missionsForSelector.find(m => String(m.id) === String(rmSelectedTaskId)) || null;
+  const rmMissionCode = selectedTask ? selectedTask.mission_code : "—";
   const COLS = [
-    { label: "م", w: "52px", c: true },
+    { label: "م", w: "110px", c: true },
     { label: "المخاطر" },
     { label: "تقييم المخاطر", w: "180px" },
     { label: "وصف الضوابط", w: "180px" },
@@ -92,8 +94,8 @@ function renderRiskMatrixPage() {
           ${readOnly ? `<span class="rm-readonly-badge"><i data-lucide="lock" style="width:10px;height:10px;"></i> عرض فقط</span>` : ""}
         </div>
         <div style="display:flex;gap:8px;">
+          ${!readOnly ? `<button class="obs-btn-add" id="rmAddBtn"><i data-lucide="plus"></i> إضافة مخاطر</button>` : ""}
           <button class="obs-btn-pdf" id="rmExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
-          ${!readOnly ? `<button class="rm-add-btn" id="rmAddBtn"><i data-lucide="plus"></i> إضافة مخاطر</button>` : ""}
         </div>
       </div>
 
@@ -109,7 +111,7 @@ function renderRiskMatrixPage() {
               const rowBg = i % 2 === 0 ? "#fff" : "#f6fcfe";
               return `
               <tr style="background:${rowBg};">
-                <td style="text-align:center;"><span class="rm-row-num">${i + 1}</span></td>
+                <td style="text-align:center;"><span class="rm-row-num" dir="ltr" style="display:inline-block;">${rmMissionCode}</span></td>
                 <td><textarea rows="2" id="rm-${row.id}-risk" class="rm-cell-textarea ${row.risk ? "filled" : ""}" placeholder="أدخل وصف الخطر..." data-rm-field="risk" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.risk)}</textarea></td>
                 <td>
                   <div class="rm-rating-wrap">

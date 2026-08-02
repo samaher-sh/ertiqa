@@ -604,16 +604,15 @@ function renderWizPage3() {
   const s = wizP3;
   return `
   <div class="wiz-card">
-    <div class="wiz-card-head">
-      <i data-lucide="file-text"></i>
-      <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents Checklist</p></div>
+    <div class="wiz-card-head" style="justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <i data-lucide="file-text"></i>
+        <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents Checklist</p></div>
+      </div>
+      <button class="wiz-add-doc-btn" id="wizAddDocBtn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);"><i data-lucide="plus"></i> إضافة مستند</button>
     </div>
-  </div>
-
-  <div class="wiz-card">
     <div class="wiz-doc-toolbar">
       <span class="wiz-doc-count">${s.rows.length} مستند مضاف</span>
-      <button class="wiz-add-doc-btn" id="wizAddDocBtn"><i data-lucide="plus"></i> إضافة مستند</button>
     </div>
     <div class="wiz-table-wrap">
       <table class="wiz-doc-table">
@@ -666,9 +665,6 @@ function renderWizPage3() {
     </div>
     <div class="wiz-doc-footer">
       <span class="wiz-doc-footer-count">الإجمالي: <strong>${s.rows.length}</strong></span>
-      <button class="wiz-btn ${s.saved ? "wiz-btn-outline" : "wiz-btn-primary"}" id="wizSaveDocsBtn">
-        <i data-lucide="${s.saved ? "check" : "file-text"}"></i> ${s.saved ? "تم الحفظ" : "حفظ القائمة"}
-      </button>
     </div>
   </div>
   `;
@@ -702,8 +698,6 @@ function bindWizPage3() {
     });
   });
 
-  const saveBtn = document.getElementById("wizSaveDocsBtn");
-  if (saveBtn) saveBtn.addEventListener("click", () => { s.saved = true; rerenderWizardContent(); });
 }
 
 /* ═══ تمدد تلقائي للـ textarea بدل ظهور شريط تمرير داخلي ═══ */
