@@ -343,6 +343,7 @@ function renderWizPage1() {
       <div class="wiz-card-head">
         <i data-lucide="file-text"></i>
         <div><h2>نموذج الخطاب الرسمي</h2><p>يتم ملؤه تلقائياً من النموذج</p></div>
+        <button type="button" class="obs-btn-pdf" id="wizP1ExportBtn" style="margin-right:auto;"><i data-lucide="file-text"></i> تصدير PDF</button>
       </div>
       <div class="wiz-letter-scroll">
         <div class="wiz-paper">
@@ -369,22 +370,21 @@ function renderWizPage1() {
               <mark class="wiz-mark small">${escHtml(s.year)}</mark>.
             </p>
             <p class="wiz-p">عليه نأمل التكرم بتوجيه من يلزم للعمل على التنسيق خلال مدة لا تتجاوز <strong>(7) أيام عمل</strong> من تاريخ استلام هذا الإشعار.</p>
-            ${s.procedure ? `
-            <div class="wiz-procedure-box">
+            <div class="wiz-procedure-box" id="procedureBox" ${s.procedure ? "" : "hidden"}>
               <div class="wiz-procedure-head"><i data-lucide="clipboard-list"></i><span>المراد مناقشته في الاجتماع</span></div>
-              <p class="wiz-procedure-body">${escHtml(s.procedure)}</p>
-            </div>` : ""}
+              <p class="wiz-procedure-body" id="procedureText">${escHtml(s.procedure)}</p>
+            </div>
             <p class="wiz-p">كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة حتى يتسنى لنا البدء بعملية المراجعة.</p>
             <p class="wiz-p">إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة.</p>
             <p class="wiz-p">حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
-            <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small">${escHtml(s.reviewer || "...............")}</mark></p>
+            <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small" id="mReviewer">${escHtml(s.reviewer || "...............")}</mark></p>
             <p class="wiz-p" style="margin-bottom:2px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
             <div style="display:flex;flex-direction:column;gap:8px;">
-              <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.email || "........................")}</span></div>
-              <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.phone || "........................")}</span></div>
+              <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" id="mEmail" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.email || "........................")}</span></div>
+              <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" id="mPhone" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.phone || "........................")}</span></div>
             </div>
             <p class="wiz-p" style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
-            ${s.director ? `<p class="wiz-p" style="font-weight:800;color:var(--pd);">${escHtml(s.director)}</p>` : ""}
+            <p class="wiz-p" id="mDirector" style="font-weight:800;color:var(--pd);" ${s.director ? "" : "hidden"}>${escHtml(s.director)}</p>
             <p class="wiz-p" style="font-weight:600;">وتقبلوا وافر التحية والتقدير،،.</p>
           </div>
           <div class="wiz-paper-footer-bar"></div>
@@ -396,6 +396,8 @@ function renderWizPage1() {
 }
 
 function bindWizPage1() {
+  const exportBtn = document.getElementById("wizP1ExportBtn");
+  if (exportBtn) exportBtn.addEventListener("click", () => window.print());
   const $ = id => document.getElementById(id);
 
   $("p1Dept").addEventListener("change", e => {
@@ -417,25 +419,31 @@ function bindWizPage1() {
   });
   $("p1Procedure").addEventListener("input", e => {
     wizP1.procedure = e.target.value;
-    rerenderWizardContent();
+    const box = document.getElementById("procedureBox");
+    const txt = document.getElementById("procedureText");
+    if (box && txt) { box.hidden = !e.target.value.trim(); txt.textContent = e.target.value; }
   });
   $("p1Reviewer").addEventListener("input", e => {
     wizP1.reviewer = e.target.value;
-    rerenderWizardContent();
+    const el = document.getElementById("mReviewer");
+    if (el) el.textContent = e.target.value || "...............";
   });
   $("p1Email").addEventListener("input", e => {
     wizP1.email = e.target.value;
-    rerenderWizardContent();
+    const el = document.getElementById("mEmail");
+    if (el) el.textContent = e.target.value || "........................";
   });
   $("p1Phone").addEventListener("input", e => {
     const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
     e.target.value = digitsOnly;
     wizP1.phone = digitsOnly;
-    rerenderWizardContent();
+    const el = document.getElementById("mPhone");
+    if (el) el.textContent = digitsOnly || "........................";
   });
   $("p1Director").addEventListener("input", e => {
     wizP1.director = e.target.value;
-    rerenderWizardContent();
+    const el = document.getElementById("mDirector");
+    if (el) { el.hidden = !e.target.value.trim(); el.textContent = e.target.value; }
   });
 }
 
@@ -456,6 +464,7 @@ function renderWizPage2() {
       <i data-lucide="file-text"></i>
       <h2 style="margin:0;">اتفاقية مستوى الخدمة</h2>
       <p style="margin:2px 0 0 6px;">— Service Level Agreement</p>
+      <button type="button" class="obs-btn-pdf" id="wizP2ExportBtn" style="margin-right:auto;"><i data-lucide="file-text"></i> تصدير PDF</button>
     </div>
     <div class="wiz-sla-grid">
       <div class="wiz-field">
@@ -485,8 +494,8 @@ function renderWizPage2() {
           </div>
           ${active ? `<div class="wiz-channel-body">
             ${c.type === "textarea"
-              ? `<textarea id="wizCh-${c.key}" rows="3" class="wiz-textarea" style="background:#fff;border:1px solid var(--pb);" data-ch-val="${c.key}" placeholder="${c.ph}">${escHtml(s.chVals[c.key])}</textarea>`
-              : `<input id="wizCh-${c.key}" type="${c.type}" ${c.type === "email" || c.type === "tel" ? 'dir="ltr" style="background:#fff;border:1px solid var(--pb);text-align:left;"' : 'style="background:#fff;border:1px solid var(--pb);"'} ${c.type === "tel" ? 'inputmode="numeric"' : ""} data-ch-val="${c.key}" placeholder="${c.ph}" value="${escHtml(s.chVals[c.key])}">`}
+              ? `<textarea id="wizCh-${c.key}" rows="3" class="wiz-textarea plain" data-ch-val="${c.key}" placeholder="${c.ph}">${escHtml(s.chVals[c.key])}</textarea>`
+              : `<input id="wizCh-${c.key}" type="${c.type}" class="wiz-input plain" ${c.type === "email" || c.type === "tel" ? 'dir="ltr" style="text-align:left;"' : ""} ${c.type === "tel" ? 'inputmode="numeric" maxlength="10"' : ""} data-ch-val="${c.key}" placeholder="${c.ph}" value="${escHtml(s.chVals[c.key])}">`}
           </div>` : ""}
         </div>`;
       }).join("")}
@@ -551,6 +560,8 @@ function renderWizPage2() {
 }
 
 function bindWizPage2() {
+  const exportBtn2 = document.getElementById("wizP2ExportBtn");
+  if (exportBtn2) exportBtn2.addEventListener("click", () => window.print());
   const $ = id => document.getElementById(id);
   const s = wizP2;
 
@@ -566,13 +577,15 @@ function bindWizPage2() {
     });
   });
   document.querySelectorAll("[data-ch-val]").forEach(el => {
+    if (el.tagName === "TEXTAREA") autoGrowTextarea(el);
     el.addEventListener("input", () => {
       let v = el.value;
       if (el.dataset.chVal === "phone") {
-        v = v.replace(/[^0-9+\-\s]/g, "");
+        v = v.replace(/[^0-9]/g, "").slice(0, 10);
         el.value = v;
       }
       s.chVals[el.dataset.chVal] = v;
+      if (el.tagName === "TEXTAREA") autoGrowTextarea(el);
     });
   });
 
