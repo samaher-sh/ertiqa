@@ -75,42 +75,6 @@ async function msumLoadData(missionId) {
 }
 
 /* ============================================================
-   لوحة توقيع بسيطة (Canvas)
-   ============================================================ */
-function attachSignaturePad(canvasId, wrapId, onSign) {
-  const canvas = document.getElementById(canvasId);
-  const wrap = document.getElementById(wrapId);
-  if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width; canvas.height = rect.height;
-  const ctx = canvas.getContext("2d");
-  ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#152c33";
-  let drawing = false, hasSig = false;
-
-  const pos = e => {
-    const r = canvas.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    return { x: t.clientX - r.left, y: t.clientY - r.top };
-  };
-  const start = e => { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-  const draw = e => {
-    if (!drawing) return;
-    if (e.cancelable) e.preventDefault();
-    const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke();
-    if (!hasSig) { hasSig = true; if (wrap) wrap.classList.add("has-sig"); }
-  };
-  const end = () => { if (!drawing) return; drawing = false; if (hasSig) onSign(canvas.toDataURL()); };
-
-  canvas.addEventListener("mousedown", start);
-  canvas.addEventListener("mousemove", draw);
-  canvas.addEventListener("mouseup", end);
-  canvas.addEventListener("mouseleave", end);
-  canvas.addEventListener("touchstart", start);
-  canvas.addEventListener("touchmove", draw);
-  canvas.addEventListener("touchend", end);
-}
-
-/* ============================================================
    الحاوية العامة
    ============================================================ */
 function msumVisibleMissions() {
@@ -137,8 +101,15 @@ function renderMeetingSummaryPage() {
           <i data-lucide="file-text"></i>
           <div><h2>ملخص الاجتماع</h2><p>Meeting Summary</p></div>
           ${allReadOnly ? `<span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>` : ""}
-          <button class="obs-btn-pdf" id="msumExportBtn" style="margin-right:auto;" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
+          <div style="display:flex;gap:8px;margin-right:auto;">
+            ${!allReadOnly ? `<label class="msum-attach-btn" style="cursor:pointer;box-shadow:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);">
+              <i data-lucide="upload"></i> إرفاق ملفات
+              <input type="file" id="msumAttachInput" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" ${locked ? "disabled" : ""}>
+            </label>` : ""}
+            <button class="obs-btn-pdf" id="msumExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
+          </div>
         </div>
+        ${msumAttachments.length > 0 ? `<div style="padding:8px 24px 0;"><span class="msum-attach-empty">${msumAttachments.map(d => `<a href="${base}/dashboard/documents/download/${d.id}" target="_blank" style="color:var(--p);text-decoration:underline;">${escHtmlMSum(d.file_name)}</a>`).join("، ")}</span></div>` : ""}
         ${hrUser ? `<div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div>` : ""}
 
         <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -244,37 +215,18 @@ function renderMeetingSummaryPage() {
         <div class="wiz-card-head"><i data-lucide="check"></i><span style="color:#fff;font-weight:700;font-size:14px;">الاعتماد</span></div>
         <div class="msum-table-wrap">
           <table class="msum-table">
-            <thead><tr><th>البيان</th><th>الاسم</th><th>الوظيفة</th><th class="c" style="width:120px;">التوقيع</th><th style="width:140px;">التاريخ</th></tr></thead>
+            <thead><tr><th>البيان</th><th>الاسم</th><th>الوظيفة</th><th style="width:140px;">التاريخ</th></tr></thead>
             <tbody>
               ${msumApprovals.map(row => `
                 <tr>
                   <td><input type="text" id="ap-${row.id}-statement" class="msum-plain-input" data-ap-field="statement" data-ap-id="${row.id}" value="${escHtmlMSum(row.statement)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td><input type="text" id="ap-${row.id}-name" class="msum-plain-input" placeholder="الاسم" data-ap-field="name" data-ap-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td><input type="text" id="ap-${row.id}-position" class="msum-plain-input" data-ap-field="position" data-ap-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td>
-                    ${!allReadOnly ? (
-                      row.signature
-                        ? `<div class="msum-sig-wrap has-sig"><img src="${row.signature}" alt="توقيع" style="width:100%;height:100%;object-fit:contain;"><button class="msum-sig-clear" data-sig-clear="${row.id}"><i data-lucide="x" style="width:12px;height:12px;"></i></button></div>`
-                        : `<div class="msum-sig-wrap" id="sigWrap-${row.id}"><canvas id="sigCanvas-${row.id}"></canvas><span class="msum-sig-hint">وقّع هنا</span></div>`
-                    ) : `<div class="msum-sig-readonly">—</div>`}
-                  </td>
                   <td><input type="date" id="ap-${row.id}-date" class="msum-plain-input" data-ap-field="date" data-ap-id="${row.id}" value="${row.date}" ${allReadOnly ? "readonly" : ""} onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
                 </tr>
               `).join("")}
             </tbody>
           </table>
-        </div>
-        <div class="msum-approve-footer">
-          <div class="msum-approve-meta">الرقم: م.م / ${new Date().getFullYear()} / .... <br> التاريخ: ${new Date().toLocaleDateString("en-GB")}</div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <label class="msum-attach-btn" style="cursor:pointer;">
-              <i data-lucide="upload"></i> إرفاق ملفات
-              <input type="file" id="msumAttachInput" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" ${locked ? "disabled" : ""}>
-            </label>
-            ${msumAttachments.length === 0
-              ? `<span class="msum-attach-empty">لا يوجد مرفقات</span>`
-              : `<span class="msum-attach-empty">${msumAttachments.map(d => `<a href="${base}/dashboard/documents/download/${d.id}" target="_blank" style="color:var(--p);text-decoration:underline;">${escHtmlMSum(d.file_name)}</a>`).join("، ")}</span>`}
-          </div>
         </div>
       </div>` : ""}
 
@@ -362,18 +314,6 @@ function bindMeetingSummaryEvents() {
       if (row) { row[el.dataset.apField] = el.value; mark(); rerenderMSumContent(); }
     });
   });
-  document.querySelectorAll("[data-sig-clear]").forEach(btn => btn.addEventListener("click", () => {
-    const row = msumApprovals.find(r => String(r.id) === String(btn.dataset.sigClear));
-    if (row) { row.signature = ""; mark(); rerenderMSumContent(); }
-  }));
-  msumApprovals.forEach(row => {
-    if (!row.signature && !allReadOnly) {
-      attachSignaturePad(`sigCanvas-${row.id}`, `sigWrap-${row.id}`, dataUrl => {
-        row.signature = dataUrl; mark(); rerenderMSumContent();
-      });
-    }
-  });
-
   const attachInput = $("msumAttachInput");
   if (attachInput) attachInput.addEventListener("change", async () => {
     if (!msumSelectedTaskId || !attachInput.files.length) return;

@@ -26,7 +26,7 @@
 .obs-btn-add i{ width:14px; height:14px; }
 .obs-readonly-badge{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:rgba(255,255,255,.12); color:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.2); }
 .obs-readonly-badge i{ width:10px; height:10px; }
-.obs-btn-pdf{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:12px; font-weight:700; background:var(--p); color:#fff; border:1.5px solid var(--pd); }
+.obs-btn-pdf{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:12px; font-weight:700; background:var(--p); color:#fff; border:1.5px solid rgba(255,255,255,.45); }
 .obs-btn-pdf i{ width:14px; height:14px; }
 
 /* ===== Filters bar ===== */
@@ -98,7 +98,7 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 .obs-risk-pick-btn.sel-عالي{ background:#fee2e2; color:#b91c1c; border-color:#fca5a5; box-shadow:0 0 0 2px rgba(239,68,68,.15); }
 .obs-risk-pick-btn.sel-متوسط{ background:#fef9c3; color:#a16207; border-color:#fde047; box-shadow:0 0 0 2px rgba(234,179,8,.15); }
 .obs-risk-pick-btn.sel-منخفض{ background:#dcfce7; color:#15803d; border-color:#86efac; box-shadow:0 0 0 2px rgba(34,197,94,.15); }
-.obs-attach-row{ display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap; }
+.obs-attach-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; }
 .obs-attach-btn{ display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); }
 .obs-attach-btn i{ width:15px; height:15px; }
 .obs-attach-list{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }

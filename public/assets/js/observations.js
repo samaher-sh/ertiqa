@@ -192,13 +192,13 @@ function renderLinkedTaskSelector(value, selectId, list) {
       <i data-lucide="clipboard-list" style="color:${value ? "#fff" : "#b45309"};"></i>
       <p class="obs-linked-title" style="color:${value ? "#fff" : "#92400e"};">المهمة / الإدارة المرتبطة</p>
       ${!value ? '<span class="obs-linked-badge-req">مطلوب</span>' : ""}
-      ${value && selected ? `<span class="obs-linked-badge-sel">${escHtml2(selected.mission_code)} · ${escHtml2(selected.target_department_name || "")}</span>` : ""}
+      ${value && selected ? `<span class="obs-linked-badge-sel" dir="ltr">${escHtml2(selected.mission_code)}</span>` : ""}
     </div>
     <div class="obs-linked-body">
       <label class="wiz-label">اختر المهمة / الإدارة المرتبطة <span class="wiz-req">*</span></label>
       <select id="${selectId}" class="wiz-select ${value ? "filled" : ""}" style="${!value ? "border-color:#fcd34d;background:#fffbeb;" : ""}">
         <option value="">— اختر المهمة المرتبطة —</option>
-        ${missions.map(m => `<option value="${m.id}" ${String(value) === String(m.id) ? "selected" : ""}>${escHtml2(m.mission_code)} · ${escHtml2(m.target_department_name || "")} (${m.year})</option>`).join("")}
+        ${missions.map(m => `<option value="${m.id}" ${String(value) === String(m.id) ? "selected" : ""}>${escHtml2(m.mission_code)} — ${escHtml2(m.target_department_name || "")} (${m.year})</option>`).join("")}
       </select>
       ${!value ? '<p class="wiz-error-text" style="color:#b45309;">يرجى تحديد المهمة المرتبطة قبل تعبئة النموذج</p>' : ""}
     </div>
@@ -258,14 +258,14 @@ function renderObsListMode() {
             ${obsHasFilters() ? '<span class="obs-filters-badge">فلاتر نشطة</span>' : ""}
           </div>
           <div class="obs-header-actions">
-            ${!readOnly ? `<button class="obs-btn-add" id="obsNewBtn"><i data-lucide="plus"></i> رصد ملاحظة</button>` : `
+            ${!readOnly ? `<button class="obs-btn-add" id="obsNewBtn"><i data-lucide="plus"></i> إضافة ملاحظة</button>` : `
               <span class="obs-readonly-badge"><i data-lucide="lock"></i> ${isObsHrUser() ? "ملاحظات إدارتك — عرض فقط" : "عرض فقط"}</span>`}
             <button class="obs-btn-pdf" id="obsExportBtn"><i data-lucide="file-text"></i> تصدير PDF</button>
           </div>
         </div>
 
+        ${isAuditMember ? "" : `
         <div class="obs-filters-bar">
-          ${isAuditMember ? "" : `
           <div class="obs-filter-field grow-2">
             <span class="obs-filter-label">بحث</span>
             <div class="obs-search-wrap">
@@ -279,7 +279,7 @@ function renderObsListMode() {
               <option value="">كل الإدارات</option>
               ${depts.map(d => `<option value="${escHtml2(d)}" ${obsFilterDept === d ? "selected" : ""}>${escHtml2(d)}</option>`).join("")}
             </select>
-          </div>`}
+          </div>
           <div class="obs-filter-field">
             <span class="obs-filter-label">مستوى الخطر</span>
             <div class="obs-risk-toggle">
@@ -309,7 +309,7 @@ function renderObsListMode() {
               <input id="obsAdvTo" type="date" class="wiz-input" value="${obsAdvDateTo}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
             </div>
           </div>` : ""}
-        </div>
+        </div>` }
 
         ${obsLoading ? `<div class="obs-empty"><p class="main">جارِ التحميل...</p></div>` :
           filteredObs.length === 0 ? `
@@ -585,7 +585,7 @@ function renderObsForm() {
     <div class="obs-form-head">
       <div class="obs-form-head-left">
         <button class="obs-form-back" id="obsFormBack"><i data-lucide="chevron-right"></i></button>
-        <h3 class="obs-form-title">${obsView === "new" ? "رصد ملاحظة جديدة" : "تعديل الملاحظة"}</h3>
+        <h3 class="obs-form-title">${obsView === "new" ? "إضافة ملاحظة جديدة" : "تعديل الملاحظة"}</h3>
       </div>
       <button class="obs-form-save" id="obsFormSave"><i data-lucide="check"></i> حفظ واعتماد</button>
     </div>
@@ -627,15 +627,15 @@ function renderObsForm() {
           <textarea id="obsStandard" rows="4" class="wiz-textarea plain" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escHtml2(d.standard)}</textarea>
         </div>
         <div class="wiz-field">
-          <label class="wiz-label">السبب</label>
+          <label class="wiz-label">السبب <span class="wiz-req">*</span></label>
           <textarea id="obsReason" rows="3" class="wiz-textarea plain" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escHtml2(d.reason)}</textarea>
         </div>
         <div class="wiz-field">
-          <label class="wiz-label">الأثر</label>
+          <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
           <textarea id="obsImpact" rows="3" class="wiz-textarea plain" placeholder="الأثر المالي أو التشغيلي المترتب...">${escHtml2(d.impact)}</textarea>
         </div>
         <div class="wiz-field" style="grid-column:1/-1;">
-          <label class="wiz-label">التوصيات</label>
+          <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
           <textarea id="obsRecommendations" rows="2" class="wiz-textarea plain" placeholder="الإجراءات التصحيحية المقترحة...">${escHtml2(d.recommendations)}</textarea>
         </div>
       </div>
@@ -746,7 +746,7 @@ function renderSubObservations() {
         <div class="obs-sub-body">
           <div class="obs-grid-4">
             <div class="wiz-field">
-              <label class="wiz-label">تاريخ المراجعة</label>
+              <label class="wiz-label">تاريخ المراجعة <span class="wiz-req">*</span></label>
               <input type="date" id="sub-${item.id}-date" class="wiz-input plain" data-sub-field="date" data-sub-id="${item.id}" value="${item.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
             </div>
             <div class="wiz-field">
@@ -757,7 +757,7 @@ function renderSubObservations() {
               </select>
             </div>
             <div class="wiz-field">
-              <label class="wiz-label">عنوان الملاحظة</label>
+              <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
               <input type="text" id="sub-${item.id}-title" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escHtml2(item.title)}">
             </div>
             <div class="wiz-field">
@@ -780,15 +780,15 @@ function renderSubObservations() {
               <textarea rows="4" id="sub-${item.id}-standard" class="wiz-textarea plain" data-sub-field="standard" data-sub-id="${item.id}" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escHtml2(item.standard)}</textarea>
             </div>
             <div class="wiz-field">
-              <label class="wiz-label">السبب</label>
+              <label class="wiz-label">السبب <span class="wiz-req">*</span></label>
               <textarea rows="3" id="sub-${item.id}-reason" class="wiz-textarea plain" data-sub-field="reason" data-sub-id="${item.id}" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escHtml2(item.reason)}</textarea>
             </div>
             <div class="wiz-field">
-              <label class="wiz-label">الأثر</label>
+              <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
               <textarea rows="3" id="sub-${item.id}-impact" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escHtml2(item.impact)}</textarea>
             </div>
             <div class="wiz-field" style="grid-column:1/-1;">
-              <label class="wiz-label">التوصيات</label>
+              <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
               <textarea rows="2" id="sub-${item.id}-recommendations" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escHtml2(item.recommendations)}</textarea>
             </div>
           </div>
@@ -796,6 +796,13 @@ function renderSubObservations() {
           <div class="obs-divider"></div>
 
           <div class="obs-attach-row">
+            <div class="wiz-field" style="gap:8px;">
+              <label class="wiz-label">تضاف للتقرير؟</label>
+              <div class="obs-radio-group">
+                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === true ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="true"> نعم</label>
+                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === false ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="false"> لا</label>
+              </div>
+            </div>
             <div>
               <input type="file" id="obsSubFile-${item.id}" style="display:none;">
               <button class="obs-attach-btn" data-sub-attach-btn="${item.id}"><i data-lucide="paperclip"></i> إرفاق</button>
@@ -809,13 +816,6 @@ function renderSubObservations() {
                     </div>
                   `).join("")}
                 </div>` : ""}
-            </div>
-            <div class="wiz-field" style="gap:8px;">
-              <label class="wiz-label">تضاف للتقرير؟</label>
-              <div class="obs-radio-group">
-                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === true ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="true"> نعم</label>
-                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === false ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="false"> لا</label>
-              </div>
             </div>
           </div>
         </div>` : ""}

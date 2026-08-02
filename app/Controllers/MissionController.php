@@ -27,7 +27,7 @@ class MissionController extends BaseController
             'reviewer_name'  => 'required|min_length[3]',
             'reviewer_email' => 'required|valid_email',
             'reviewer_phone' => 'required|min_length[8]',
-            'director_name'  => 'required|min_length[3]',
+            'director_name'  => 'permit_empty|min_length[3]',
         ];
 
         if (!$this->validateData($data ?? [], $rules)) {
@@ -95,7 +95,7 @@ class MissionController extends BaseController
             'reviewer_name'        => $data['reviewer_name'],
             'reviewer_email'       => $data['reviewer_email'],
             'reviewer_phone'       => $data['reviewer_phone'],
-            'director_name'        => $data['director_name'],
+            'director_name'        => $data['director_name'] ?? null,
             'current_stage'        => 1,
             'status'               => 'active',
             'procedure_note'       => $data['procedure'],

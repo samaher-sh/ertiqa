@@ -95,7 +95,7 @@ function renderFRTable(reports) {
 
   const hasFilter = !!(frFilterYear || frFilterStatus || frFilterDept || frFilterTargetDept);
   const activeCount = [frFilterYear, frFilterStatus, frFilterDept, frFilterTargetDept].filter(Boolean).length;
-  const COLS = ["ID المهمة", "الإدارة", "الإدارة المستهدفة", "السنة", "التاريخ", "الحالة", "إجراء"];
+  const COLS = ["رقم المهمة", "الإدارة", "الإدارة المستهدفة", "السنة", "التاريخ", "الحالة", ""];
 
   return `
   <div class="fr-header-card">
@@ -107,20 +107,18 @@ function renderFRTable(reports) {
       </div>
       <span class="fr-count-badge">${frLoading ? "..." : filtered.length + " تقرير"}</span>
       <div class="fr-header-actions">
+        <button class="fr-filters-icon-btn" id="frFiltersToggle" title="الفلاتر">
+          <i data-lucide="filter"></i>
+          ${activeCount > 0 ? `<span class="fr-filter-count">${activeCount}</span>` : ""}
+        </button>
         ${!isAuditHead && !hrUser ? `<button class="fr-create-btn" id="frCreateBtn"><i data-lucide="plus"></i> إنشاء تقرير</button>` : ""}
         ${hrUser ? `<span class="fr-readonly-badge"><i data-lucide="lock" style="width:9px;height:9px;"></i> عرض فقط</span>` : ""}
       </div>
     </div>
   </div>
 
-  <div class="fr-filters-acc ${frFiltersOpen ? "open" : "closed"}">
-    <button class="fr-filters-toggle" id="frFiltersToggle">
-      <i class="icon" data-lucide="filter"></i>
-      <span class="lbl">الفلاتر</span>
-      ${activeCount > 0 ? `<span class="fr-filter-count">${activeCount}</span>` : ""}
-      ${hasFilter ? `<button class="fr-filter-clear" id="frClearFilters" onclick="event.stopPropagation();"><i data-lucide="x" style="width:9px;height:9px;"></i> مسح</button>` : ""}
-      <i class="chev" data-lucide="chevron-down"></i>
-    </button>
+  <div class="fr-filters-acc ${frFiltersOpen ? "open" : "closed"}" ${frFiltersOpen ? "" : "hidden"}>
+    ${hasFilter ? `<div style="display:flex;justify-content:flex-end;padding:6px 16px 0;"><button class="fr-filter-clear" id="frClearFilters"><i data-lucide="x" style="width:9px;height:9px;"></i> مسح الفلاتر</button></div>` : ""}
     ${frFiltersOpen ? `
     <div class="fr-filters-body">
       <select id="frFilterYear" class="wiz-select ${frFilterYear ? "filled" : ""}">
@@ -157,7 +155,7 @@ function renderFRTable(reports) {
               const statusLabel = approved ? "معتمد" : (isPresident && r.status === "pending_signatures" ? "بانتظار الاعتماد" : frStatusLabel(r.status));
               return `
               <tr style="background:${i % 2 === 0 ? "#fff" : "#f5fafd"};">
-                <td><span class="fr-taskid-pill">${escHtmlFR(r.mission_code)}</span></td>
+                <td><span class="fr-taskid-pill" dir="ltr">${escHtmlFR(r.mission_code)}</span></td>
                 <td style="font-size:12px;font-weight:600;color:#374151;">${escHtmlFR(r.audit_dept_name)}</td>
                 <td style="font-size:12px;color:#6b7280;">${escHtmlFR(r.target_dept_name)}</td>
                 <td style="font-size:12px;color:#6b7280;">${r.year}</td>
@@ -195,7 +193,7 @@ function bindFRTableEvents() {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", e => {
       if (id === "frFilterYear") frFilterYear = e.target.value;
-      if (id === "frFilterDept") frFilterDept = e.target.value;
+      if (id === "frFilterDept") { frFilterDept = e.target.value; frFilterTargetDept = ""; }
       if (id === "frFilterTargetDept") frFilterTargetDept = e.target.value;
       if (id === "frFilterStatus") frFilterStatus = e.target.value;
       rerenderFRContent();
