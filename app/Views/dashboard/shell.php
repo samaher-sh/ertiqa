@@ -112,6 +112,34 @@
 <!-- Toast container -->
 <div id="toastContainer" class="toast-container"></div>
 
+<!-- قوالب HTML الثابتة للصفحات (تُستنسخ وتُملأ ديناميكيًا من ملفات JS بدل بناء HTML كامل
+     داخل template strings JS مباشرة) -->
+<template id="tpl-notifications">
+  <div class="notif-card">
+    <div class="notif-head">
+      <i data-lucide="bell"></i>
+      <div><h2>الإخطارات</h2><p>Notifications</p></div>
+      <span class="notif-unread-badge" data-slot="badge" hidden></span>
+    </div>
+    <div class="notif-list" data-slot="list"></div>
+  </div>
+</template>
+
+<template id="tpl-notif-item">
+  <div class="notif-item" data-notif-id="">
+    <div class="notif-dot-wrap"><span class="notif-dot"></span></div>
+    <div class="notif-icon"><i data-lucide="bell"></i></div>
+    <div class="notif-body">
+      <div class="notif-title-row">
+        <p class="notif-title" data-slot="title"></p>
+        <span class="notif-type-tag" data-slot="type"></span>
+      </div>
+      <p class="notif-text" data-slot="body"></p>
+      <span class="notif-time" dir="ltr" data-slot="time"></span>
+    </div>
+  </div>
+</template>
+
 <script>
   window.APP = { baseUrl: "<?= rtrim(base_url(), '/') ?>" };
   // مُعرَّفة هنا مرة وحدة فقط - كل ملفات الصفحات (wizard.js, riskmatrix.js, ...) تستخدمها مباشرة
