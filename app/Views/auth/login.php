@@ -69,6 +69,7 @@
     <p class="footer-text">© <span id="currentYear"></span> مدينة الملك عبدالله الطبية — جميع الحقوق محفوظة</p>
   </div>
 
+  <script src="<?= base_url('assets/js/utils.js') ?>"></script>
   <script src="<?= base_url('assets/js/shared.js') ?>"></script>
 </body>
 </html>

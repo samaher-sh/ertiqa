@@ -11,11 +11,6 @@ let rmLoading = false;
 
 const rmIsReadOnly = () => isHrCoordinator || isAuditHead;
 
-function escHtmlRM(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function autoGrowTextareaRM(el) {
   if (!el) return;
   el.style.height = "auto";
@@ -53,8 +48,7 @@ function rerenderRMContent() {
 async function rmLoadItems(missionId) {
   rmLoading = true;
   try {
-    const res = await fetch(base + "/dashboard/risk-matrix/api/items?mission_id=" + missionId);
-    const data = await res.json();
+    const data = await apiGet(base + "/dashboard/risk-matrix/api/items?mission_id=" + missionId);
     rmRows = (data.items || []).map(it => ({
       id: it.id, risk: it.risk || "", riskRating: it.risk_rating || "",
       controls: it.controls || "", activity: it.activity_type || "",
@@ -108,7 +102,7 @@ function renderRiskMatrixPage() {
               return `
               <tr style="background:${rowBg};">
                 <td style="text-align:center;"><span class="rm-row-num">${i + 1}</span></td>
-                <td><textarea rows="2" id="rm-${row.id}-risk" class="rm-cell-textarea ${row.risk ? "filled" : ""}" placeholder="أدخل وصف الخطر..." data-rm-field="risk" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.risk)}</textarea></td>
+                <td><textarea rows="2" id="rm-${row.id}-risk" class="rm-cell-textarea ${row.risk ? "filled" : ""}" placeholder="أدخل وصف الخطر..." data-rm-field="risk" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escapeHtml(row.risk)}</textarea></td>
                 <td>
                   <div class="rm-rating-wrap">
                     <select class="rm-rating-select ${row.riskRating ? "set" : ""}" data-rm-rating="${row.id}" ${readOnly ? "disabled" : ""}
@@ -120,8 +114,8 @@ function renderRiskMatrixPage() {
                     </select>
                   </div>
                 </td>
-                <td><textarea rows="2" id="rm-${row.id}-controls" class="rm-cell-textarea ${row.controls ? "filled" : ""}" placeholder="وصف الضوابط الرقابية..." data-rm-field="controls" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.controls)}</textarea></td>
-                <td><input type="text" id="rm-${row.id}-activity" class="rm-cell-input ${row.activity ? "filled" : ""}" placeholder="نوع النشاط..." data-rm-field="activity" data-rm-id="${row.id}" value="${escHtmlRM(row.activity)}" ${readOnly ? "readonly" : ""}></td>
+                <td><textarea rows="2" id="rm-${row.id}-controls" class="rm-cell-textarea ${row.controls ? "filled" : ""}" placeholder="وصف الضوابط الرقابية..." data-rm-field="controls" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escapeHtml(row.controls)}</textarea></td>
+                <td><input type="text" id="rm-${row.id}-activity" class="rm-cell-input ${row.activity ? "filled" : ""}" placeholder="نوع النشاط..." data-rm-field="activity" data-rm-id="${row.id}" value="${escapeHtml(row.activity)}" ${readOnly ? "readonly" : ""}></td>
                 <td style="text-align:center;">${!readOnly ? `<button class="rm-del-btn" data-rm-del="${row.id}"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>` : ""}</td>
               </tr>`;
             }).join("")}
@@ -203,16 +197,10 @@ function bindRiskMatrixEvents() {
 async function rmHandleSave() {
   if (!rmSelectedTaskId) return;
   try {
-    const res = await fetch(base + "/dashboard/risk-matrix/api/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mission_id: rmSelectedTaskId,
-        rows: rmRows.map(r => ({ risk: r.risk, risk_rating: r.riskRating, controls: r.controls, activity_type: r.activity })),
-        [csrfName()]: csrfValue(),
-      }),
+    const data = await apiPost(base + "/dashboard/risk-matrix/api/save", {
+      mission_id: rmSelectedTaskId,
+      rows: rmRows.map(r => ({ risk: r.risk, risk_rating: r.riskRating, controls: r.controls, activity_type: r.activity })),
     });
-    const data = await res.json();
     if (!data.success) {
       showToast(data.message || "تعذّر الحفظ", "error");
       return;

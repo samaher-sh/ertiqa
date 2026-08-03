@@ -7,8 +7,7 @@ let notifLoading = false;
 async function loadNotifications() {
   notifLoading = true;
   try {
-    const res = await fetch(base + "/dashboard/notifications/api/list");
-    const data = await res.json();
+    const data = await apiGet(base + "/dashboard/notifications/api/list");
     notifItems = data.notifications || [];
   } catch (e) {
     notifItems = [];
@@ -36,11 +35,11 @@ function renderNotificationsPage() {
             <div class="notif-icon"><i data-lucide="bell"></i></div>
             <div class="notif-body">
               <div class="notif-title-row">
-                <p class="notif-title">${escHtmlNotif(n.title)}</p>
-                <span class="notif-type-tag">${escHtmlNotif(n.type)}</span>
+                <p class="notif-title">${escapeHtml(n.title)}</p>
+                <span class="notif-type-tag">${escapeHtml(n.type)}</span>
               </div>
-              <p class="notif-text">${escHtmlNotif(n.body)}</p>
-              <span class="notif-time" dir="ltr">${escHtmlNotif(n.created_at)}</span>
+              <p class="notif-text">${escapeHtml(n.body)}</p>
+              <span class="notif-time" dir="ltr">${escapeHtml(n.created_at)}</span>
             </div>
           </div>
         `).join("")}
@@ -57,11 +56,7 @@ function bindNotificationsEvents() {
       n.is_read = 1;
       rerenderNotifContent();
       try {
-        await fetch(base + "/dashboard/notifications/api/mark-read/" + id, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ [csrfName()]: csrfValue() }),
-        });
+        await apiPost(base + "/dashboard/notifications/api/mark-read/" + id, {});
       } catch (e) {}
     });
   });
@@ -72,8 +67,4 @@ function rerenderNotifContent() {
   el.innerHTML = renderNotificationsPage();
   bindNotificationsEvents();
   lucide.createIcons();
-}
-
-function escHtmlNotif(str) {
-  return String(str == null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

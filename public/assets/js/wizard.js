@@ -12,8 +12,7 @@ let wizDataLoaded = false;
 async function initWizardData() {
   if (wizDataLoaded) return;
   try {
-    const res = await fetch(base + "/api/departments");
-    const data = await res.json();
+    const data = await apiGet(base + "/api/departments");
     WIZ_MAIN_DEPTS = data.main || [];
     WIZ_SUBS_BY_PARENT = data.subs_by_parent || {};
     wizDataLoaded = true;
@@ -48,13 +47,6 @@ function initWizardState() {
   wizardPage = 1;
 }
 initWizardState();
-
-/* ---------- أدوات مساعدة ---------- */
-function escHtml(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 function isPage1Valid() {
   const s = wizP1;
@@ -196,23 +188,17 @@ async function handleSendTask() {
   if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = "جارٍ الإرسال..."; }
 
   try {
-    const res = await fetch(base + "/dashboard/new-task", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        main_dept_id:   wizP1.deptId,
-        target_dept_id: wizP1.targetId,
-        year:           wizP1.year,
-        procedure:      wizP1.procedure,
-        reviewer_name:  wizP1.reviewer,
-        reviewer_email: wizP1.email,
-        reviewer_phone: wizP1.phone,
-        director_name:  wizP1.director,
-        doc_names:      wizP3.rows.map(r => r.name),
-        [csrfName()]: csrfValue(),
-      }),
+    const data = await apiPost(base + "/dashboard/new-task", {
+      main_dept_id:   wizP1.deptId,
+      target_dept_id: wizP1.targetId,
+      year:           wizP1.year,
+      procedure:      wizP1.procedure,
+      reviewer_name:  wizP1.reviewer,
+      reviewer_email: wizP1.email,
+      reviewer_phone: wizP1.phone,
+      director_name:  wizP1.director,
+      doc_names:      wizP3.rows.map(r => r.name),
     });
-    const data = await res.json();
 
     if (data.success) {
       showToast(`تم إرسال المهمة إلى ${wizP1.targetName}`, "success");
@@ -233,8 +219,6 @@ async function handleSendTask() {
   }
 }
 
-function csrfName()  { return document.querySelector('meta[name="csrf-token-name"]').content; }
-function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }
 
 /* ============================================================
    PAGE 1 — طلب المراجعة الداخلية + الخطاب الرسمي الحي
@@ -267,7 +251,7 @@ function renderWizPage1() {
             <label class="wiz-label ${err("deptId") ? "error" : ""}">الإدارة ${err("deptId") ? '<span class="wiz-req">*</span>' : ""}</label>
             <select id="p1Dept" class="wiz-select ${s.deptId ? "filled" : ""} ${err("deptId") ? "err" : ""}">
               <option value="">— اختر —</option>
-              ${WIZ_MAIN_DEPTS.map(d => `<option value="${d.id}" ${String(s.deptId) === String(d.id) ? "selected" : ""}>${escHtml(d.name_ar)}</option>`).join("")}
+              ${WIZ_MAIN_DEPTS.map(d => `<option value="${d.id}" ${String(s.deptId) === String(d.id) ? "selected" : ""}>${escapeHtml(d.name_ar)}</option>`).join("")}
             </select>
             ${err("deptId") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
@@ -277,7 +261,7 @@ function renderWizPage1() {
             <div class="wiz-cascade-wrap">
               <select id="p1Target" class="wiz-select ${s.targetId ? "filled" : ""} ${err("targetId") ? "err" : ""}" ${isLocked ? "disabled" : ""}>
                 <option value="">${isLocked ? "— اختر الإدارة أولاً —" : `— اختر من ${subs.length} إدارة —`}</option>
-                ${subs.map(sub => `<option value="${sub.id}" ${String(s.targetId) === String(sub.id) ? "selected" : ""}>${escHtml(sub.name_ar)}</option>`).join("")}
+                ${subs.map(sub => `<option value="${sub.id}" ${String(s.targetId) === String(sub.id) ? "selected" : ""}>${escapeHtml(sub.name_ar)}</option>`).join("")}
               </select>
               ${(s.deptId && !s.targetId) ? `<span class="wiz-cascade-badge">${subs.length} خيار</span>` : ""}
             </div>
@@ -295,7 +279,7 @@ function renderWizPage1() {
 
         <div class="wiz-section ${err("procedure") ? "error" : ""}">
           <p class="wiz-section-title ${err("procedure") ? "error" : ""}">المراد مناقشته في الاجتماع ${err("procedure") ? '<span class="wiz-req">*</span>' : ""}</p>
-          <textarea id="p1Procedure" rows="4" class="wiz-textarea ${err("procedure") ? "err" : ""}" placeholder="أدخل المراد مناقشته في الاجتماع هنا...">${escHtml(s.procedure)}</textarea>
+          <textarea id="p1Procedure" rows="4" class="wiz-textarea ${err("procedure") ? "err" : ""}" placeholder="أدخل المراد مناقشته في الاجتماع هنا...">${escapeHtml(s.procedure)}</textarea>
           ${err("procedure") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
         </div>
 
@@ -304,21 +288,21 @@ function renderWizPage1() {
           <div class="wiz-field">
             <label class="wiz-label ${err("reviewer") ? "error" : ""}">اسم المراجع الرئيسي ${err("reviewer") ? '<span class="wiz-req">*</span>' : ""}</label>
             <div class="wiz-input-icon-wrap"><i data-lucide="user"></i>
-              <input id="p1Reviewer" type="text" class="wiz-input plain ${err("reviewer") ? "err" : ""}" placeholder="الاسم كاملاً" value="${escHtml(s.reviewer)}">
+              <input id="p1Reviewer" type="text" class="wiz-input plain ${err("reviewer") ? "err" : ""}" placeholder="الاسم كاملاً" value="${escapeHtml(s.reviewer)}">
             </div>
             ${err("reviewer") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
           <div class="wiz-field">
             <label class="wiz-label ${err("email") ? "error" : ""}">البريد الإلكتروني ${err("email") ? '<span class="wiz-req">*</span>' : ""}</label>
             <div class="wiz-input-icon-wrap"><i data-lucide="mail"></i>
-              <input id="p1Email" type="email" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("email") ? "err" : ""}" placeholder="example@kamc.med.sa" value="${escHtml(s.email)}">
+              <input id="p1Email" type="email" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("email") ? "err" : ""}" placeholder="example@kamc.med.sa" value="${escapeHtml(s.email)}">
             </div>
             ${err("email") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
           <div class="wiz-field">
             <label class="wiz-label ${err("phone") ? "error" : ""}">رقم الجوال ${err("phone") ? '<span class="wiz-req">*</span>' : ""}</label>
             <div class="wiz-input-icon-wrap"><i data-lucide="phone"></i>
-              <input id="p1Phone" type="tel" inputmode="numeric" maxlength="10" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("phone") ? "err" : ""}" placeholder="05XXXXXXXX" value="${escHtml(s.phone)}">
+              <input id="p1Phone" type="tel" inputmode="numeric" maxlength="10" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("phone") ? "err" : ""}" placeholder="05XXXXXXXX" value="${escapeHtml(s.phone)}">
             </div>
             ${err("phone") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
@@ -329,7 +313,7 @@ function renderWizPage1() {
           <div class="wiz-field">
             <label class="wiz-label ${err("director") ? "error" : ""}">اسم المدير ${err("director") ? '<span class="wiz-req">*</span>' : ""}</label>
             <div class="wiz-input-icon-wrap"><i data-lucide="user"></i>
-              <input id="p1Director" type="text" class="wiz-input plain ${err("director") ? "err" : ""}" placeholder="الاسم كاملاً" value="${escHtml(s.director)}">
+              <input id="p1Director" type="text" class="wiz-input plain ${err("director") ? "err" : ""}" placeholder="الاسم كاملاً" value="${escapeHtml(s.director)}">
             </div>
             ${err("director") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
           </div>
@@ -361,30 +345,30 @@ function renderWizPage1() {
             </div>
             <div class="wiz-divider-fade"></div>
             <p class="wiz-p" style="font-weight:700;color:#1f2937;">
-              سعادة المدير التنفيذي لـ${s.deptName ? `<mark class="wiz-mark">${escHtml(s.deptName)}</mark>` : ""} المحترم
+              سعادة المدير التنفيذي لـ${s.deptName ? `<mark class="wiz-mark">${escapeHtml(s.deptName)}</mark>` : ""} المحترم
             </p>
             <p class="wiz-p" style="font-weight:600;color:#4b5563;">السلام عليكم ورحمة الله وبركاته،</p>
             <p class="wiz-p">نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة
-              <mark class="wiz-mark small">${escHtml(s.targetName || "الإدارة المستهدفة")}</mark>
+              <mark class="wiz-mark small">${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark>
               للقيام بعملية المراجعة الداخلية الشاملة وفق الخطة السنوية المعتمدة لعام
-              <mark class="wiz-mark small">${escHtml(s.year)}</mark>.
+              <mark class="wiz-mark small">${escapeHtml(s.year)}</mark>.
             </p>
             <p class="wiz-p">عليه نأمل التكرم بتوجيه من يلزم للعمل على التنسيق خلال مدة لا تتجاوز <strong>(7) أيام عمل</strong> من تاريخ استلام هذا الإشعار.</p>
             <div class="wiz-procedure-box" id="procedureBox" ${s.procedure ? "" : "hidden"}>
               <div class="wiz-procedure-head"><i data-lucide="clipboard-list"></i><span>المراد مناقشته في الاجتماع</span></div>
-              <p class="wiz-procedure-body" id="procedureText">${escHtml(s.procedure)}</p>
+              <p class="wiz-procedure-body" id="procedureText">${escapeHtml(s.procedure)}</p>
             </div>
             <p class="wiz-p">كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة حتى يتسنى لنا البدء بعملية المراجعة.</p>
             <p class="wiz-p">إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة.</p>
             <p class="wiz-p">حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
-            <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small" id="mReviewer">${escHtml(s.reviewer || "...............")}</mark></p>
+            <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small" id="mReviewer">${escapeHtml(s.reviewer || "...............")}</mark></p>
             <p class="wiz-p" style="margin-bottom:2px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
             <div style="display:flex;flex-direction:column;gap:8px;">
-              <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" id="mEmail" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.email || "........................")}</span></div>
-              <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" id="mPhone" dir="ltr" style="unicode-bidi:embed;">${escHtml(s.phone || "........................")}</span></div>
+              <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" id="mEmail" dir="ltr" style="unicode-bidi:embed;">${escapeHtml(s.email || "........................")}</span></div>
+              <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" id="mPhone" dir="ltr" style="unicode-bidi:embed;">${escapeHtml(s.phone || "........................")}</span></div>
             </div>
             <p class="wiz-p" style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
-            <p class="wiz-p" id="mDirector" style="font-weight:800;color:var(--pd);" ${s.director ? "" : "hidden"}>${escHtml(s.director)}</p>
+            <p class="wiz-p" id="mDirector" style="font-weight:800;color:var(--pd);" ${s.director ? "" : "hidden"}>${escapeHtml(s.director)}</p>
             <p class="wiz-p" style="font-weight:600;">وتقبلوا وافر التحية والتقدير،،.</p>
           </div>
           <div class="wiz-paper-footer-bar"></div>
@@ -469,7 +453,7 @@ function renderWizPage2() {
     <div class="wiz-sla-grid">
       <div class="wiz-field">
         <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
-        <div class="msum-auto-field plain"><span class="val">${escHtml(s.subjectDept) || "— يُحدَّد تلقائيًا من الخطوة السابقة —"}</span></div>
+        <div class="msum-auto-field plain"><span class="val">${escapeHtml(s.subjectDept) || "— يُحدَّد تلقائيًا من الخطوة السابقة —"}</span></div>
       </div>
       <div class="wiz-field">
         <label class="wiz-label">تاريخ الاتفاقية</label>
@@ -478,7 +462,7 @@ function renderWizPage2() {
       </div>
       <div class="wiz-field span2">
         <label class="wiz-label">وصف الخدمة</label>
-        <textarea id="p2Desc" rows="3" class="wiz-textarea plain">${escHtml(s.desc)}</textarea>
+        <textarea id="p2Desc" rows="3" class="wiz-textarea plain">${escapeHtml(s.desc)}</textarea>
       </div>
     </div>
 
@@ -494,8 +478,8 @@ function renderWizPage2() {
           </div>
           ${active ? `<div class="wiz-channel-body">
             ${c.type === "textarea"
-              ? `<textarea id="wizCh-${c.key}" rows="3" class="wiz-textarea plain" data-ch-val="${c.key}" placeholder="${c.ph}">${escHtml(s.chVals[c.key])}</textarea>`
-              : `<input id="wizCh-${c.key}" type="${c.type}" class="wiz-input plain" ${c.type === "email" || c.type === "tel" ? 'dir="ltr" style="text-align:left;"' : ""} ${c.type === "tel" ? 'inputmode="numeric" maxlength="10"' : ""} data-ch-val="${c.key}" placeholder="${c.ph}" value="${escHtml(s.chVals[c.key])}">`}
+              ? `<textarea id="wizCh-${c.key}" rows="3" class="wiz-textarea plain" data-ch-val="${c.key}" placeholder="${c.ph}">${escapeHtml(s.chVals[c.key])}</textarea>`
+              : `<input id="wizCh-${c.key}" type="${c.type}" class="wiz-input plain" ${c.type === "email" || c.type === "tel" ? 'dir="ltr" style="text-align:left;"' : ""} ${c.type === "tel" ? 'inputmode="numeric" maxlength="10"' : ""} data-ch-val="${c.key}" placeholder="${c.ph}" value="${escapeHtml(s.chVals[c.key])}">`}
           </div>` : ""}
         </div>`;
       }).join("")}
@@ -537,7 +521,7 @@ function renderWizPage2() {
       <div class="wiz-sig-card active">
         <p class="wiz-sig-title">المراجع الرئيسي</p>
         <div class="wiz-input-icon-wrap">
-          <input id="p2SigName" type="text" class="wiz-input plain" placeholder="اسم المراجع الرئيسي" value="${escHtml(s.sigName)}">
+          <input id="p2SigName" type="text" class="wiz-input plain" placeholder="اسم المراجع الرئيسي" value="${escapeHtml(s.sigName)}">
         </div>
         <div>
           <p class="wiz-sig-mini-label">التاريخ</p>
@@ -631,7 +615,7 @@ function renderWizPage3() {
               <td style="text-align:center;"><span class="wiz-doc-row-num">${i + 1}</span></td>
               <td>
                 <input type="text" id="doc-${row.id}-name" class="wiz-doc-name-input ${s.touched && !row.name.trim() ? "err" : ""}"
-                  data-doc-name="${row.id}" placeholder="أدخل اسم المستند..." value="${escHtml(row.name)}">
+                  data-doc-name="${row.id}" placeholder="أدخل اسم المستند..." value="${escapeHtml(row.name)}">
                 ${s.touched && !row.name.trim() ? '<p class="wiz-error-text" style="padding:4px 4px 0;">اسم المستند مطلوب</p>' : ""}
               </td>
               <td style="text-align:center;background:#fafafa;">

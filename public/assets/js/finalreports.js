@@ -26,11 +26,6 @@ let frCurrentCompletion = {};
 
 const frIsHrUser = () => isHrDept || isHrCoordinator;
 
-function escHtmlFR(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function rerenderFRContent() {
   const ca = document.getElementById("contentArea");
   ca.innerHTML = renderFinalReportsPage();
@@ -41,8 +36,7 @@ function rerenderFRContent() {
 async function initFinalReportsData() {
   frLoading = true;
   try {
-    const res = await fetch(base + "/dashboard/reports/api/list");
-    const data = await res.json();
+    const data = await apiGet(base + "/dashboard/reports/api/list");
     frReportsList = data.reports || [];
   } catch (e) {
     frReportsList = [];
@@ -128,11 +122,11 @@ function renderFRTable(reports) {
       ${!hrUser ? `
       <select id="frFilterDept" class="wiz-select ${frFilterDept ? "filled" : ""}">
         <option value="">الإدارة</option>
-        ${depts.map(d => `<option value="${escHtmlFR(d)}" ${frFilterDept === d ? "selected" : ""}>${escHtmlFR(d)}</option>`).join("")}
+        ${depts.map(d => `<option value="${escapeHtml(d)}" ${frFilterDept === d ? "selected" : ""}>${escapeHtml(d)}</option>`).join("")}
       </select>` : ""}
       <select id="frFilterTargetDept" class="wiz-select ${frFilterTargetDept ? "filled" : ""}">
         <option value="">الإدارة المستهدفة</option>
-        ${targetDepts.map(d => `<option value="${escHtmlFR(d)}" ${frFilterTargetDept === d ? "selected" : ""}>${escHtmlFR(d)}</option>`).join("")}
+        ${targetDepts.map(d => `<option value="${escapeHtml(d)}" ${frFilterTargetDept === d ? "selected" : ""}>${escapeHtml(d)}</option>`).join("")}
       </select>
       ${!hrUser ? `
       <select id="frFilterStatus" class="wiz-select ${frFilterStatus ? "filled" : ""}">
@@ -155,11 +149,11 @@ function renderFRTable(reports) {
               const statusLabel = approved ? "معتمد" : (isPresident && r.status === "pending_signatures" ? "بانتظار الاعتماد" : frStatusLabel(r.status));
               return `
               <tr style="background:${i % 2 === 0 ? "#fff" : "#f5fafd"};">
-                <td><span class="fr-taskid-pill" dir="ltr">${escHtmlFR(r.mission_code)}</span></td>
-                <td style="font-size:12px;font-weight:600;color:#374151;">${escHtmlFR(r.audit_dept_name)}</td>
-                <td style="font-size:12px;color:#6b7280;">${escHtmlFR(r.target_dept_name)}</td>
+                <td><span class="fr-taskid-pill" dir="ltr">${escapeHtml(r.mission_code)}</span></td>
+                <td style="font-size:12px;font-weight:600;color:#374151;">${escapeHtml(r.audit_dept_name)}</td>
+                <td style="font-size:12px;color:#6b7280;">${escapeHtml(r.target_dept_name)}</td>
                 <td style="font-size:12px;color:#6b7280;">${r.year}</td>
-                <td style="font-size:12px;color:#6b7280;">${escHtmlFR((r.created_at || "").slice(0, 10))}</td>
+                <td style="font-size:12px;color:#6b7280;">${escapeHtml((r.created_at || "").slice(0, 10))}</td>
                 <td><span class="fr-status-pill" style="background:${approved ? "#f0fdf4" : "#fef9ec"};color:${approved ? "#1f5f7a" : "#b45309"};"><span class="dot" style="background:${approved ? "#3185b3" : "#f59e0b"};"></span>${statusLabel}</span></td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px;">
@@ -215,8 +209,7 @@ function bindFRTableEvents() {
    ============================================================ */
 async function frLoadChecklist(missionId) {
   try {
-    const res = await fetch(base + "/dashboard/reports/api/checklist?mission_id=" + missionId);
-    const data = await res.json();
+    const data = await apiGet(base + "/dashboard/reports/api/checklist?mission_id=" + missionId);
     frCurrentReport = data.report;
     frCurrentItems = data.items || [];
     frCurrentCompletion = data.completion || {};
@@ -248,7 +241,7 @@ function renderCreateReportView() {
         <label class="wiz-label">اختر المهمة / الإدارة المرتبطة <span class="wiz-req">*</span></label>
         <select id="frCreateTaskSelect" class="wiz-select ${frCreateSelectedTask ? "filled" : ""}" style="${!frCreateSelectedTask ? "border-color:#fde68a;" : ""}">
           <option value="">--- اختر المهمة ---</option>
-          ${missionsForSelector.map(m => `<option value="${m.id}" ${String(frCreateSelectedTask) === String(m.id) ? "selected" : ""}>${escHtmlFR(m.mission_code)} — ${escHtmlFR(m.target_department_name || "")}</option>`).join("")}
+          ${missionsForSelector.map(m => `<option value="${m.id}" ${String(frCreateSelectedTask) === String(m.id) ? "selected" : ""}>${escapeHtml(m.mission_code)} — ${escapeHtml(m.target_department_name || "")}</option>`).join("")}
         </select>
       </div>
     </div>
@@ -271,7 +264,7 @@ function renderCreateReportView() {
                 <td>
                   <div style="display:flex;align-items:center;gap:12px;">
                     <span class="fr-phase-num ${isChecked ? "done" : ""}">${isChecked ? '<i data-lucide="check" style="width:13px;height:13px;"></i>' : item.section_number}</span>
-                    <span class="fr-phase-name ${isChecked ? "done" : ""}">${escHtmlFR(item.section_title)}</span>
+                    <span class="fr-phase-name ${isChecked ? "done" : ""}">${escapeHtml(item.section_title)}</span>
                   </div>
                 </td>
                 <td style="text-align:center;"><span class="fr-mini-pill" style="background:${isDone ? "#f0fdf4" : "#fef2f2"};color:${isDone ? "#166534" : "#b91c1c"};">${isDone ? "مكتملة" : "غير مكتملة"}</span></td>
@@ -314,10 +307,8 @@ function bindCreateReportEvents() {
       if (!item) return;
       const newVal = Number(item.is_checked) === 1 ? 0 : 1;
       try {
-        await fetch(base + "/dashboard/reports/api/toggle-check", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ report_id: frCurrentReport.id, section_number: section, checked: !!newVal, [csrfName()]: csrfValue() }),
+        await apiPost(base + "/dashboard/reports/api/toggle-check", {
+          report_id: frCurrentReport.id, section_number: section, checked: !!newVal,
         });
         item.is_checked = newVal;
       } catch (e) {
@@ -331,12 +322,7 @@ function bindCreateReportEvents() {
   if (submitBtn) submitBtn.addEventListener("click", async () => {
     submitBtn.disabled = true;
     try {
-      const res = await fetch(base + "/dashboard/reports/api/finalize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ report_id: frCurrentReport.id, [csrfName()]: csrfValue() }),
-      });
-      const data = await res.json();
+      const data = await apiPost(base + "/dashboard/reports/api/finalize", { report_id: frCurrentReport.id });
       if (data.success) {
         showToast("تم اعتماد التقرير وإرساله للمراجعة", "success");
         await frLoadChecklist(frCreateSelectedTask);
@@ -351,5 +337,3 @@ function bindCreateReportEvents() {
   });
 }
 
-function csrfName()  { return document.querySelector('meta[name="csrf-token-name"]').content; }
-function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }

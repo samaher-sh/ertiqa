@@ -36,27 +36,21 @@ const TASK_DETAIL_ACTIVITIES = [
   { user: "محمد الغامدي", role: "رئيس إدارة المراجعة الداخلية", button: "اعتماد التقرير", phase: "التقرير النهائي", time: "04:30 م" },
 ];
 
-function escHtmlTD(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 function renderActivityTimeline(activities) {
   return `
   <div class="td-timeline">
     <div class="td-timeline-rail"></div>
     ${activities.map(act => `
       <div class="td-activity-row">
-        <div class="td-activity-avatar">${escHtmlTD(act.user).charAt(0)}</div>
+        <div class="td-activity-avatar">${escapeHtml(act.user).charAt(0)}</div>
         <div class="td-activity-body">
-          <div class="td-activity-user">${escHtmlTD(act.user)} <span class="role">(${escHtmlTD(act.role)})</span></div>
+          <div class="td-activity-user">${escapeHtml(act.user)} <span class="role">(${escapeHtml(act.role)})</span></div>
           <div class="td-activity-meta">
-            <span class="td-activity-btn-tag">${escHtmlTD(act.button)}</span>
+            <span class="td-activity-btn-tag">${escapeHtml(act.button)}</span>
             <span class="td-activity-sep">—</span>
-            <span class="td-activity-phase">${escHtmlTD(act.phase)}</span>
+            <span class="td-activity-phase">${escapeHtml(act.phase)}</span>
             <span class="td-activity-sep">—</span>
-            <span class="td-activity-time">التاريخ${escHtmlTD(act.time)}</span>
+            <span class="td-activity-time">التاريخ${escapeHtml(act.time)}</span>
           </div>
         </div>
       </div>
@@ -73,7 +67,7 @@ function renderTaskDetailPage() {
     <div class="td-header">
       <div class="td-header-left">
         <button class="td-back-btn" id="tdBackBtn"><i data-lucide="chevron-right"></i></button>
-        <h2 class="td-title">تفاصيل المهمة: ${escHtmlTD(task.dept)}</h2>
+        <h2 class="td-title">تفاصيل المهمة: ${escapeHtml(task.dept)}</h2>
         <span class="td-year">(${task.year})</span>
       </div>
       <button class="obs-btn-pdf" id="tdExportBtn"><i data-lucide="file-text"></i> تصدير PDF</button>
