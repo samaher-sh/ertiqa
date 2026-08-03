@@ -376,14 +376,7 @@ function bindObsListEvents() {
   if (newBtn) newBtn.addEventListener("click", obsOpenNew);
 
   const exportBtn = document.getElementById("obsExportBtn");
-  if (exportBtn) exportBtn.addEventListener("click", () => {
-    const rows = obsFullyFiltered().map(o => ({
-      label: o.title || "ملاحظة",
-      value: `الإدارة: ${o.dept} | التاريخ: ${o.date} | الخطر: ${o.risk} | الحالة: ${o.status}`,
-    }));
-    const mission = missionsForSelector.find(m => String(m.id) === String(obsSelectedTaskId));
-    exportTaskToPDF(mission ? mission.mission_code : "—", "سجل الملاحظات الرقابية", obsFilterDept || "الكل", rows);
-  });
+  if (exportBtn) exportBtn.addEventListener("click", () => window.print());
 
   const searchInput = document.getElementById("obsSearchInput");
   if (searchInput) searchInput.addEventListener("input", e => { obsSearchQuery = e.target.value; rerenderObsContent(); });
@@ -604,7 +597,7 @@ function renderObsForm() {
           </select>
         </div>
         <div class="wiz-field">
-          <label class="wiz-label">عنوان الملاحظة</label>
+          <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
           <input id="obsTitle" type="text" class="wiz-input plain" placeholder="عنوان مختصر..." value="${escHtml2(d.title)}">
         </div>
         <div class="wiz-field">
@@ -643,6 +636,13 @@ function renderObsForm() {
       <div class="obs-divider"></div>
 
       <div class="obs-attach-row">
+        <div class="wiz-field" style="gap:8px;">
+          <label class="wiz-label">تضاف للتقرير؟</label>
+          <div class="obs-radio-group">
+            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === true ? "checked" : ""} data-add-report="true"> نعم</label>
+            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === false ? "checked" : ""} data-add-report="false"> لا</label>
+          </div>
+        </div>
         <div>
           <input type="file" id="obsFileInput" style="display:none;">
           <button class="obs-attach-btn" id="obsAttachBtn"><i data-lucide="paperclip"></i> إرفاق</button>
@@ -656,13 +656,6 @@ function renderObsForm() {
                 </div>
               `).join("")}
             </div>` : ""}
-        </div>
-        <div class="wiz-field" style="gap:8px;">
-          <label class="wiz-label">تضاف للتقرير؟</label>
-          <div class="obs-radio-group">
-            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === true ? "checked" : ""} data-add-report="true"> نعم</label>
-            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === false ? "checked" : ""} data-add-report="false"> لا</label>
-          </div>
         </div>
       </div>
 
@@ -686,12 +679,14 @@ function bindObsFormEvents() {
     d.dept = obsDeptName(d.deptId);
     rerenderObsContent();
   });
-  $("obsTitle").addEventListener("input", e => { d.title = e.target.value; rerenderObsContent(); });
-  $("obsObservation").addEventListener("input", e => { d.observation = e.target.value; rerenderObsContent(); });
-  $("obsStandard").addEventListener("input", e => { d.standard = e.target.value; rerenderObsContent(); });
-  $("obsReason").addEventListener("input", e => { d.reason = e.target.value; rerenderObsContent(); });
-  $("obsImpact").addEventListener("input", e => { d.impact = e.target.value; rerenderObsContent(); });
-  $("obsRecommendations").addEventListener("input", e => { d.recommendations = e.target.value; rerenderObsContent(); });
+  $("obsTitle").addEventListener("input", e => { d.title = e.target.value; });
+
+  const obsGrowFields = { obsObservation: "observation", obsStandard: "standard", obsReason: "reason", obsImpact: "impact", obsRecommendations: "recommendations" };
+  Object.keys(obsGrowFields).forEach(id => {
+    const el = $(id);
+    autoGrowTextarea(el);
+    el.addEventListener("input", e => { d[obsGrowFields[id]] = e.target.value; autoGrowTextarea(e.target); });
+  });
 
   document.querySelectorAll("[data-risk-pick]").forEach(btn => {
     btn.addEventListener("click", () => { d.risk = btn.dataset.riskPick; rerenderObsContent(); });

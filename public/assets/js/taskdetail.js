@@ -125,14 +125,7 @@ function bindTaskDetailEvents() {
     renderSidebar(); renderContent(); lucide.createIcons();
   });
 
-  document.getElementById("tdExportBtn").addEventListener("click", () => {
-    exportTaskToPDF(task.id, "تفاصيل المهمة الرقابية: " + task.subDept, task.dept, [
-      { label: "حالة المهمة", value: task.status },
-      { label: "المرحلة الحالية", value: "المرحلة " + task.currentPhase },
-      { label: "آخر إجراء", value: task.lastAction },
-      { label: "السنة", value: task.year },
-    ]);
-  });
+  document.getElementById("tdExportBtn").addEventListener("click", () => window.print());
 
   document.getElementById("tdCompleteBtn").addEventListener("click", () => {
     const dest = taskPageMap[task.id];

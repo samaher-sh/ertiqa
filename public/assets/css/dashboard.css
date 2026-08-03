@@ -349,7 +349,7 @@ img{ max-width:100%; }
   font-size:13px; font-weight:700; color:#1f2937; border-right:4px solid var(--p);
   animation: toastIn .2s ease;
 }
-.toast.success{ border-color:#22c55e; color:#15803d; }
+.toast.success{ border-color:#3185b3; color:#1f5f7a; }
 .toast.error{ border-color:#ef4444; color:#b91c1c; }
 @keyframes toastIn{ from{ opacity:0; transform:translateY(-8px);} to{ opacity:1; transform:translateY(0);} }
 
@@ -398,3 +398,13 @@ img{ max-width:100%; }
 .flex-col{ flex-direction:column; }
 .gap-4{ gap:16px; }
 .gap-5{ gap:20px; }
+
+/* ══════ تنسيق الطباعة/تصدير PDF — يخفي كل شي إلا محتوى الصفحة نفسها ══════ */
+@media print{
+  .sidebar, .topbar, .obs-btn-pdf, .obs-btn-add, .rm-add-btn, .msum-attach-btn,
+  .wiz-nav, .wiz-btn, .fr-header-actions button, .obs-attach-btn, button, .nav-tooltip,
+  input[type="file"], .toast-container{ display:none !important; }
+  .app-shell, .main-col, .content-area{ display:block !important; height:auto !important; overflow:visible !important; }
+  body{ background:#fff !important; }
+  .wiz-card, .rm-card, .obs-card, .fr-header-card, .fr-table-card, .st-card{ box-shadow:none !important; break-inside:avoid; }
+}

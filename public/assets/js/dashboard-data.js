@@ -52,12 +52,12 @@ const _draft = {
 const OBS_RISK_COLORS = {
   "عالي":  { bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5", dot: "#ef4444", label: "عالي"  },
   "متوسط": { bg: "#fef9c3", text: "#a16207", border: "#fde047", dot: "#eab308", label: "متوسط" },
-  "منخفض": { bg: "#dcfce7", text: "#15803d", border: "#86efac", dot: "#22c55e", label: "منخفض" },
+  "منخفض": { bg: "#eaf4fa", text: "#1f5f7a", border: "#b3d4e5", dot: "#3185b3", label: "منخفض" },
 };
 const OBS_STATUS_COLORS = {
   "بانتظار الرد":  { bg: "#fefce8", text: "#a16207", border: "#fde68a", dot: "#f59e0b" },
   "قيد المعالجة": { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe", dot: "#3b82f6" },
-  "مغلقة":        { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0", dot: "#22c55e" },
+  "مغلقة":        { bg: "#f0fdf4", text: "#1f5f7a", border: "#b3d4e5", dot: "#3185b3" },
 };
 
 /* نفس بنود التقرير النهائي الثابتة (مطابقة لـ ReportController::STEPS بالباك-إند) */
@@ -67,7 +67,7 @@ const CR_STEPS = ["طلب المراجعة الداخلية", "اتفاقية م
 const CLASS_COLORS = {
   "عالي":  { bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5", dot: "#ef4444" },
   "متوسط": { bg: "#fef9c3", text: "#a16207", border: "#fde047", dot: "#eab308" },
-  "منخفض": { bg: "#dcfce7", text: "#15803d", border: "#86efac", dot: "#22c55e" },
+  "منخفض": { bg: "#eaf4fa", text: "#1f5f7a", border: "#b3d4e5", dot: "#3185b3" },
 };
 
 /* اختصارات الإدارات الرئيسية لمعاينة رقم المهمة بمعاينة الخطاب فقط (نفس القائمة الفعلية
