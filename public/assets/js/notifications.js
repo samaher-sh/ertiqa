@@ -18,33 +18,36 @@ async function loadNotifications() {
 function renderNotificationsPage() {
   const unreadCount = notifItems.filter(n => !Number(n.is_read)).length;
 
-  return `
-  <div class="notif-card">
-    <div class="notif-head">
-      <i data-lucide="bell"></i>
-      <div><h2>الإخطارات</h2><p>Notifications</p></div>
-      ${unreadCount > 0 ? `<span class="notif-unread-badge">${unreadCount} غير مقروء</span>` : ""}
-    </div>
-    <div class="notif-list">
-      ${notifLoading ? `<div class="notif-empty">جارِ التحميل...</div>` :
-        notifItems.length === 0
-        ? `<div class="notif-empty">لا توجد إخطارات حاليًا</div>`
-        : notifItems.map(n => `
-          <div class="notif-item ${!Number(n.is_read) ? "unread" : ""}" data-notif-id="${n.id}">
-            <div class="notif-dot-wrap"><span class="notif-dot"></span></div>
-            <div class="notif-icon"><i data-lucide="bell"></i></div>
-            <div class="notif-body">
-              <div class="notif-title-row">
-                <p class="notif-title">${escapeHtml(n.title)}</p>
-                <span class="notif-type-tag">${escapeHtml(n.type)}</span>
-              </div>
-              <p class="notif-text">${escapeHtml(n.body)}</p>
-              <span class="notif-time" dir="ltr">${escapeHtml(n.created_at)}</span>
-            </div>
-          </div>
-        `).join("")}
-    </div>
-  </div>`;
+  const root = document.getElementById("tpl-notifications").content.cloneNode(true);
+  const card = root.querySelector(".notif-card");
+
+  const badge = card.querySelector('[data-slot="badge"]');
+  if (unreadCount > 0) {
+    badge.hidden = false;
+    badge.textContent = unreadCount + " غير مقروء";
+  }
+
+  const list = card.querySelector('[data-slot="list"]');
+  if (notifLoading) {
+    list.innerHTML = `<div class="notif-empty">جارِ التحميل...</div>`;
+  } else if (notifItems.length === 0) {
+    list.innerHTML = `<div class="notif-empty">لا توجد إخطارات حاليًا</div>`;
+  } else {
+    const itemTpl = document.getElementById("tpl-notif-item");
+    notifItems.forEach(n => {
+      const item = itemTpl.content.cloneNode(true);
+      const row = item.querySelector(".notif-item");
+      row.classList.toggle("unread", !Number(n.is_read));
+      row.dataset.notifId = n.id;
+      row.querySelector('[data-slot="title"]').textContent = n.title == null ? "" : String(n.title);
+      row.querySelector('[data-slot="type"]').textContent = n.type == null ? "" : String(n.type);
+      row.querySelector('[data-slot="body"]').textContent = n.body == null ? "" : String(n.body);
+      row.querySelector('[data-slot="time"]').textContent = n.created_at == null ? "" : String(n.created_at);
+      list.appendChild(item);
+    });
+  }
+
+  return card.outerHTML;
 }
 
 function bindNotificationsEvents() {
