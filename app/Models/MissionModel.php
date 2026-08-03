@@ -65,6 +65,23 @@ class MissionModel extends Model
     ];
 
     /**
+     * المهام الموجّهة فعليًا لإدارة مستخدم "الإدارة محل المراجعة" (منسق/مدير إدارة)
+     * — تُجلب حسب target_department_id الحقيقي بالمهمة، مقارنةً بـ department_id
+     * الحقيقي للمستخدم بجدول users. هذا يستبدل أي مطابقة نصية باسم الإدارة كانت
+     * تُستخدم بالواجهة سابقًا (Mock).
+     */
+    public function missionsForTargetDepartment(int $departmentId): array
+    {
+        return $this->select('missions.*, ad.name_ar as audit_department_name, td.name_ar as target_department_name, u.full_name as mission_head_name')
+            ->join('departments ad', 'ad.id = missions.audit_department_id', 'left')
+            ->join('departments td', 'td.id = missions.target_department_id', 'left')
+            ->join('users u', 'u.id = missions.mission_head_id', 'left')
+            ->where('missions.target_department_id', $departmentId)
+            ->orderBy('missions.created_at', 'DESC')
+            ->findAll();
+    }
+
+    /**
      * يولّد كود مهمة فريد بصيغة [اختصار الإدارة][4 أرقام تسلسلية]
      * مثال: HR0001, MED0042 — الترقيم تسلسلي داخل كل إدارة لحالها (مو عام لكل النظام)
      *

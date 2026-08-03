@@ -54,6 +54,25 @@ class DashboardController extends BaseController
     }
 
     /**
+     * GET /dashboard/api/target-missions — المهام الموجّهة فعليًا لإدارة المستخدم الحالي
+     * (يُستخدم من قِبل مستخدمي "الإدارة محل المراجعة" — dept_coordinator وما شابه)
+     */
+    public function targetMissions()
+    {
+        $departmentId = session()->get('department_id');
+
+        if (!$departmentId) {
+            return $this->response->setJSON(['success' => true, 'missions' => []]);
+        }
+
+        $missionModel = new MissionModel();
+        return $this->response->setJSON([
+            'success'  => true,
+            'missions' => $missionModel->missionsForTargetDepartment((int) $departmentId),
+        ]);
+    }
+
+    /**
      * GET /dashboard/api/active-missions — قائمة المهام النشطة (JSON)
      */
     public function activeMissions()

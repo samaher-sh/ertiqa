@@ -240,7 +240,8 @@ let missionsForSelector = [];
 
 async function loadMissionsForSelector() {
   try {
-    const res = await fetch(base + "/dashboard/api/active-missions");
+    const url = isHrDept ? base + "/dashboard/api/target-missions" : base + "/dashboard/api/active-missions";
+    const res = await fetch(url);
     const data = await res.json();
     missionsForSelector = data.missions || [];
   } catch (e) {
@@ -251,9 +252,12 @@ async function loadMissionsForSelector() {
 /* ---------- تبويب الرئيسية ---------- */
 async function loadHomeData() {
   try {
+    // منسّق/مدير الإدارة الخاضعة للمراجعة يرى المهام الموجّهة فعليًا لإدارته
+    // (target_department_id)، لا المهام التي يقودها أو ضمن فريقها (وهو مفهوم خاص بالمراجعين)
+    const missionsUrl = isHrDept ? base + "/dashboard/api/target-missions" : base + "/dashboard/api/active-missions";
     const [statsRes, missionsRes, meetingsRes] = await Promise.all([
       fetch(base + "/dashboard/api/home-stats"),
-      fetch(base + "/dashboard/api/active-missions"),
+      fetch(missionsUrl),
       fetch(base + "/dashboard/api/scheduled-meetings"),
     ]);
     homeStats = await statsRes.json();
