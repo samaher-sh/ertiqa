@@ -30,8 +30,6 @@ function updateSaveBtnStateRM() {
   }
   const hint = document.querySelector(".rm-submit-hint");
   if (hint) hint.hidden = rmDirty;
-  const footerSaveBtn = document.getElementById("rmFooterSaveBtn");
-  if (footerSaveBtn) footerSaveBtn.disabled = !rmDirty;
 }
 function rerenderRMContent() {
   const active = document.activeElement;
@@ -71,10 +69,8 @@ async function rmLoadItems(missionId) {
 function renderRiskMatrixPage() {
   const readOnly = rmIsReadOnly();
   const locked = !rmSelectedTaskId;
-  const selectedTask = missionsForSelector.find(m => String(m.id) === String(rmSelectedTaskId)) || null;
-  const rmMissionCode = selectedTask ? selectedTask.mission_code : "—";
   const COLS = [
-    { label: "م", w: "110px", c: true },
+    { label: "م", w: "52px", c: true },
     { label: "المخاطر" },
     { label: "تقييم المخاطر", w: "180px" },
     { label: "وصف الضوابط", w: "180px" },
@@ -89,7 +85,7 @@ function renderRiskMatrixPage() {
     <div class="rm-card ${locked ? "locked" : ""}">
       <div class="rm-head">
         <div class="rm-head-left">
-          <div class="rm-head-icon"><i data-lucide="shield-alert"></i></div>
+          <div class="rm-head-icon"><i data-lucide="bar-chart-2"></i></div>
           <div><h2>مصفوفة المخاطر</h2><p>Risk Matrix Form</p></div>
           ${readOnly ? `<span class="rm-readonly-badge"><i data-lucide="lock" style="width:10px;height:10px;"></i> عرض فقط</span>` : ""}
         </div>
@@ -111,13 +107,12 @@ function renderRiskMatrixPage() {
               const rowBg = i % 2 === 0 ? "#fff" : "#f6fcfe";
               return `
               <tr style="background:${rowBg};">
-                <td style="text-align:center;"><span class="rm-row-num" dir="ltr" style="display:inline-block;">${rmMissionCode}</span></td>
+                <td style="text-align:center;"><span class="rm-row-num">${i + 1}</span></td>
                 <td><textarea rows="2" id="rm-${row.id}-risk" class="rm-cell-textarea ${row.risk ? "filled" : ""}" placeholder="أدخل وصف الخطر..." data-rm-field="risk" data-rm-id="${row.id}" ${readOnly ? "readonly" : ""}>${escHtmlRM(row.risk)}</textarea></td>
                 <td>
                   <div class="rm-rating-wrap">
-                    ${rc ? `<span class="rm-rating-dot" style="background:${rc.dot};"></span>` : ""}
                     <select class="rm-rating-select ${row.riskRating ? "set" : ""}" data-rm-rating="${row.id}" ${readOnly ? "disabled" : ""}
-                      style="${rc ? `border-color:${rc.border};background:${rc.bg};color:${rc.text};` : ""}">
+                      style="text-align:center;text-align-last:center;${rc ? `border-color:${rc.border};background:${rc.bg};color:${rc.text};` : ""}">
                       <option value="">— اختر —</option>
                       <option value="عالي" ${row.riskRating === "عالي" ? "selected" : ""}>عالي</option>
                       <option value="متوسط" ${row.riskRating === "متوسط" ? "selected" : ""}>متوسط</option>
@@ -133,11 +128,6 @@ function renderRiskMatrixPage() {
           </tbody>
         </table>
       </div>
-
-      ${rmRows.length > 0 ? `
-      <div class="rm-footer">
-        ${!readOnly ? `<button class="rm-footer-save-btn" id="rmFooterSaveBtn"><i data-lucide="check"></i> حفظ</button>` : ""}
-      </div>` : ""}
     </div>
 
     <div class="rm-bottom-row">
@@ -197,9 +187,6 @@ function bindRiskMatrixEvents() {
       if (row) { row.riskRating = sel.value; rmDirty = true; rerenderRMContent(); }
     });
   });
-
-  const footerSaveBtn = document.getElementById("rmFooterSaveBtn");
-  if (footerSaveBtn) footerSaveBtn.addEventListener("click", rmHandleSave);
 
   const submitBtn = document.getElementById("rmSubmitBtn");
   if (submitBtn) submitBtn.addEventListener("click", rmHandleSave);

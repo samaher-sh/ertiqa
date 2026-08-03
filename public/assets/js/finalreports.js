@@ -100,7 +100,7 @@ function renderFRTable(reports) {
   return `
   <div class="fr-header-card">
     <div class="fr-header-bar">
-      <i class="main" data-lucide="book-open"></i>
+      <i class="main" data-lucide="file-text"></i>
       <div>
         <h2>${isPresident ? "التقارير التي تتطلب المراجعة" : "التقارير النهائية"}</h2>
         <p>${isPresident ? "تقارير تحت المراجعة تنتظر الاعتماد" : "Final Reports"}</p>
@@ -160,7 +160,7 @@ function renderFRTable(reports) {
                 <td style="font-size:12px;color:#6b7280;">${escHtmlFR(r.target_dept_name)}</td>
                 <td style="font-size:12px;color:#6b7280;">${r.year}</td>
                 <td style="font-size:12px;color:#6b7280;">${escHtmlFR((r.created_at || "").slice(0, 10))}</td>
-                <td><span class="fr-status-pill" style="background:${approved ? "#f0fdf4" : "#fef9ec"};color:${approved ? "#166534" : "#b45309"};"><span class="dot" style="background:${approved ? "#22c55e" : "#f59e0b"};"></span>${statusLabel}</span></td>
+                <td><span class="fr-status-pill" style="background:${approved ? "#f0fdf4" : "#fef9ec"};color:${approved ? "#1f5f7a" : "#b45309"};"><span class="dot" style="background:${approved ? "#3185b3" : "#f59e0b"};"></span>${statusLabel}</span></td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px;">
                     ${isPresident

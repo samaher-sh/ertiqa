@@ -123,14 +123,14 @@ function renderWizardNav() {
   const isFirst = wizardPage === STEPS[0].n;
   const isLast = wizardPage === STEPS[STEPS.length - 1].n;
   return `<div class="wiz-nav">
-    <button class="wiz-btn wiz-btn-outline" id="wizPrevBtn" ${isFirst ? "disabled" : ""}>
+    <button class="wiz-btn wiz-btn-outline" id="wizPrevBtn" ${isFirst ? "disabled" : ""} style="min-width:150px;justify-content:center;">
       <i data-lucide="chevron-right"></i>السابق
     </button>
     <div class="wiz-dots">
       ${STEPS.map(s => `<button class="wiz-dot ${wizardPage === s.n ? "current" : ""}" data-goto-step="${s.n}"></button>`).join("")}
     </div>
     ${isLast
-      ? `<button class="wiz-btn wiz-btn-success" id="wizSendBtn"><i data-lucide="check"></i>إرسال المهمة للإدارة</button>`
+      ? `<button class="wiz-btn wiz-btn-success" id="wizSendBtn" style="min-width:150px;justify-content:center;"><i data-lucide="check"></i>إرسال المهمة</button>`
       : `<button class="wiz-btn wiz-btn-primary" id="wizNextBtn">التالي<i data-lucide="chevron-left"></i></button>`}
   </div>`;
 }
@@ -255,7 +255,7 @@ function renderWizPage1() {
     <!-- RIGHT: form -->
     <div class="wiz-card">
       <div class="wiz-card-head">
-        <i data-lucide="clipboard-list"></i>
+        <i data-lucide="plus"></i>
         <div><h2>طلب المراجعة الداخلية</h2><p>Internal Audit Request</p></div>
       </div>
       <div class="wiz-card-body">
@@ -610,9 +610,6 @@ function renderWizPage3() {
         <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents Checklist</p></div>
       </div>
       <button class="wiz-add-doc-btn" id="wizAddDocBtn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);"><i data-lucide="plus"></i> إضافة مستند</button>
-    </div>
-    <div class="wiz-doc-toolbar">
-      <span class="wiz-doc-count">${s.rows.length} مستند مضاف</span>
     </div>
     <div class="wiz-table-wrap">
       <table class="wiz-doc-table">

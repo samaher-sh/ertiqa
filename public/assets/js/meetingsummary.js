@@ -98,7 +98,7 @@ function renderMeetingSummaryPage() {
       <!-- 1. بيانات الاجتماع -->
       <div class="wiz-card">
         <div class="wiz-card-head">
-          <i data-lucide="file-text"></i>
+          <i data-lucide="users"></i>
           <div><h2>ملخص الاجتماع</h2><p>Meeting Summary</p></div>
           ${allReadOnly ? `<span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>` : ""}
           <div style="display:flex;gap:8px;margin-right:auto;">
@@ -192,7 +192,7 @@ function renderMeetingSummaryPage() {
                   </td>
                   <td>
                     ${(hrUser && !allReadOnly)
-                      ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#86efac" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" id="pt-${pt.id}-opinion" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escHtmlMSum(pt.opinion)}</textarea>`
+                      ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#b3d4e5" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" id="pt-${pt.id}-opinion" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escHtmlMSum(pt.opinion)}</textarea>`
                       : `<div class="msum-opinion-readonly ${pt.opinion ? "has" : "empty"}">${escHtmlMSum(pt.opinion || "—")}</div>`}
                   </td>
                   <td>

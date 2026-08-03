@@ -41,7 +41,7 @@
 .obs-risk-btn{ flex:1; padding:9px 6px; border-radius:10px; font-size:11px; font-weight:700; background:#f3f4f6; color:#9ca3af; border:1px solid #e2e8f0; white-space:nowrap; }
 .obs-risk-btn.sel-عالي{ background:#fee2e2; color:#b91c1c; border-color:#fca5a5; }
 .obs-risk-btn.sel-متوسط{ background:#fef9c3; color:#a16207; border-color:#fde047; }
-.obs-risk-btn.sel-منخفض{ background:#dcfce7; color:#15803d; border-color:#86efac; }
+.obs-risk-btn.sel-منخفض{ background:#eaf4fa; color:#1f5f7a; border-color:#b3d4e5; }
 .obs-adv-toggle-btn{ display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:10px; font-size:12px; font-weight:700; background:#fff; color:var(--p); border:1px solid var(--pb); white-space:nowrap; }
 .obs-adv-toggle-btn i{ width:13px; height:13px; }
 .obs-clear-btn{ display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:10px; font-size:12px; font-weight:700; background:#fff; color:#dc2626; border:1px solid #fecaca; white-space:nowrap; }
@@ -89,15 +89,16 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 .obs-form-save i{ width:15px; height:15px; }
 .obs-form-body{ padding:24px; display:flex; flex-direction:column; gap:20px; }
 .obs-grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.obs-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .obs-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-@media (max-width:800px){ .obs-grid-4{ grid-template-columns:1fr 1fr; } .obs-grid-2{ grid-template-columns:1fr; } }
-@media (max-width:520px){ .obs-grid-4{ grid-template-columns:1fr; } }
+@media (max-width:800px){ .obs-grid-4{ grid-template-columns:1fr 1fr; } .obs-grid-3{ grid-template-columns:1fr 1fr; } .obs-grid-2{ grid-template-columns:1fr; } }
+@media (max-width:520px){ .obs-grid-4{ grid-template-columns:1fr; } .obs-grid-3{ grid-template-columns:1fr; } }
 .obs-divider{ height:1px; background:linear-gradient(90deg,transparent,var(--pb),transparent); }
 .obs-risk-picker{ display:flex; gap:8px; height:42px; }
 .obs-risk-pick-btn{ flex:1; border-radius:12px; font-size:12px; font-weight:700; background:#f3f4f6; color:#9ca3af; border:1px solid #e2e8f0; }
 .obs-risk-pick-btn.sel-عالي{ background:#fee2e2; color:#b91c1c; border-color:#fca5a5; box-shadow:0 0 0 2px rgba(239,68,68,.15); }
 .obs-risk-pick-btn.sel-متوسط{ background:#fef9c3; color:#a16207; border-color:#fde047; box-shadow:0 0 0 2px rgba(234,179,8,.15); }
-.obs-risk-pick-btn.sel-منخفض{ background:#dcfce7; color:#15803d; border-color:#86efac; box-shadow:0 0 0 2px rgba(34,197,94,.15); }
+.obs-risk-pick-btn.sel-منخفض{ background:#eaf4fa; color:#1f5f7a; border-color:#b3d4e5; box-shadow:0 0 0 2px rgba(34,197,94,.15); }
 .obs-attach-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; }
 .obs-attach-btn{ display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); }
 .obs-attach-btn i{ width:15px; height:15px; }
