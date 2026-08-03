@@ -26,9 +26,6 @@ let homeStats    = { active_count: 0, review_count: 0, meetings_count: 0 };
 let activeMissions = [];
 let scheduledMeetings = [];
 
-function csrfName()  { return document.querySelector('meta[name="csrf-token-name"]').content; }
-function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }
-
 /* ============================================================
    تهيئة الصفحة
    ============================================================ */
@@ -50,8 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   isHrCoordinator = roleCode === "dept_coordinator";
 
   try {
-    const navRes = await fetch(base + "/api/nav-items");
-    const navData = await navRes.json();
+    const navData = await apiGet(base + "/api/nav-items");
     navItemsData = navData.items || [];
   } catch (e) {
     navItemsData = [];
@@ -241,8 +237,7 @@ let missionsForSelector = [];
 async function loadMissionsForSelector() {
   try {
     const url = isHrDept ? base + "/dashboard/api/target-missions" : base + "/dashboard/api/active-missions";
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await apiGet(url);
     missionsForSelector = data.missions || [];
   } catch (e) {
     missionsForSelector = [];
@@ -255,14 +250,12 @@ async function loadHomeData() {
     // منسّق/مدير الإدارة الخاضعة للمراجعة يرى المهام الموجّهة فعليًا لإدارته
     // (target_department_id)، لا المهام التي يقودها أو ضمن فريقها (وهو مفهوم خاص بالمراجعين)
     const missionsUrl = isHrDept ? base + "/dashboard/api/target-missions" : base + "/dashboard/api/active-missions";
-    const [statsRes, missionsRes, meetingsRes] = await Promise.all([
-      fetch(base + "/dashboard/api/home-stats"),
-      fetch(missionsUrl),
-      fetch(base + "/dashboard/api/scheduled-meetings"),
+    const [stats, missionsData, meetingsData] = await Promise.all([
+      apiGet(base + "/dashboard/api/home-stats"),
+      apiGet(missionsUrl),
+      apiGet(base + "/dashboard/api/scheduled-meetings"),
     ]);
-    homeStats = await statsRes.json();
-    const missionsData = await missionsRes.json();
-    const meetingsData = await meetingsRes.json();
+    homeStats = stats;
     activeMissions = missionsData.missions || [];
     scheduledMeetings = meetingsData.meetings || [];
   } catch (e) {
@@ -580,8 +573,6 @@ function showToast(message, type) {
   container.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
-
-function escapeHtml(str) { const div = document.createElement("div"); div.textContent = str ?? ""; return div.innerHTML; }
 
 /* ============================================================
    أحداث عامة (موبايل)

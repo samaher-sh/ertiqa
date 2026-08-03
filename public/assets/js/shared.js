@@ -36,9 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (usernameInput) usernameInput.addEventListener("input", clearError);
   if (passwordInput) passwordInput.addEventListener("input", clearError);
 
-  function csrfName() { return document.querySelector('meta[name="csrf-token-name"]').content; }
-  function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }
-
   // Form Submit
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
@@ -59,17 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.textContent = "جارٍ تسجيل الدخول...";
 
       try {
-        const res = await fetch("/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            national_id: username,
-            password: password,
-            [csrfName()]: csrfValue(),
-          }),
+        const data = await apiPost("/auth/login", {
+          national_id: username,
+          password: password,
         });
-
-        const data = await res.json();
 
         if (data.success) {
           window.location.href = data.redirect;

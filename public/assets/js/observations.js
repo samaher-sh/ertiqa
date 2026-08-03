@@ -44,12 +44,6 @@ function obsDeptName(deptId) {
   return "";
 }
 
-/* ---------- أدوات مساعدة ---------- */
-function escHtml2(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 function rerenderObsContent() {
   const active = document.activeElement;
@@ -78,8 +72,7 @@ function rerenderObsContent() {
 async function obsLoadList(missionId) {
   obsLoading = true;
   try {
-    const res = await fetch(base + "/dashboard/observations/api/list?mission_id=" + missionId);
-    const data = await res.json();
+    const data = await apiGet(base + "/dashboard/observations/api/list?mission_id=" + missionId);
     obsList = (data.items || []).map(o => ({
       id: o.id, ref: o.ref_code, deptId: o.department_id, dept: o.department_name || "",
       title: o.title || "", date: o.observation_date, risk: o.risk_severity, status: o.status,
@@ -113,8 +106,8 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
         <tbody>
           ${detailsList.map(item => `
             <tr>
-              <td style="padding: 12px; border: 1px solid #d8e6eb; font-weight: bold; width: 30%; color: #6b8c95;">${escHtml2(item.label)}</td>
-              <td style="padding: 12px; border: 1px solid #d8e6eb; color: #152c33;">${escHtml2(item.value)}</td>
+              <td style="padding: 12px; border: 1px solid #d8e6eb; font-weight: bold; width: 30%; color: #6b8c95;">${escapeHtml(item.label)}</td>
+              <td style="padding: 12px; border: 1px solid #d8e6eb; color: #152c33;">${escapeHtml(item.value)}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -125,7 +118,7 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
   printWindow.document.write(`
     <html dir="rtl">
       <head>
-        <title>تصدير تقرير المهمة - ${escHtml2(taskId)}</title>
+        <title>تصدير تقرير المهمة - ${escapeHtml(taskId)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
           h1 { color: #3185b3; border-bottom: 2px solid #3185b3; padding-bottom: 15px; margin-bottom: 30px; font-size: 24px;}
@@ -146,15 +139,15 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
         <div class="header-info">
           <div>
             <span class="label">رقم المهمة</span>
-            <span class="value">${escHtml2(taskId)}</span>
+            <span class="value">${escapeHtml(taskId)}</span>
           </div>
           <div>
             <span class="label">عنوان المهمة</span>
-            <span class="value">${escHtml2(taskTitle)}</span>
+            <span class="value">${escapeHtml(taskTitle)}</span>
           </div>
           <div>
             <span class="label">الإدارة المختصة</span>
-            <span class="value">${escHtml2(taskDept)}</span>
+            <span class="value">${escapeHtml(taskDept)}</span>
           </div>
           <div>
             <span class="label">تاريخ التصدير</span>
@@ -192,13 +185,13 @@ function renderLinkedTaskSelector(value, selectId, list) {
       <i data-lucide="clipboard-list" style="color:${value ? "#fff" : "#b45309"};"></i>
       <p class="obs-linked-title" style="color:${value ? "#fff" : "#92400e"};">المهمة / الإدارة المرتبطة</p>
       ${!value ? '<span class="obs-linked-badge-req">مطلوب</span>' : ""}
-      ${value && selected ? `<span class="obs-linked-badge-sel" dir="ltr">${escHtml2(selected.mission_code)}</span>` : ""}
+      ${value && selected ? `<span class="obs-linked-badge-sel" dir="ltr">${escapeHtml(selected.mission_code)}</span>` : ""}
     </div>
     <div class="obs-linked-body">
       <label class="wiz-label">اختر المهمة / الإدارة المرتبطة <span class="wiz-req">*</span></label>
       <select id="${selectId}" class="wiz-select ${value ? "filled" : ""}" style="${!value ? "border-color:#fcd34d;background:#fffbeb;" : ""}">
         <option value="">— اختر المهمة المرتبطة —</option>
-        ${missions.map(m => `<option value="${m.id}" ${String(value) === String(m.id) ? "selected" : ""}>${escHtml2(m.mission_code)} — ${escHtml2(m.target_department_name || "")} (${m.year})</option>`).join("")}
+        ${missions.map(m => `<option value="${m.id}" ${String(value) === String(m.id) ? "selected" : ""}>${escapeHtml(m.mission_code)} — ${escapeHtml(m.target_department_name || "")} (${m.year})</option>`).join("")}
       </select>
       ${!value ? '<p class="wiz-error-text" style="color:#b45309;">يرجى تحديد المهمة المرتبطة قبل تعبئة النموذج</p>' : ""}
     </div>
@@ -270,14 +263,14 @@ function renderObsListMode() {
             <span class="obs-filter-label">بحث</span>
             <div class="obs-search-wrap">
               <i data-lucide="search"></i>
-              <input id="obsSearchInput" type="text" placeholder="بحث بعنوان الملاحظة، الإدارة، أو المرجع..." value="${escHtml2(obsSearchQuery)}">
+              <input id="obsSearchInput" type="text" placeholder="بحث بعنوان الملاحظة، الإدارة، أو المرجع..." value="${escapeHtml(obsSearchQuery)}">
             </div>
           </div>
           <div class="obs-filter-field">
             <span class="obs-filter-label">الإدارة</span>
             <select id="obsFilterDept" class="wiz-select ${obsFilterDept ? "filled" : ""}">
               <option value="">كل الإدارات</option>
-              ${depts.map(d => `<option value="${escHtml2(d)}" ${obsFilterDept === d ? "selected" : ""}>${escHtml2(d)}</option>`).join("")}
+              ${depts.map(d => `<option value="${escapeHtml(d)}" ${obsFilterDept === d ? "selected" : ""}>${escapeHtml(d)}</option>`).join("")}
             </select>
           </div>
           <div class="obs-filter-field">
@@ -334,8 +327,8 @@ function renderObsListMode() {
                   const menuOpen = obsOpenMenuId === obs.id;
                   return `
                   <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
-                    <td><span class="obs-title-cell">${escHtml2(obs.title)}</span></td>
-                    <td><span class="obs-dept-cell"><i data-lucide="building-2"></i>${escHtml2(obs.dept || "—")}</span></td>
+                    <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
+                    <td><span class="obs-dept-cell"><i data-lucide="building-2"></i>${escapeHtml(obs.dept || "—")}</span></td>
                     <td><span class="obs-date-cell">${obs.date}</span></td>
                     <td><span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${rc.label}</span></td>
                     ${!isAuditHead ? `
@@ -474,12 +467,7 @@ function obsOpenView(id) {
 async function obsDelete(id) {
   obsOpenMenuId = null;
   try {
-    const res = await fetch(base + "/dashboard/observations/api/delete/" + id, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [csrfName()]: csrfValue() }),
-    });
-    const data = await res.json();
+    const data = await apiPost(base + "/dashboard/observations/api/delete/" + id, {});
     if (data.success) {
       showToast("تم حذف الملاحظة", "success");
       await obsLoadList(obsSelectedTaskId);
@@ -497,25 +485,20 @@ function obsCancel() {
 }
 
 async function obsSaveOne(draft) {
-  return fetch(base + "/dashboard/observations/api/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: draft.id || null,
-      mission_id: obsSelectedTaskId,
-      department_id: draft.deptId,
-      title: draft.title,
-      observation_date: draft.date,
-      risk_severity: draft.risk,
-      observation_text: draft.observation,
-      standard_text: draft.standard,
-      reason_text: draft.reason,
-      impact_text: draft.impact,
-      recommendations_text: draft.recommendations,
-      add_to_report: draft.addToReport,
-      [csrfName()]: csrfValue(),
-    }),
-  }).then(r => r.json());
+  return apiPost(base + "/dashboard/observations/api/save", {
+    id: draft.id || null,
+    mission_id: obsSelectedTaskId,
+    department_id: draft.deptId,
+    title: draft.title,
+    observation_date: draft.date,
+    risk_severity: draft.risk,
+    observation_text: draft.observation,
+    standard_text: draft.standard,
+    reason_text: draft.reason,
+    impact_text: draft.impact,
+    recommendations_text: draft.recommendations,
+    add_to_report: draft.addToReport,
+  });
 }
 
 async function obsSave() {
@@ -566,8 +549,8 @@ function renderObsFormMode() {
 }
 
 function renderDeptOptions(selectedId) {
-  return WIZ_MAIN_DEPTS.map(g => `<optgroup label="── ${escHtml2(g.name_ar)}">
-    ${wizSubDepts(g.id).map(sub => `<option value="${sub.id}" ${String(selectedId) === String(sub.id) ? "selected" : ""}>${escHtml2(sub.name_ar)}</option>`).join("")}
+  return WIZ_MAIN_DEPTS.map(g => `<optgroup label="── ${escapeHtml(g.name_ar)}">
+    ${wizSubDepts(g.id).map(sub => `<option value="${sub.id}" ${String(selectedId) === String(sub.id) ? "selected" : ""}>${escapeHtml(sub.name_ar)}</option>`).join("")}
   </optgroup>`).join("");
 }
 
@@ -598,7 +581,7 @@ function renderObsForm() {
         </div>
         <div class="wiz-field">
           <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
-          <input id="obsTitle" type="text" class="wiz-input plain" placeholder="عنوان مختصر..." value="${escHtml2(d.title)}">
+          <input id="obsTitle" type="text" class="wiz-input plain" placeholder="عنوان مختصر..." value="${escapeHtml(d.title)}">
         </div>
         <div class="wiz-field">
           <label class="wiz-label">مستوى الخطر</label>
@@ -613,23 +596,23 @@ function renderObsForm() {
       <div class="obs-grid-2">
         <div class="wiz-field">
           <label class="wiz-label">الملاحظة <span class="wiz-req">*</span></label>
-          <textarea id="obsObservation" rows="4" class="wiz-textarea plain" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escHtml2(d.observation)}</textarea>
+          <textarea id="obsObservation" rows="4" class="wiz-textarea plain" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escapeHtml(d.observation)}</textarea>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">المعيار أو النظام <span class="wiz-req">*</span></label>
-          <textarea id="obsStandard" rows="4" class="wiz-textarea plain" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escHtml2(d.standard)}</textarea>
+          <textarea id="obsStandard" rows="4" class="wiz-textarea plain" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escapeHtml(d.standard)}</textarea>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">السبب <span class="wiz-req">*</span></label>
-          <textarea id="obsReason" rows="3" class="wiz-textarea plain" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escHtml2(d.reason)}</textarea>
+          <textarea id="obsReason" rows="3" class="wiz-textarea plain" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escapeHtml(d.reason)}</textarea>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
-          <textarea id="obsImpact" rows="3" class="wiz-textarea plain" placeholder="الأثر المالي أو التشغيلي المترتب...">${escHtml2(d.impact)}</textarea>
+          <textarea id="obsImpact" rows="3" class="wiz-textarea plain" placeholder="الأثر المالي أو التشغيلي المترتب...">${escapeHtml(d.impact)}</textarea>
         </div>
         <div class="wiz-field" style="grid-column:1/-1;">
           <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
-          <textarea id="obsRecommendations" rows="2" class="wiz-textarea plain" placeholder="الإجراءات التصحيحية المقترحة...">${escHtml2(d.recommendations)}</textarea>
+          <textarea id="obsRecommendations" rows="2" class="wiz-textarea plain" placeholder="الإجراءات التصحيحية المقترحة...">${escapeHtml(d.recommendations)}</textarea>
         </div>
       </div>
 
@@ -651,7 +634,7 @@ function renderObsForm() {
               ${d.attachments.map((f, i) => `
                 <div class="obs-attach-chip">
                   <i class="pin" data-lucide="paperclip"></i>
-                  <span>${escHtml2(f)}</span>
+                  <span>${escapeHtml(f)}</span>
                   <button data-remove-attach="${i}"><i data-lucide="x" style="width:12px;height:12px;"></i></button>
                 </div>
               `).join("")}
@@ -732,7 +715,7 @@ function renderSubObservations() {
       <div class="obs-sub-card ${open ? "open" : ""}">
         <div class="obs-sub-card-head" data-sub-toggle="${item.id}">
           <span class="obs-sub-num">${idx + 1}</span>
-          <span class="obs-sub-title">${escHtml2(item.title || "ملاحظة غير معنونة")}</span>
+          <span class="obs-sub-title">${escapeHtml(item.title || "ملاحظة غير معنونة")}</span>
           ${rc ? `<span class="obs-pill" style="background:${rc.bg};color:${rc.text};">${item.risk}</span>` : ""}
           <button class="obs-sub-del" data-sub-del="${item.id}"><i data-lucide="x"></i></button>
           <i data-lucide="chevron-left" class="obs-sub-chevron ${open ? "open" : ""}"></i>
@@ -753,7 +736,7 @@ function renderSubObservations() {
             </div>
             <div class="wiz-field">
               <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
-              <input type="text" id="sub-${item.id}-title" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escHtml2(item.title)}">
+              <input type="text" id="sub-${item.id}-title" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escapeHtml(item.title)}">
             </div>
             <div class="wiz-field">
               <label class="wiz-label">مستوى الخطر</label>
@@ -768,23 +751,23 @@ function renderSubObservations() {
           <div class="obs-grid-2">
             <div class="wiz-field">
               <label class="wiz-label">الملاحظة <span class="wiz-req">*</span></label>
-              <textarea rows="4" id="sub-${item.id}-observation" class="wiz-textarea plain" data-sub-field="observation" data-sub-id="${item.id}" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escHtml2(item.observation)}</textarea>
+              <textarea rows="4" id="sub-${item.id}-observation" class="wiz-textarea plain" data-sub-field="observation" data-sub-id="${item.id}" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escapeHtml(item.observation)}</textarea>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">المعيار أو النظام <span class="wiz-req">*</span></label>
-              <textarea rows="4" id="sub-${item.id}-standard" class="wiz-textarea plain" data-sub-field="standard" data-sub-id="${item.id}" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escHtml2(item.standard)}</textarea>
+              <textarea rows="4" id="sub-${item.id}-standard" class="wiz-textarea plain" data-sub-field="standard" data-sub-id="${item.id}" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escapeHtml(item.standard)}</textarea>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">السبب <span class="wiz-req">*</span></label>
-              <textarea rows="3" id="sub-${item.id}-reason" class="wiz-textarea plain" data-sub-field="reason" data-sub-id="${item.id}" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escHtml2(item.reason)}</textarea>
+              <textarea rows="3" id="sub-${item.id}-reason" class="wiz-textarea plain" data-sub-field="reason" data-sub-id="${item.id}" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escapeHtml(item.reason)}</textarea>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
-              <textarea rows="3" id="sub-${item.id}-impact" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escHtml2(item.impact)}</textarea>
+              <textarea rows="3" id="sub-${item.id}-impact" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escapeHtml(item.impact)}</textarea>
             </div>
             <div class="wiz-field" style="grid-column:1/-1;">
               <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
-              <textarea rows="2" id="sub-${item.id}-recommendations" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escHtml2(item.recommendations)}</textarea>
+              <textarea rows="2" id="sub-${item.id}-recommendations" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escapeHtml(item.recommendations)}</textarea>
             </div>
           </div>
 
@@ -806,7 +789,7 @@ function renderSubObservations() {
                   ${item.attachments.map((f, ai) => `
                     <div class="obs-attach-chip">
                       <i class="pin" data-lucide="paperclip"></i>
-                      <span>${escHtml2(f)}</span>
+                      <span>${escapeHtml(f)}</span>
                       <button data-sub-remove-attach="${item.id}" data-attach-idx="${ai}"><i data-lucide="x" style="width:12px;height:12px;"></i></button>
                     </div>
                   `).join("")}
@@ -927,8 +910,8 @@ function renderObsViewMode() {
       <div class="obs-form-body">
         <div class="obs-view-grid cols-4">
           <div class="obs-view-field"><span class="lbl">تاريخ المراجعة</span><span class="val">${v.date}</span></div>
-          <div class="obs-view-field"><span class="lbl">الإدارة محل المراجعة</span><span class="val">${escHtml2(v.dept || "—")}</span></div>
-          <div class="obs-view-field"><span class="lbl">عنوان الملاحظة</span><span class="val">${escHtml2(v.title || "—")}</span></div>
+          <div class="obs-view-field"><span class="lbl">الإدارة محل المراجعة</span><span class="val">${escapeHtml(v.dept || "—")}</span></div>
+          <div class="obs-view-field"><span class="lbl">عنوان الملاحظة</span><span class="val">${escapeHtml(v.title || "—")}</span></div>
           <div class="obs-view-field">
             <span class="lbl">مستوى الخطر</span>
             <span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${rc.label}</span>
@@ -938,11 +921,11 @@ function renderObsViewMode() {
         <div class="obs-divider"></div>
 
         <div class="obs-view-grid">
-          <div class="obs-view-box"><span class="lbl">الملاحظة</span><p>${escHtml2(v.observation || "—")}</p></div>
-          <div class="obs-view-box"><span class="lbl">المعيار أو النظام</span><p>${escHtml2(v.standard || "—")}</p></div>
-          <div class="obs-view-box"><span class="lbl">السبب</span><p>${escHtml2(v.reason || "—")}</p></div>
-          <div class="obs-view-box"><span class="lbl">الأثر</span><p>${escHtml2(v.impact || "—")}</p></div>
-          <div class="obs-view-box" style="grid-column:1/-1;"><span class="lbl">التوصيات</span><p>${escHtml2(v.recommendations || "—")}</p></div>
+          <div class="obs-view-box"><span class="lbl">الملاحظة</span><p>${escapeHtml(v.observation || "—")}</p></div>
+          <div class="obs-view-box"><span class="lbl">المعيار أو النظام</span><p>${escapeHtml(v.standard || "—")}</p></div>
+          <div class="obs-view-box"><span class="lbl">السبب</span><p>${escapeHtml(v.reason || "—")}</p></div>
+          <div class="obs-view-box"><span class="lbl">الأثر</span><p>${escapeHtml(v.impact || "—")}</p></div>
+          <div class="obs-view-box" style="grid-column:1/-1;"><span class="lbl">التوصيات</span><p>${escapeHtml(v.recommendations || "—")}</p></div>
         </div>
 
         <div class="obs-view-footer">
@@ -977,5 +960,3 @@ function bindObsViewEvents() {
   });
 }
 
-function csrfName()  { return document.querySelector('meta[name="csrf-token-name"]').content; }
-function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }

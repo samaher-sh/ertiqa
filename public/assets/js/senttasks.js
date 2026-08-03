@@ -21,12 +21,6 @@ const ST_STAGE_TO_PAGE = {
   7: { key: "finalReports",   label: "التقرير النهائي" },
 };
 
-function escHtmlST(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 function renderSentTasksPage() {
   return sentTasksSelected ? renderSentTaskDetail() : renderSentTasksList();
 }
@@ -54,11 +48,11 @@ function renderSentTasksList() {
         <tbody>
           ${missionsForSelector.map(task => `
             <tr>
-              <td class="st-id-cell">${escHtmlST(task.mission_code)}</td>
-              <td class="st-title-cell">${escHtmlST(task.title)}</td>
-              <td class="st-dept-cell">${escHtmlST(task.target_department_name)}</td>
-              <td class="st-sentby-cell">${escHtmlST(task.reviewer_name || "—")}</td>
-              <td class="st-sentat-cell" dir="ltr">${escHtmlST(task.created_at || "—")}</td>
+              <td class="st-id-cell">${escapeHtml(task.mission_code)}</td>
+              <td class="st-title-cell">${escapeHtml(task.title)}</td>
+              <td class="st-dept-cell">${escapeHtml(task.target_department_name)}</td>
+              <td class="st-sentby-cell">${escapeHtml(task.reviewer_name || "—")}</td>
+              <td class="st-sentat-cell" dir="ltr">${escapeHtml(task.created_at || "—")}</td>
               <td><span class="st-status-pill">المرحلة ${task.current_stage}</span></td>
               <td style="text-align:center;"><button class="st-view-btn" data-view-sent="${task.id}" title="عرض التفاصيل والسجل">عرض</button></td>
             </tr>
@@ -85,8 +79,7 @@ function bindSentTasksListEvents() {
 async function stLoadTimeline(missionId) {
   stTimelineLoading = true;
   try {
-    const res = await fetch(base + "/dashboard/sent-tasks/api/timeline?mission_id=" + missionId);
-    const data = await res.json();
+    const data = await apiGet(base + "/dashboard/sent-tasks/api/timeline?mission_id=" + missionId);
     stTimelineEvents = data.events || [];
   } catch (e) {
     stTimelineEvents = [];
@@ -102,13 +95,13 @@ function renderSentTaskTimeline() {
     <div class="td-timeline-rail"></div>
     ${stTimelineEvents.map(ev => `
       <div class="td-activity-row">
-        <div class="td-activity-avatar">${escHtmlST(ev.user_name).charAt(0)}</div>
+        <div class="td-activity-avatar">${escapeHtml(ev.user_name).charAt(0)}</div>
         <div class="td-activity-body">
-          <div class="td-activity-user">${escHtmlST(ev.user_name)}</div>
+          <div class="td-activity-user">${escapeHtml(ev.user_name)}</div>
           <div class="td-activity-meta">
-            <span class="td-activity-btn-tag">${escHtmlST(ev.stage_name)}</span>
+            <span class="td-activity-btn-tag">${escapeHtml(ev.stage_name)}</span>
             <span class="td-activity-sep">—</span>
-            <span class="td-activity-time">${escHtmlST(ev.entered_at)}</span>
+            <span class="td-activity-time">${escapeHtml(ev.entered_at)}</span>
           </div>
         </div>
       </div>
@@ -126,8 +119,8 @@ function renderSentTaskDetail() {
       <button class="st-detail-back" id="stBackBtn"><i data-lucide="chevron-right"></i></button>
       <div class="st-detail-icon"><i data-lucide="history"></i></div>
       <div>
-        <h2 class="st-detail-title">${escHtmlST(t.title)}</h2>
-        <p class="st-detail-sub">${escHtmlST(t.mission_code)} · ${escHtmlST(t.target_department_name)}</p>
+        <h2 class="st-detail-title">${escapeHtml(t.title)}</h2>
+        <p class="st-detail-sub">${escapeHtml(t.mission_code)} · ${escapeHtml(t.target_department_name)}</p>
       </div>
       <span class="st-detail-status">المرحلة ${t.current_stage}</span>
     </div>
@@ -140,10 +133,10 @@ function renderSentTaskDetail() {
             <span>بيانات المهمة</span>
           </div>
           <div class="st-phase-fields">
-            <div class="st-phase-field"><span class="lbl">الإدارة الخاضعة</span><span class="val">${escHtmlST(t.target_department_name)}</span></div>
-            <div class="st-phase-field"><span class="lbl">المراجع المسؤول</span><span class="val">${escHtmlST(t.reviewer_name || "—")}</span></div>
-            <div class="st-phase-field"><span class="lbl">مدير الإدارة</span><span class="val">${escHtmlST(t.director_name || "—")}</span></div>
-            <div class="st-phase-field"><span class="lbl">تاريخ الإنشاء</span><span class="val" dir="ltr">${escHtmlST(t.created_at || "—")}</span></div>
+            <div class="st-phase-field"><span class="lbl">الإدارة الخاضعة</span><span class="val">${escapeHtml(t.target_department_name)}</span></div>
+            <div class="st-phase-field"><span class="lbl">المراجع المسؤول</span><span class="val">${escapeHtml(t.reviewer_name || "—")}</span></div>
+            <div class="st-phase-field"><span class="lbl">مدير الإدارة</span><span class="val">${escapeHtml(t.director_name || "—")}</span></div>
+            <div class="st-phase-field"><span class="lbl">تاريخ الإنشاء</span><span class="val" dir="ltr">${escapeHtml(t.created_at || "—")}</span></div>
           </div>
         </div>
 

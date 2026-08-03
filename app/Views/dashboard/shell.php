@@ -118,6 +118,7 @@
   // بدون إعادة تعريفها (const بنفس الاسم بأكثر من <script> بنفس الصفحة تطلع SyntaxError)
   const base = window.APP.baseUrl;
 </script>
+<script src="<?= base_url('assets/js/utils.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard-data.js') ?>"></script>
 <script src="<?= base_url('assets/js/wizard.js') ?>"></script>
 <script src="<?= base_url('assets/js/riskmatrix.js') ?>"></script>

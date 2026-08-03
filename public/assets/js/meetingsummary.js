@@ -16,11 +16,6 @@ let msumAttachments = [];
 const msumIsHrUser = () => isHrDept || isHrCoordinator;
 const msumAllReadOnly = () => isAuditHead;
 
-function escHtmlMSum(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function rerenderMSumContent() {
   const active = document.activeElement;
   const activeId = active && active.id;
@@ -46,12 +41,10 @@ async function msumLoadData(missionId) {
   msumDept = mission ? (mission.target_department_name || "") : "";
 
   try {
-    const [dataRes, attRes] = await Promise.all([
-      fetch(base + "/dashboard/meetings/api/data?mission_id=" + missionId),
-      fetch(base + "/dashboard/meetings/api/attachments?mission_id=" + missionId),
+    const [data, attData] = await Promise.all([
+      apiGet(base + "/dashboard/meetings/api/data?mission_id=" + missionId),
+      apiGet(base + "/dashboard/meetings/api/attachments?mission_id=" + missionId),
     ]);
-    const data = await dataRes.json();
-    const attData = await attRes.json();
 
     const m = data.meeting || {};
     msumDate = m.meeting_date || "";
@@ -109,7 +102,7 @@ function renderMeetingSummaryPage() {
             <button class="obs-btn-pdf" id="msumExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
           </div>
         </div>
-        ${msumAttachments.length > 0 ? `<div style="padding:8px 24px 0;"><span class="msum-attach-empty">${msumAttachments.map(d => `<a href="${base}/dashboard/documents/download/${d.id}" target="_blank" style="color:var(--p);text-decoration:underline;">${escHtmlMSum(d.file_name)}</a>`).join("، ")}</span></div>` : ""}
+        ${msumAttachments.length > 0 ? `<div style="padding:8px 24px 0;"><span class="msum-attach-empty">${msumAttachments.map(d => `<a href="${base}/dashboard/documents/download/${d.id}" target="_blank" style="color:var(--p);text-decoration:underline;">${escapeHtml(d.file_name)}</a>`).join("، ")}</span></div>` : ""}
         ${hrUser ? `<div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div>` : ""}
 
         <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -123,22 +116,22 @@ function renderMeetingSummaryPage() {
           </div>
           <div class="wiz-field">
             <label class="wiz-label">مكان الاجتماع</label>
-            <textarea id="msumLocation" rows="1" class="wiz-textarea plain msum-growfield" placeholder="أدخل مكان الاجتماع" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(msumLocation)}</textarea>
+            <textarea id="msumLocation" rows="1" class="wiz-textarea plain msum-growfield" placeholder="أدخل مكان الاجتماع" ${allReadOnly ? "readonly" : ""}>${escapeHtml(msumLocation)}</textarea>
           </div>
 
           <div class="wiz-field">
             <label class="wiz-label">الإدارة محل المراجعة</label>
-            <div class="msum-auto-field hr"><span class="val">${escHtmlMSum(msumDept) || "— اختر المهمة أولاً —"}</span></div>
+            <div class="msum-auto-field hr"><span class="val">${escapeHtml(msumDept) || "— اختر المهمة أولاً —"}</span></div>
           </div>
 
           <div class="wiz-field" style="grid-column:1/-1;">
             <label class="wiz-label">عنوان المهمة</label>
-            <div class="msum-edit-wrap"><textarea id="msumTitle" rows="1" class="msum-growfield" placeholder="عنوان مهمة المراجعة" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(msumTitle)}</textarea></div>
+            <div class="msum-edit-wrap"><textarea id="msumTitle" rows="1" class="msum-growfield" placeholder="عنوان مهمة المراجعة" ${allReadOnly ? "readonly" : ""}>${escapeHtml(msumTitle)}</textarea></div>
           </div>
 
           <div class="wiz-field" style="grid-column:1/-1;">
             <label class="wiz-label">الهدف من الاجتماع</label>
-            <textarea id="msumObjective" rows="2" class="wiz-textarea plain" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(msumObjective)}</textarea>
+            <textarea id="msumObjective" rows="2" class="wiz-textarea plain" ${allReadOnly ? "readonly" : ""}>${escapeHtml(msumObjective)}</textarea>
           </div>
         </div>
       </div>
@@ -156,9 +149,9 @@ function renderMeetingSummaryPage() {
               ${msumAttendance.map((row, i) => `
                 <tr>
                   <td class="msum-row-num">${i + 1}</td>
-                  <td><input type="text" id="att-${row.id}-name" class="msum-plain-input" placeholder="أدخل الاسم" data-att-field="name" data-att-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" id="att-${row.id}-dept" class="msum-plain-input" placeholder="أدخل الإدارة" data-att-field="dept" data-att-id="${row.id}" value="${escHtmlMSum(row.dept)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" id="att-${row.id}-position" class="msum-plain-input" placeholder="أدخل الوظيفة" data-att-field="position" data-att-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="att-${row.id}-name" class="msum-plain-input" placeholder="أدخل الاسم" data-att-field="name" data-att-id="${row.id}" value="${escapeHtml(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="att-${row.id}-dept" class="msum-plain-input" placeholder="أدخل الإدارة" data-att-field="dept" data-att-id="${row.id}" value="${escapeHtml(row.dept)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="att-${row.id}-position" class="msum-plain-input" placeholder="أدخل الوظيفة" data-att-field="position" data-att-id="${row.id}" value="${escapeHtml(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td style="text-align:center;">${!allReadOnly ? `<button class="msum-del-btn" data-att-del="${row.id}"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>` : ""}</td>
                 </tr>
               `).join("")}
@@ -187,18 +180,18 @@ function renderMeetingSummaryPage() {
                 <tr>
                   <td>
                     ${hrUser
-                      ? `<div class="msum-point-hr-box"><span class="msum-point-num">${i + 1}</span><span>${escHtmlMSum(pt.text)}</span></div>`
-                      : `<textarea rows="2" id="pt-${pt.id}-text" class="wiz-textarea plain" placeholder="النقطة ${i + 1}..." data-pt-field="text" data-pt-id="${pt.id}" ${allReadOnly ? "readonly" : ""}>${escHtmlMSum(pt.text)}</textarea>`}
+                      ? `<div class="msum-point-hr-box"><span class="msum-point-num">${i + 1}</span><span>${escapeHtml(pt.text)}</span></div>`
+                      : `<textarea rows="2" id="pt-${pt.id}-text" class="wiz-textarea plain" placeholder="النقطة ${i + 1}..." data-pt-field="text" data-pt-id="${pt.id}" ${allReadOnly ? "readonly" : ""}>${escapeHtml(pt.text)}</textarea>`}
                   </td>
                   <td>
                     ${(hrUser && !allReadOnly)
-                      ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#b3d4e5" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" id="pt-${pt.id}-opinion" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escHtmlMSum(pt.opinion)}</textarea>`
-                      : `<div class="msum-opinion-readonly ${pt.opinion ? "has" : "empty"}">${escHtmlMSum(pt.opinion || "—")}</div>`}
+                      ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#b3d4e5" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" id="pt-${pt.id}-opinion" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escapeHtml(pt.opinion)}</textarea>`
+                      : `<div class="msum-opinion-readonly ${pt.opinion ? "has" : "empty"}">${escapeHtml(pt.opinion || "—")}</div>`}
                   </td>
                   <td>
                     ${(hrUser && !allReadOnly)
-                      ? `<textarea rows="2" class="wiz-textarea plain" id="pt-${pt.id}-reason" placeholder="اكتب السبب أو التوضيح..." data-pt-field="reason" data-pt-id="${pt.id}">${escHtmlMSum(pt.reason)}</textarea>`
-                      : `<div class="msum-opinion-readonly empty" style="color:${pt.reason ? "#152c33" : "#9ca3af"};">${escHtmlMSum(pt.reason || "—")}</div>`}
+                      ? `<textarea rows="2" class="wiz-textarea plain" id="pt-${pt.id}-reason" placeholder="اكتب السبب أو التوضيح..." data-pt-field="reason" data-pt-id="${pt.id}">${escapeHtml(pt.reason)}</textarea>`
+                      : `<div class="msum-opinion-readonly empty" style="color:${pt.reason ? "#152c33" : "#9ca3af"};">${escapeHtml(pt.reason || "—")}</div>`}
                   </td>
                   ${(!hrUser && !allReadOnly) ? `<td style="text-align:center;"><button class="msum-del-btn" data-pt-del="${pt.id}"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td>` : ""}
                 </tr>
@@ -219,9 +212,9 @@ function renderMeetingSummaryPage() {
             <tbody>
               ${msumApprovals.map(row => `
                 <tr>
-                  <td><input type="text" id="ap-${row.id}-statement" class="msum-plain-input" data-ap-field="statement" data-ap-id="${row.id}" value="${escHtmlMSum(row.statement)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" id="ap-${row.id}-name" class="msum-plain-input" placeholder="الاسم" data-ap-field="name" data-ap-id="${row.id}" value="${escHtmlMSum(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" id="ap-${row.id}-position" class="msum-plain-input" data-ap-field="position" data-ap-id="${row.id}" value="${escHtmlMSum(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="ap-${row.id}-statement" class="msum-plain-input" data-ap-field="statement" data-ap-id="${row.id}" value="${escapeHtml(row.statement)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="ap-${row.id}-name" class="msum-plain-input" placeholder="الاسم" data-ap-field="name" data-ap-id="${row.id}" value="${escapeHtml(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td><input type="text" id="ap-${row.id}-position" class="msum-plain-input" data-ap-field="position" data-ap-id="${row.id}" value="${escapeHtml(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td><input type="date" id="ap-${row.id}-date" class="msum-plain-input" data-ap-field="date" data-ap-id="${row.id}" value="${row.date}" ${allReadOnly ? "readonly" : ""} onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
                 </tr>
               `).join("")}
@@ -320,13 +313,10 @@ function bindMeetingSummaryEvents() {
     const formData = new FormData();
     formData.append("mission_id", msumSelectedTaskId);
     formData.append("file", attachInput.files[0]);
-    formData.append(csrfName(), csrfValue());
     try {
-      const res = await fetch(base + "/dashboard/meetings/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
+      const data = await apiPostFile(base + "/dashboard/meetings/api/upload", formData);
       if (data.success) {
-        const attRes = await fetch(base + "/dashboard/meetings/api/attachments?mission_id=" + msumSelectedTaskId);
-        const attData = await attRes.json();
+        const attData = await apiGet(base + "/dashboard/meetings/api/attachments?mission_id=" + msumSelectedTaskId);
         msumAttachments = attData.documents || [];
         rerenderMSumContent();
       } else {
@@ -350,20 +340,14 @@ function bindMeetingSummaryEvents() {
     if (!msumSelectedTaskId) return;
     submitBtn.disabled = true;
     try {
-      const res = await fetch(base + "/dashboard/meetings/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mission_id: msumSelectedTaskId,
-          date: msumDate, time: msumTime, location: msumLocation,
-          title: msumTitle, objective: msumObjective,
-          attendees: msumAttendance.map(a => ({ name: a.name, dept: a.dept, position: a.position })),
-          points: msumSummaryPoints.map(p => ({ text: p.text, opinion: p.opinion, reason: p.reason })),
-          approvals: msumApprovals.map(a => ({ statement: a.statement, name: a.name, position: a.position, date: a.date, signature: a.signature })),
-          [csrfName()]: csrfValue(),
-        }),
+      const data = await apiPost(base + "/dashboard/meetings/api/save", {
+        mission_id: msumSelectedTaskId,
+        date: msumDate, time: msumTime, location: msumLocation,
+        title: msumTitle, objective: msumObjective,
+        attendees: msumAttendance.map(a => ({ name: a.name, dept: a.dept, position: a.position })),
+        points: msumSummaryPoints.map(p => ({ text: p.text, opinion: p.opinion, reason: p.reason })),
+        approvals: msumApprovals.map(a => ({ statement: a.statement, name: a.name, position: a.position, date: a.date, signature: a.signature })),
       });
-      const data = await res.json();
       if (data.success) {
         msumDirty = false;
         showToast("تم حفظ التغييرات بنجاح", "success");
@@ -379,5 +363,3 @@ function bindMeetingSummaryEvents() {
   });
 }
 
-function csrfName()  { return document.querySelector('meta[name="csrf-token-name"]').content; }
-function csrfValue() { return document.querySelector('meta[name="csrf-token-value"]').content; }

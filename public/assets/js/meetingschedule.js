@@ -9,11 +9,6 @@ let msState = {
   dept: "", sent: false,
 };
 
-function escHtmlMS(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function rerenderMSContent() {
   const active = document.activeElement;
   const activeId = active && active.id;
@@ -40,15 +35,15 @@ function renderMeetingSchedulePage() {
       <div class="ms-grid">
         <div class="wiz-field span2">
           <label class="wiz-label">عنوان المهمة / الاجتماع</label>
-          <input id="msTitle" type="text" class="wiz-input plain" placeholder="عنوان الاجتماع" value="${escHtmlMS(s.title)}">
+          <input id="msTitle" type="text" class="wiz-input plain" placeholder="عنوان الاجتماع" value="${escapeHtml(s.title)}">
         </div>
         <div class="wiz-field">
           <label class="wiz-label">الإدارة المستهدفة</label>
-          <div class="wiz-input-icon-wrap"><i data-lucide="building-2"></i><input id="msDept" type="text" class="wiz-input plain" placeholder="اسم الإدارة" value="${escHtmlMS(s.dept)}"></div>
+          <div class="wiz-input-icon-wrap"><i data-lucide="building-2"></i><input id="msDept" type="text" class="wiz-input plain" placeholder="اسم الإدارة" value="${escapeHtml(s.dept)}"></div>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">مكان الاجتماع</label>
-          <div class="wiz-input-icon-wrap"><i data-lucide="building-2"></i><input id="msLoc" type="text" class="wiz-input plain" placeholder="قاعة / موقع الاجتماع" value="${escHtmlMS(s.loc)}"></div>
+          <div class="wiz-input-icon-wrap"><i data-lucide="building-2"></i><input id="msLoc" type="text" class="wiz-input plain" placeholder="قاعة / موقع الاجتماع" value="${escapeHtml(s.loc)}"></div>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">تاريخ الاجتماع</label>
@@ -60,7 +55,7 @@ function renderMeetingSchedulePage() {
         </div>
         <div class="wiz-field span2">
           <label class="wiz-label">الهدف من الاجتماع</label>
-          <textarea id="msObjective" rows="3" class="wiz-textarea plain">${escHtmlMS(s.objective)}</textarea>
+          <textarea id="msObjective" rows="3" class="wiz-textarea plain">${escapeHtml(s.objective)}</textarea>
         </div>
       </div>
       <div class="ms-footer">
