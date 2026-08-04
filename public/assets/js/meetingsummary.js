@@ -16,6 +16,61 @@ let msumAttachments = [];
 const msumIsHrUser = () => isHrDept || isHrCoordinator;
 const msumAllReadOnly = () => isAuditHead;
 
+/* ---------- لوحة توقيع تفاعلية (Signature Pad) عبر canvas — تدعم الماوس واللمس ---------- */
+function msumInitSignaturePad(canvas, initialDataUrl, onChange) {
+  const ctx = canvas.getContext("2d");
+  ctx.strokeStyle = "#152c33";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  if (initialDataUrl) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    img.src = initialDataUrl;
+  }
+
+  let drawing = false;
+  let last = null;
+
+  function pointFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches && e.touches.length ? e.touches[0] : e;
+    return {
+      x: (src.clientX - rect.left) * (canvas.width / rect.width),
+      y: (src.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    last = pointFromEvent(e);
+  }
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = pointFromEvent(e);
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    last = p;
+  }
+  function end() {
+    if (!drawing) return;
+    drawing = false;
+    onChange(canvas.toDataURL("image/png"));
+  }
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", move, { passive: false });
+  canvas.addEventListener("touchend", end);
+}
+
 function rerenderMSumContent() {
   const active = document.activeElement;
   const activeId = active && active.id;
@@ -55,12 +110,13 @@ async function msumLoadData(missionId) {
 
     msumAttendance = (data.attendees || []).map((a, i) => ({ id: a.id || (i + 1), name: a.external_name || "", dept: a.attendee_dept || "", position: a.attendee_position || "" }));
     msumSummaryPoints = (data.points || []).map((p, i) => ({ id: p.id || (i + 1), text: p.point_text || "", opinion: p.opinion || "", reason: p.reason || "" }));
-    msumApprovals = (data.approvals || []).map((a, i) => ({ id: a.id || (i + 1), statement: a.statement || "إعداد واعتماد", name: a.signer_name || "", position: a.position || "رئيس المهمة", date: a.approval_date || "", signature: a.signature_data || "" }));
+    const currentUserName = (currentUser && currentUser.full_name) || "";
+    msumApprovals = (data.approvals || []).map((a, i) => ({ id: a.id || (i + 1), statement: a.statement || "إعداد واعتماد", name: a.signer_name || currentUserName, position: a.position || "رئيس المهمة", date: a.approval_date || "", signature: a.signature_data || "" }));
     msumAttachments = attData.documents || [];
   } catch (e) {
     msumAttendance = [{ id: 1, name: "", dept: "", position: "" }];
     msumSummaryPoints = [{ id: 1, text: "", opinion: "", reason: "" }];
-    msumApprovals = [{ id: 1, statement: "إعداد واعتماد", name: "", position: "رئيس المهمة", date: "", signature: "" }];
+    msumApprovals = [{ id: 1, statement: "إعداد واعتماد", name: (currentUser && currentUser.full_name) || "", position: "رئيس المهمة", date: "", signature: "" }];
     msumAttachments = [];
   }
   msumDirty = false;
@@ -202,20 +258,26 @@ function renderMeetingSummaryPage() {
         </div>
       </div>
 
-      <!-- 4. الاعتماد — لغير مستخدمي HR فقط -->
+      <!-- 4. إعداد واعتماد — لغير مستخدمي HR فقط -->
       ${!hrUser ? `
       <div class="wiz-card">
-        <div class="wiz-card-head"><i data-lucide="check"></i><span style="color:#fff;font-weight:700;font-size:14px;">الاعتماد</span></div>
+        <div class="wiz-card-head"><i data-lucide="check"></i><span style="color:#fff;font-weight:700;font-size:14px;">إعداد واعتماد</span></div>
         <div class="msum-table-wrap">
           <table class="msum-table">
-            <thead><tr><th>البيان</th><th>الاسم</th><th>الوظيفة</th><th style="width:140px;">التاريخ</th></tr></thead>
+            <thead><tr><th>الاسم</th><th>الوظيفة</th><th style="width:220px;">التوقيع</th></tr></thead>
             <tbody>
               ${msumApprovals.map(row => `
                 <tr>
-                  <td><input type="text" id="ap-${row.id}-statement" class="msum-plain-input" data-ap-field="statement" data-ap-id="${row.id}" value="${escapeHtml(row.statement)}" ${allReadOnly ? "readonly" : ""}></td>
                   <td><input type="text" id="ap-${row.id}-name" class="msum-plain-input" placeholder="الاسم" data-ap-field="name" data-ap-id="${row.id}" value="${escapeHtml(row.name)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="text" id="ap-${row.id}-position" class="msum-plain-input" data-ap-field="position" data-ap-id="${row.id}" value="${escapeHtml(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
-                  <td><input type="date" id="ap-${row.id}-date" class="msum-plain-input" data-ap-field="date" data-ap-id="${row.id}" value="${row.date}" ${allReadOnly ? "readonly" : ""} onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
+                  <td><input type="text" id="ap-${row.id}-position" class="msum-plain-input" placeholder="الوظيفة" data-ap-field="position" data-ap-id="${row.id}" value="${escapeHtml(row.position)}" ${allReadOnly ? "readonly" : ""}></td>
+                  <td>
+                    ${allReadOnly
+                      ? (row.signature ? `<img src="${row.signature}" alt="توقيع" class="msum-sig-img">` : `<span class="msum-sig-empty">لا يوجد توقيع</span>`)
+                      : `<div class="msum-sig-pad-wrap">
+                          <canvas id="ap-${row.id}-sig" class="msum-sig-canvas" width="220" height="80"></canvas>
+                          <button type="button" class="msum-sig-clear" data-ap-sig-clear="${row.id}" title="مسح التوقيع">✕</button>
+                        </div>`}
+                  </td>
                 </tr>
               `).join("")}
             </tbody>
@@ -307,6 +369,22 @@ function bindMeetingSummaryEvents() {
       if (row) { row[el.dataset.apField] = el.value; mark(); rerenderMSumContent(); }
     });
   });
+
+  if (!allReadOnly) {
+    msumApprovals.forEach(row => {
+      const canvas = $("ap-" + row.id + "-sig");
+      if (canvas) msumInitSignaturePad(canvas, row.signature, (dataUrl) => { row.signature = dataUrl; mark(); });
+    });
+    document.querySelectorAll("[data-ap-sig-clear]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const row = msumApprovals.find(r => String(r.id) === String(btn.dataset.apSigClear));
+        const canvas = $("ap-" + btn.dataset.apSigClear + "-sig");
+        if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        if (row) { row.signature = ""; mark(); }
+      });
+    });
+  }
+
   const attachInput = $("msumAttachInput");
   if (attachInput) attachInput.addEventListener("change", async () => {
     if (!msumSelectedTaskId || !attachInput.files.length) return;
