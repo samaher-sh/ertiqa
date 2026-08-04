@@ -89,8 +89,8 @@ class MeetingSummaryController extends BaseController
         $meetingModel->update($meeting['id'], [
             'title'        => $data['title'] ?? null,
             'objective'    => $data['objective'] ?? null,
-            'meeting_date' => $data['date'] ?: null,
-            'meeting_time' => $data['time'] ?: null,
+            'meeting_date' => ($data['date'] ?? null) ?: null,
+            'meeting_time' => ($data['time'] ?? null) ?: null,
             'location'     => $data['location'] ?? null,
         ]);
 
