@@ -201,6 +201,11 @@ async function renderContent() {
     await initWizardData();
     el.innerHTML = renderWizardPage();
     bindWizardEvents();
+  } else if (activeContent === "scheduledMeetings") {
+    await loadMissionsForSelector();
+    await loadScheduledMeetingsPage();
+    el.innerHTML = renderScheduledMeetingsPage();
+    bindScheduledMeetingsEvents();
   } else if (activeContent === "observations") {
     await loadMissionsForSelector();
     el.innerHTML = renderObservationsPage();
