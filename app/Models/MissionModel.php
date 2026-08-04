@@ -82,6 +82,18 @@ class MissionModel extends Model
     }
 
     /**
+     * تفاصيل مهمة واحدة كاملة (لمعاينة "طلب المراجعة الداخلية" بصفحة التقرير النهائي)
+     */
+    public function findWithDetails(int $missionId): ?array
+    {
+        return $this->select('missions.*, ad.name_ar as audit_department_name, td.name_ar as target_department_name')
+            ->join('departments ad', 'ad.id = missions.audit_department_id', 'left')
+            ->join('departments td', 'td.id = missions.target_department_id', 'left')
+            ->where('missions.id', $missionId)
+            ->first();
+    }
+
+    /**
      * يولّد كود مهمة فريد بصيغة [اختصار الإدارة][4 أرقام تسلسلية]
      * مثال: HR0001, MED0042 — الترقيم تسلسلي داخل كل إدارة لحالها (مو عام لكل النظام)
      *

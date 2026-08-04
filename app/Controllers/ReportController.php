@@ -5,10 +5,15 @@ namespace App\Controllers;
 use App\Models\ReportModel;
 use App\Models\ReportChecklistItemModel;
 use App\Models\ServiceAgreementModel;
+use App\Models\ServiceAgreementResponseModel;
 use App\Models\DocumentRequestModel;
 use App\Models\RiskMatrixItemModel;
 use App\Models\MeetingModel;
+use App\Models\MeetingAttendeeModel;
+use App\Models\MeetingSummaryPointModel;
+use App\Models\MeetingApprovalModel;
 use App\Models\AuditNoteModel;
+use App\Models\MissionModel;
 
 class ReportController extends BaseController
 {
@@ -102,6 +107,58 @@ class ReportController extends BaseController
 
         (new ReportModel())->update($reportId, ['status' => 'pending_signatures', 'generated_at' => date('Y-m-d H:i:s')]);
         return $this->response->setJSON(['success' => true]);
+    }
+
+    /**
+     * GET /dashboard/reports/api/preview?mission_id=X&section=N (1-6)
+     * يجيب بيانات المعاينة الفعلية لمرحلة معيّنة من مراحل الاعتماد، لعرضها بزر
+     * "عرض" بجدول مراحل الاعتماد — قراءة فقط، بدون إنشاء أي صفوف جديدة
+     * (بخلاف findOrCreateForMission المستخدمة بصفحات التعبئة الفعلية)
+     */
+    public function preview()
+    {
+        $missionId = (int) $this->request->getGet('mission_id');
+        $section   = (int) $this->request->getGet('section');
+
+        if (!$missionId || !isset(self::STEPS[$section])) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'بيانات غير صحيحة.']);
+        }
+
+        switch ($section) {
+            case 1:
+                $mission = (new MissionModel())->findWithDetails($missionId);
+                if (!$mission) {
+                    return $this->response->setStatusCode(404)->setJSON(['success' => false]);
+                }
+                return $this->response->setJSON(['success' => true, 'section' => 1, 'mission' => $mission]);
+
+            case 2:
+                $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+                $responses = (new ServiceAgreementResponseModel())->forMission($missionId);
+                return $this->response->setJSON(['success' => true, 'section' => 2, 'agreement' => $agreement, 'responses' => $responses]);
+
+            case 3:
+                $documents = (new DocumentRequestModel())->forMissionWithResponses($missionId);
+                return $this->response->setJSON(['success' => true, 'section' => 3, 'documents' => $documents]);
+
+            case 4:
+                $items = (new RiskMatrixItemModel())->forMission($missionId);
+                return $this->response->setJSON(['success' => true, 'section' => 4, 'items' => $items]);
+
+            case 5:
+                $meeting = (new MeetingModel())->firstForMission($missionId);
+                $attendees = $meeting ? (new MeetingAttendeeModel())->forMeeting($meeting['id']) : [];
+                $points    = $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [];
+                $approvals = $meeting ? (new MeetingApprovalModel())->forMeeting($meeting['id']) : [];
+                return $this->response->setJSON([
+                    'success' => true, 'section' => 5,
+                    'meeting' => $meeting, 'attendees' => $attendees, 'points' => $points, 'approvals' => $approvals,
+                ]);
+
+            case 6:
+                $observations = (new AuditNoteModel())->forMission($missionId);
+                return $this->response->setJSON(['success' => true, 'section' => 6, 'observations' => $observations]);
+        }
     }
 
     /** يتحقق فعليًا هل كل مرحلة فيها بيانات حقيقية بقاعدة البيانات */
