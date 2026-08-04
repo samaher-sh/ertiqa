@@ -13,6 +13,7 @@
 let sentTasksSelected = null;
 let stTimelineEvents = [];
 let stTimelineLoading = false;
+let stNextStage = null;
 
 const ST_STAGE_TO_PAGE = {
   3: { key: "riskMatrix",     label: "مصفوفة المخاطر" },
@@ -81,8 +82,10 @@ async function stLoadTimeline(missionId) {
   try {
     const data = await apiGet(base + "/dashboard/sent-tasks/api/timeline?mission_id=" + missionId);
     stTimelineEvents = data.events || [];
+    stNextStage = data.next_stage || null;
   } catch (e) {
     stTimelineEvents = [];
+    stNextStage = null;
   }
   stTimelineLoading = false;
 }
@@ -112,7 +115,7 @@ function renderSentTaskTimeline() {
 /* ---------- Detail ---------- */
 function renderSentTaskDetail() {
   const t = sentTasksSelected;
-  const nextStage = ST_STAGE_TO_PAGE[t.current_stage];
+  const nextStage = ST_STAGE_TO_PAGE[stNextStage];
   return `
   <div class="flex flex-col gap-5" dir="rtl">
     <div class="st-detail-header">
@@ -122,7 +125,7 @@ function renderSentTaskDetail() {
         <h2 class="st-detail-title">${escapeHtml(t.title)}</h2>
         <p class="st-detail-sub">${escapeHtml(t.mission_code)} · ${escapeHtml(t.target_department_name)}</p>
       </div>
-      <span class="st-detail-status">المرحلة ${t.current_stage}</span>
+      <span class="st-detail-status">المرحلة ${stNextStage || t.current_stage}</span>
     </div>
 
     <div class="st-detail-grid">

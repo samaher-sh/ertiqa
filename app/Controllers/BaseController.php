@@ -50,14 +50,14 @@ abstract class BaseController extends Controller
     protected function allNavItems(): array
     {
         return [
-            'home'           => ['label' => 'الرئيسية',          'desc' => 'Dashboard',        'url' => base_url('dashboard'),               'icon' => 'home'],
-            'newTask'        => ['label' => 'بدء مهمة',           'desc' => 'New Audit Task',   'url' => base_url('dashboard/new-task'),      'icon' => 'plus'],
-            'riskMatrix'     => ['label' => 'مصفوفة المخاطر',     'desc' => 'Risk Matrix',      'url' => base_url('dashboard/risk-matrix'),   'icon' => 'bar-chart-2'],
-            'meetingSummary' => ['label' => 'ملخص اجتماع',        'desc' => 'Meeting Summary',  'url' => base_url('dashboard/meetings'),      'icon' => 'users'],
-            'observations'   => ['label' => 'الملاحظات',          'desc' => 'Observations',     'url' => base_url('dashboard/observations'),  'icon' => 'book-open'],
-            'finalReports'   => ['label' => 'تقرير نهائي',        'desc' => 'Final Reports',    'url' => base_url('dashboard/reports'),       'icon' => 'file-text'],
-            'sentTasks'      => ['label' => 'المراسلات المشتركة', 'desc' => 'Sent Tasks',       'url' => base_url('dashboard/sent-tasks'),    'icon' => 'send'],
-            'notifications'  => ['label' => 'الإخطارات',          'desc' => 'Notifications',   'url' => base_url('dashboard/notifications'), 'icon' => 'bell'],
+            'home'              => ['label' => 'الرئيسية',          'desc' => 'Dashboard',           'url' => base_url('dashboard'),                  'icon' => 'home'],
+            'newTask'           => ['label' => 'بدء مهمة',           'desc' => 'New Audit Task',      'url' => base_url('dashboard/new-task'),         'icon' => 'plus'],
+            'scheduledMeetings' => ['label' => 'اجتماعات مجدولة',    'desc' => 'Scheduled Meetings',  'url' => base_url('dashboard/scheduled-meetings'),'icon' => 'calendar'],
+            'riskMatrix'        => ['label' => 'مصفوفة المخاطر',     'desc' => 'Risk Matrix',         'url' => base_url('dashboard/risk-matrix'),      'icon' => 'bar-chart-2'],
+            'meetingSummary'    => ['label' => 'ملخص اجتماع',        'desc' => 'Meeting Summary',     'url' => base_url('dashboard/meetings'),         'icon' => 'users'],
+            'observations'      => ['label' => 'الملاحظات',          'desc' => 'Observations',        'url' => base_url('dashboard/observations'),     'icon' => 'book-open'],
+            'finalReports'      => ['label' => 'تقرير نهائي',        'desc' => 'Final Reports',       'url' => base_url('dashboard/reports'),          'icon' => 'file-text'],
+            'sentTasks'         => ['label' => 'المراسلات المشتركة', 'desc' => 'Sent Tasks',          'url' => base_url('dashboard/sent-tasks'),       'icon' => 'send'],
         ];
     }
 
@@ -72,7 +72,7 @@ abstract class BaseController extends Controller
         if ($isPresident) {
             $keys = ['home', 'finalReports'];
         } elseif ($isHrDept) {
-            $keys = ['home', 'notifications', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
+            $keys = ['home', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
         } elseif ($isAuditHead) {
             $keys = ['home', 'finalReports'];
         }
