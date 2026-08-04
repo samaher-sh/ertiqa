@@ -51,7 +51,7 @@ class ObservationController extends BaseController
             'department_id'         => $data['department_id'],
             'title'                 => $data['title'] ?? '',
             'observation_date'      => $data['observation_date'] ?: date('Y-m-d'),
-            'risk_severity'         => in_array($data['risk_severity'] ?? '', ['عالي', 'متوسط', 'منخفض'], true) ? $data['risk_severity'] : 'متوسط',
+            'risk_severity'         => mb_substr((string) ($data['risk_severity'] ?? ''), 0, 50),
             'observation_text'      => $data['observation_text'],
             'standard_text'         => $data['standard_text'] ?? '',
             'reason_text'           => $data['reason_text'] ?? '',

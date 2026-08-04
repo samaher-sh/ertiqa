@@ -94,6 +94,8 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 @media (max-width:800px){ .obs-grid-4{ grid-template-columns:1fr 1fr; } .obs-grid-3{ grid-template-columns:1fr 1fr; } .obs-grid-2{ grid-template-columns:1fr; } }
 @media (max-width:520px){ .obs-grid-4{ grid-template-columns:1fr; } .obs-grid-3{ grid-template-columns:1fr; } }
 .obs-divider{ height:1px; background:linear-gradient(90deg,transparent,var(--pb),transparent); }
+.obs-auto-field{ display:flex; align-items:center; padding:10px 12px; border-radius:12px; font-size:13px; height:42px; box-sizing:border-box; color:#6b7280; background:#f3f4f6; border:1px solid #e5e7eb; }
+.obs-auto-field .val{ font-weight:600; color:#6b7280; }
 .obs-risk-picker{ display:flex; gap:8px; height:42px; }
 .obs-risk-pick-btn{ flex:1; border-radius:12px; font-size:12px; font-weight:700; background:#f3f4f6; color:#9ca3af; border:1px solid #e2e8f0; }
 .obs-risk-pick-btn.sel-عالي{ background:#fee2e2; color:#b91c1c; border-color:#fca5a5; box-shadow:0 0 0 2px rgba(239,68,68,.15); }
