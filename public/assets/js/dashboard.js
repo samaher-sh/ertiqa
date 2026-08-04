@@ -203,7 +203,6 @@ async function renderContent() {
     bindWizardEvents();
   } else if (activeContent === "observations") {
     await loadMissionsForSelector();
-    await initObservationsData();
     el.innerHTML = renderObservationsPage();
     bindObservationsEvents();
   } else if (activeContent === "taskDetail" && typeof selectedTaskDetail !== "undefined" && selectedTaskDetail) {

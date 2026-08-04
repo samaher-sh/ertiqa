@@ -30,18 +30,11 @@ let obsSubExpanded = null;
 const isObsHrUser = () => isHrDept || isHrCoordinator;
 const obsIsReadOnly = () => isObsHrUser() || isAuditHead;
 
-/* ---------- بيانات الإدارات (مشتركة مع wizard.js - تُحمَّل مرة وحدة) ---------- */
-async function initObservationsData() {
-  await initWizardData(); // نفس دالة تحميل WIZ_MAIN_DEPTS / WIZ_SUBS_BY_PARENT الموجودة بـ wizard.js
-}
-
-function obsDeptName(deptId) {
-  for (const g of WIZ_MAIN_DEPTS) {
-    if (String(g.id) === String(deptId)) return g.name_ar;
-    const sub = (WIZ_SUBS_BY_PARENT[g.id] || []).find(s => String(s.id) === String(deptId));
-    if (sub) return sub.name_ar;
-  }
-  return "";
+/* الإدارة محل المراجعة تُشتق دائمًا من المهمة المختارة حاليًا (target_department_id
+   الحقيقي بالمهمة) — بدون اختيار يدوي منفصل بالنموذج */
+function obsMissionDept() {
+  const m = missionsForSelector.find(x => String(x.id) === String(obsSelectedTaskId));
+  return m ? { deptId: m.target_department_id, dept: m.target_department_name || "" } : { deptId: "", dept: "" };
 }
 
 
@@ -86,39 +79,39 @@ async function obsLoadList(missionId) {
   obsLoading = false;
 }
 
-/* تصدير PDF عبر نافذة طباعة (لا يوجد endpoint حقيقي لتصدير الملاحظات بالباك-إند حاليًا) */
-function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
+/* تصدير PDF لملاحظة واحدة بعينها عبر نافذة طباعة (لا يوجد endpoint حقيقي بالباك-إند
+   لتوليد PDF مباشرة، فنستخدم نافذة طباعة كما بباقي الصفحات) — يستخدم بيانات نفس
+   الملاحظة المفتوحة بالنموذج فقط، وليس قائمة الملاحظات كاملة */
+function exportObservationToPDF(obs) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
 
   const today = new Date().toLocaleDateString("ar-SA");
+  const refLabel = obs.ref || "سيُحدَّد بعد الحفظ";
 
-  let detailsHTML = "";
-  if (detailsList && detailsList.length > 0) {
-    detailsHTML = `
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-          <tr style="background-color: #f0f8fd;">
-            <th style="padding: 12px; border: 1px solid #d8e6eb; text-align: right; color: #3185b3;">المرحلة / الحقل</th>
-            <th style="padding: 12px; border: 1px solid #d8e6eb; text-align: right; color: #3185b3;">التفاصيل</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${detailsList.map(item => `
-            <tr>
-              <td style="padding: 12px; border: 1px solid #d8e6eb; font-weight: bold; width: 30%; color: #6b8c95;">${escapeHtml(item.label)}</td>
-              <td style="padding: 12px; border: 1px solid #d8e6eb; color: #152c33;">${escapeHtml(item.value)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  }
+  const fields = [
+    ["عنوان الملاحظة", obs.title],
+    ["الإدارة محل المراجعة", obs.dept],
+    ["تاريخ المراجعة", obs.date],
+    ["الحالة (الخطر)", obs.risk],
+    ["الملاحظة", obs.observation],
+    ["المعيار أو النظام", obs.standard],
+    ["السبب", obs.reason],
+    ["الأثر", obs.impact],
+    ["التوصيات", obs.recommendations],
+  ];
+
+  const fieldsHTML = fields.map(([label, value]) => `
+    <tr>
+      <td style="padding: 12px; border: 1px solid #d8e6eb; font-weight: bold; width: 30%; color: #6b8c95;">${escapeHtml(label)}</td>
+      <td style="padding: 12px; border: 1px solid #d8e6eb; color: #152c33;">${escapeHtml(value || "—")}</td>
+    </tr>
+  `).join("");
 
   printWindow.document.write(`
     <html dir="rtl">
       <head>
-        <title>تصدير تقرير المهمة - ${escapeHtml(taskId)}</title>
+        <title>ملاحظة رقابية - ${escapeHtml(refLabel)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
           h1 { color: #3185b3; border-bottom: 2px solid #3185b3; padding-bottom: 15px; margin-bottom: 30px; font-size: 24px;}
@@ -126,6 +119,7 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
           .header-info div { display: flex; flex-direction: column; gap: 5px; }
           .label { font-size: 12px; color: #6b8c95; font-weight: bold; }
           .value { font-size: 16px; font-weight: bold; color: #152c33; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
           .footer { margin-top: 60px; text-align: center; font-size: 12px; color: #6b8c95; border-top: 1px solid #d8e6eb; padding-top: 20px; }
           @media print {
             body { padding: 0; }
@@ -134,20 +128,12 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
         </style>
       </head>
       <body>
-        <h1>تقرير تفاصيل المهمة الرقابية</h1>
+        <h1>ملاحظة رقابية</h1>
 
         <div class="header-info">
           <div>
-            <span class="label">رقم المهمة</span>
-            <span class="value">${escapeHtml(taskId)}</span>
-          </div>
-          <div>
-            <span class="label">عنوان المهمة</span>
-            <span class="value">${escapeHtml(taskTitle)}</span>
-          </div>
-          <div>
-            <span class="label">الإدارة المختصة</span>
-            <span class="value">${escapeHtml(taskDept)}</span>
+            <span class="label">المرجع</span>
+            <span class="value" dir="ltr">${escapeHtml(refLabel)}</span>
           </div>
           <div>
             <span class="label">تاريخ التصدير</span>
@@ -155,11 +141,10 @@ function exportTaskToPDF(taskId, taskTitle, taskDept, detailsList) {
           </div>
         </div>
 
-        <h3 style="color: #3185b3; margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px;">سجل وتفاصيل المهمة</h3>
-        ${detailsHTML || "<p>لا توجد تفاصيل إضافية مسجلة لهذه المهمة حالياً.</p>"}
+        <table>${fieldsHTML}</table>
 
         <div class="footer">
-          تم إنشاء هذا التقرير تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}
+          تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}
         </div>
         <script>
           window.onload = () => {
@@ -323,14 +308,15 @@ function renderObsListMode() {
               </tr></thead>
               <tbody>
                 ${filteredObs.map((obs, i) => {
-                  const rc = OBS_RISK_COLORS[obs.risk] || OBS_RISK_COLORS["متوسط"];
+                  const rc = OBS_RISK_COLORS[obs.risk] || { bg: "#f3f4f6", text: "#4b5563", border: "#e5e7eb", dot: "#9ca3af" };
+                  const rcLabel = obs.risk || "—";
                   const menuOpen = obsOpenMenuId === obs.id;
                   return `
                   <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
                     <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
                     <td><span class="obs-dept-cell"><i data-lucide="building-2"></i>${escapeHtml(obs.dept || "—")}</span></td>
                     <td><span class="obs-date-cell">${obs.date}</span></td>
-                    <td><span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${rc.label}</span></td>
+                    <td><span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(rcLabel)}</span></td>
                     ${!isAuditHead ? `
                     <td class="obs-menu-cell">
                       <button class="obs-menu-btn" data-menu-toggle="${obs.id}"><i data-lucide="more-vertical"></i></button>
@@ -435,9 +421,10 @@ function bindObsListEvents() {
 
 /* ---------- إجراءات القائمة ---------- */
 function obsOpenNew() {
+  const md = obsMissionDept();
   obsDraft = {
-    id: 0, ref: "", deptId: "", dept: "", title: "", date: new Date().toISOString().slice(0, 10),
-    risk: "متوسط", status: "بانتظار الرد",
+    id: 0, ref: "", deptId: md.deptId, dept: md.dept, title: "", date: new Date().toISOString().slice(0, 10),
+    risk: "", status: "بانتظار الرد",
     observation: "", standard: "", reason: "", impact: "",
     recommendations: "", addToReport: null, attachments: [],
   };
@@ -449,7 +436,8 @@ function obsOpenNew() {
 function obsOpenEdit(id) {
   const obs = obsList.find(o => o.id === id);
   if (!obs) return;
-  obsDraft = { ...obs, attachments: [] };
+  const md = obsMissionDept();
+  obsDraft = { ...obs, deptId: md.deptId, dept: md.dept, attachments: [] };
   obsSubItems = [];
   obsSubExpanded = null;
   obsOpenMenuId = null;
@@ -548,11 +536,6 @@ function renderObsFormMode() {
   </div>`;
 }
 
-function renderDeptOptions(selectedId) {
-  return WIZ_MAIN_DEPTS.map(g => `<optgroup label="── ${escapeHtml(g.name_ar)}">
-    ${wizSubDepts(g.id).map(sub => `<option value="${sub.id}" ${String(selectedId) === String(sub.id) ? "selected" : ""}>${escapeHtml(sub.name_ar)}</option>`).join("")}
-  </optgroup>`).join("");
-}
 
 function renderObsForm() {
   const d = obsDraft;
@@ -563,31 +546,25 @@ function renderObsForm() {
         <button class="obs-form-back" id="obsFormBack"><i data-lucide="chevron-right"></i></button>
         <h3 class="obs-form-title">${obsView === "new" ? "إضافة ملاحظة جديدة" : "تعديل الملاحظة"}</h3>
       </div>
-      <button class="obs-form-save" id="obsFormSave"><i data-lucide="check"></i> حفظ واعتماد</button>
+      <div style="display:flex;gap:8px;">
+        <button class="obs-btn-pdf" id="obsFormExportBtn"><i data-lucide="file-text"></i> تصدير PDF</button>
+        <button class="obs-form-save" id="obsFormSave"><i data-lucide="check"></i> حفظ واعتماد</button>
+      </div>
     </div>
 
     <div class="obs-form-body">
-      <div class="obs-grid-4">
+      <div class="obs-grid-3">
         <div class="wiz-field">
-          <label class="wiz-label">تاريخ المراجعة</label>
-          <input id="obsDate" type="date" class="wiz-input plain" value="${d.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-        </div>
-        <div class="wiz-field">
-          <label class="wiz-label">الإدارة محل المراجعة <span class="wiz-req">*</span></label>
-          <select id="obsDept" class="wiz-select ${d.deptId ? "filled" : ""}">
-            <option value="">--- اختر ---</option>
-            ${renderDeptOptions(d.deptId)}
-          </select>
+          <label class="wiz-label">الإدارة محل المراجعة</label>
+          <div class="obs-auto-field"><span class="val">${escapeHtml(d.dept) || "— اختر المهمة أولاً —"}</span></div>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
           <input id="obsTitle" type="text" class="wiz-input plain" placeholder="عنوان مختصر..." value="${escapeHtml(d.title)}">
         </div>
         <div class="wiz-field">
-          <label class="wiz-label">مستوى الخطر</label>
-          <div class="obs-risk-picker">
-            ${["عالي", "متوسط", "منخفض"].map(r => `<button class="obs-risk-pick-btn ${d.risk === r ? "sel-" + r : ""}" data-risk-pick="${r}">${r}</button>`).join("")}
-          </div>
+          <label class="wiz-label">التاريخ</label>
+          <input id="obsDate" type="date" class="wiz-input plain" value="${d.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
         </div>
       </div>
 
@@ -610,22 +587,19 @@ function renderObsForm() {
           <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
           <textarea id="obsImpact" rows="3" class="wiz-textarea plain" placeholder="الأثر المالي أو التشغيلي المترتب...">${escapeHtml(d.impact)}</textarea>
         </div>
-        <div class="wiz-field" style="grid-column:1/-1;">
+        <div class="wiz-field">
           <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
           <textarea id="obsRecommendations" rows="2" class="wiz-textarea plain" placeholder="الإجراءات التصحيحية المقترحة...">${escapeHtml(d.recommendations)}</textarea>
+        </div>
+        <div class="wiz-field">
+          <label class="wiz-label">الحالة (الخطر):</label>
+          <input id="obsRisk" type="text" class="wiz-input plain" placeholder="اكتب حالة/خطورة الملاحظة..." value="${escapeHtml(d.risk)}">
         </div>
       </div>
 
       <div class="obs-divider"></div>
 
       <div class="obs-attach-row">
-        <div class="wiz-field" style="gap:8px;">
-          <label class="wiz-label">تضاف للتقرير؟</label>
-          <div class="obs-radio-group">
-            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === true ? "checked" : ""} data-add-report="true"> نعم</label>
-            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === false ? "checked" : ""} data-add-report="false"> لا</label>
-          </div>
-        </div>
         <div>
           <input type="file" id="obsFileInput" style="display:none;">
           <button class="obs-attach-btn" id="obsAttachBtn"><i data-lucide="paperclip"></i> إرفاق</button>
@@ -639,6 +613,13 @@ function renderObsForm() {
                 </div>
               `).join("")}
             </div>` : ""}
+        </div>
+        <div class="wiz-field" style="gap:8px;">
+          <label class="wiz-label">تضاف للتقرير؟</label>
+          <div class="obs-radio-group">
+            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === true ? "checked" : ""} data-add-report="true"> نعم</label>
+            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === false ? "checked" : ""} data-add-report="false"> لا</label>
+          </div>
         </div>
       </div>
 
@@ -655,24 +636,17 @@ function bindObsFormEvents() {
 
   $("obsFormBack").addEventListener("click", obsCancel);
   $("obsFormSave").addEventListener("click", obsSave);
+  $("obsFormExportBtn").addEventListener("click", () => exportObservationToPDF(d));
 
   $("obsDate").addEventListener("change", e => { d.date = e.target.value; rerenderObsContent(); });
-  $("obsDept").addEventListener("change", e => {
-    d.deptId = e.target.value;
-    d.dept = obsDeptName(d.deptId);
-    rerenderObsContent();
-  });
   $("obsTitle").addEventListener("input", e => { d.title = e.target.value; });
+  $("obsRisk").addEventListener("input", e => { d.risk = e.target.value; });
 
   const obsGrowFields = { obsObservation: "observation", obsStandard: "standard", obsReason: "reason", obsImpact: "impact", obsRecommendations: "recommendations" };
   Object.keys(obsGrowFields).forEach(id => {
     const el = $(id);
     autoGrowTextarea(el);
     el.addEventListener("input", e => { d[obsGrowFields[id]] = e.target.value; autoGrowTextarea(e.target); });
-  });
-
-  document.querySelectorAll("[data-risk-pick]").forEach(btn => {
-    btn.addEventListener("click", () => { d.risk = btn.dataset.riskPick; rerenderObsContent(); });
   });
 
   $("obsAttachBtn").addEventListener("click", () => $("obsFileInput").click());
@@ -706,43 +680,32 @@ function renderSubObservations() {
       <button class="obs-sub-add-btn" id="obsSubAddBtn"><i data-lucide="plus"></i> إضافة ملاحظة</button>
     </div>
 
-    ${obsSubItems.length === 0 ? `<p class="obs-sub-empty">اضغط «إضافة ملاحظة» لإضافة ملاحظة فرعية جديدة</p>` : ""}
-
     ${obsSubItems.map((item, idx) => {
       const open = obsSubExpanded === item.id;
-      const rc = item.risk ? OBS_RISK_COLORS[item.risk] : null;
+      const rc = item.risk ? (OBS_RISK_COLORS[item.risk] || { bg: "#f3f4f6", text: "#4b5563" }) : null;
       return `
       <div class="obs-sub-card ${open ? "open" : ""}">
         <div class="obs-sub-card-head" data-sub-toggle="${item.id}">
           <span class="obs-sub-num">${idx + 1}</span>
           <span class="obs-sub-title">${escapeHtml(item.title || "ملاحظة غير معنونة")}</span>
-          ${rc ? `<span class="obs-pill" style="background:${rc.bg};color:${rc.text};">${item.risk}</span>` : ""}
+          ${rc ? `<span class="obs-pill" style="background:${rc.bg};color:${rc.text};">${escapeHtml(item.risk)}</span>` : ""}
           <button class="obs-sub-del" data-sub-del="${item.id}"><i data-lucide="x"></i></button>
           <i data-lucide="chevron-left" class="obs-sub-chevron ${open ? "open" : ""}"></i>
         </div>
         ${open ? `
         <div class="obs-sub-body">
-          <div class="obs-grid-4">
+          <div class="obs-grid-3">
             <div class="wiz-field">
-              <label class="wiz-label">تاريخ المراجعة <span class="wiz-req">*</span></label>
-              <input type="date" id="sub-${item.id}-date" class="wiz-input plain" data-sub-field="date" data-sub-id="${item.id}" value="${item.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">الإدارة محل المراجعة <span class="wiz-req">*</span></label>
-              <select id="sub-${item.id}-dept" class="wiz-select ${item.deptId ? "filled" : ""}" data-sub-select-dept="${item.id}">
-                <option value="">--- اختر ---</option>
-                ${renderDeptOptions(item.deptId)}
-              </select>
+              <label class="wiz-label">الإدارة محل المراجعة</label>
+              <div class="obs-auto-field"><span class="val">${escapeHtml(item.dept) || "—"}</span></div>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
               <input type="text" id="sub-${item.id}-title" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escapeHtml(item.title)}">
             </div>
             <div class="wiz-field">
-              <label class="wiz-label">مستوى الخطر</label>
-              <div class="obs-risk-picker">
-                ${["عالي", "متوسط", "منخفض"].map(r => `<button class="obs-risk-pick-btn ${item.risk === r ? "sel-" + r : ""}" data-sub-risk="${item.id}" data-risk-val="${r}">${r}</button>`).join("")}
-              </div>
+              <label class="wiz-label">التاريخ</label>
+              <input type="date" id="sub-${item.id}-date" class="wiz-input plain" data-sub-field="date" data-sub-id="${item.id}" value="${item.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
             </div>
           </div>
 
@@ -765,22 +728,19 @@ function renderSubObservations() {
               <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
               <textarea rows="3" id="sub-${item.id}-impact" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escapeHtml(item.impact)}</textarea>
             </div>
-            <div class="wiz-field" style="grid-column:1/-1;">
+            <div class="wiz-field">
               <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
               <textarea rows="2" id="sub-${item.id}-recommendations" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escapeHtml(item.recommendations)}</textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">الحالة (الخطر):</label>
+              <input type="text" id="sub-${item.id}-risk" class="wiz-input plain" data-sub-field="risk" data-sub-id="${item.id}" placeholder="اكتب حالة/خطورة الملاحظة..." value="${escapeHtml(item.risk)}">
             </div>
           </div>
 
           <div class="obs-divider"></div>
 
           <div class="obs-attach-row">
-            <div class="wiz-field" style="gap:8px;">
-              <label class="wiz-label">تضاف للتقرير؟</label>
-              <div class="obs-radio-group">
-                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === true ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="true"> نعم</label>
-                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === false ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="false"> لا</label>
-              </div>
-            </div>
             <div>
               <input type="file" id="obsSubFile-${item.id}" style="display:none;">
               <button class="obs-attach-btn" data-sub-attach-btn="${item.id}"><i data-lucide="paperclip"></i> إرفاق</button>
@@ -795,6 +755,13 @@ function renderSubObservations() {
                   `).join("")}
                 </div>` : ""}
             </div>
+            <div class="wiz-field" style="gap:8px;">
+              <label class="wiz-label">تضاف للتقرير؟</label>
+              <div class="obs-radio-group">
+                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === true ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="true"> نعم</label>
+                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === false ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="false"> لا</label>
+              </div>
+            </div>
           </div>
         </div>` : ""}
       </div>`;
@@ -805,9 +772,10 @@ function renderSubObservations() {
 function bindSubObservationsEvents() {
   document.getElementById("obsSubAddBtn").addEventListener("click", () => {
     const id = Date.now();
+    const md = obsMissionDept();
     obsSubItems.push({
       id, date: new Date().toISOString().slice(0, 10),
-      deptId: "", dept: "", title: "", risk: "متوسط",
+      deptId: md.deptId, dept: md.dept, title: "", risk: "",
       observation: "", standard: "", reason: "", impact: "",
       recommendations: "", addToReport: null, attachments: [],
     });
@@ -841,22 +809,6 @@ function bindSubObservationsEvents() {
       if (item) { item[field] = el.value; rerenderObsContent(); }
     });
   });
-  document.querySelectorAll("[data-sub-select-dept]").forEach(el => {
-    el.addEventListener("change", () => {
-      const id = parseInt(el.dataset.subSelectDept, 10);
-      const item = obsSubItems.find(it => it.id === id);
-      if (item) { item.deptId = el.value; item.dept = obsDeptName(el.value); rerenderObsContent(); }
-    });
-  });
-
-  document.querySelectorAll("[data-sub-risk]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = parseInt(btn.dataset.subRisk, 10);
-      const item = obsSubItems.find(it => it.id === id);
-      if (item) { item.risk = btn.dataset.riskVal; rerenderObsContent(); }
-    });
-  });
-
   obsSubItems.forEach(item => {
     const btn = document.querySelector(`[data-sub-attach-btn="${item.id}"]`);
     const input = document.getElementById(`obsSubFile-${item.id}`);
@@ -890,7 +842,7 @@ function bindSubObservationsEvents() {
    ============================================================ */
 function renderObsViewMode() {
   const v = obsViewTarget;
-  const rc = OBS_RISK_COLORS[v.risk] || OBS_RISK_COLORS["متوسط"];
+  const rc = OBS_RISK_COLORS[v.risk] || { bg: "#f3f4f6", text: "#4b5563", border: "#e5e7eb", dot: "#9ca3af" };
   const sc = OBS_STATUS_COLORS[v.status] || OBS_STATUS_COLORS["بانتظار الرد"];
   const readOnly = obsIsReadOnly();
 
@@ -909,12 +861,12 @@ function renderObsViewMode() {
 
       <div class="obs-form-body">
         <div class="obs-view-grid cols-4">
-          <div class="obs-view-field"><span class="lbl">تاريخ المراجعة</span><span class="val">${v.date}</span></div>
           <div class="obs-view-field"><span class="lbl">الإدارة محل المراجعة</span><span class="val">${escapeHtml(v.dept || "—")}</span></div>
           <div class="obs-view-field"><span class="lbl">عنوان الملاحظة</span><span class="val">${escapeHtml(v.title || "—")}</span></div>
+          <div class="obs-view-field"><span class="lbl">التاريخ</span><span class="val">${v.date}</span></div>
           <div class="obs-view-field">
-            <span class="lbl">مستوى الخطر</span>
-            <span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${rc.label}</span>
+            <span class="lbl">الحالة (الخطر)</span>
+            <span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(v.risk || "—")}</span>
           </div>
         </div>
 
