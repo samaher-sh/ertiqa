@@ -65,6 +65,14 @@ table.msum-table td:not(:last-child){ border-left:1px solid #d8e6eb; }
 .msum-submit-btn.dirty{ background:var(--p); box-shadow:0 4px 12px rgba(49,133,179,.3); cursor:pointer; }
 .msum-submit-hint{ font-size:10px; color:#9ca3af; font-weight:500; }
 
+/* ══════ لوحة التوقيع (Signature Pad) بجدول إعداد واعتماد ══════ */
+.msum-sig-pad-wrap{ position:relative; display:inline-block; }
+.msum-sig-canvas{ width:100%; max-width:220px; height:80px; border:1.5px dashed #cbd5e1; border-radius:10px; background:#fff; cursor:crosshair; touch-action:none; display:block; }
+.msum-sig-clear{ position:absolute; top:4px; left:4px; width:20px; height:20px; border-radius:50%; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.msum-sig-clear:hover{ background:#fee2e2; }
+.msum-sig-img{ max-width:220px; max-height:80px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+.msum-sig-empty{ font-size:11px; color:#9ca3af; }
+
 /* ══════ حقل عنوان المهمة القابل للتعديل (منفصل عن الحقول المقفولة الرمادية) ══════ */
 .msum-edit-wrap{ border:1px solid var(--pb); background:#f0f8fd; border-radius:12px; padding:2px 12px; }
 .msum-edit-wrap .msum-growfield{ border:none; background:transparent; width:100%; padding:8px 0; }
