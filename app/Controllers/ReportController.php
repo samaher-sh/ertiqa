@@ -105,7 +105,14 @@ class ReportController extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب اعتماد كل المراحل أولاً.']);
         }
 
-        (new ReportModel())->update($reportId, ['status' => 'pending_signatures', 'generated_at' => date('Y-m-d H:i:s')]);
+        $reportModel = new ReportModel();
+        $reportModel->update($reportId, ['status' => 'pending_signatures', 'generated_at' => date('Y-m-d H:i:s')]);
+
+        $report = $reportModel->find($reportId);
+        if ($report && !empty($report['mission_id'])) {
+            (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_finalized', 'report', $reportId);
+        }
+
         return $this->response->setJSON(['success' => true]);
     }
 

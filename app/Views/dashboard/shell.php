@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/finalreports.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/meetingschedule.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/notifications.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/documentrequests.css') ?>">
 </head>
 <body>
 
@@ -158,6 +159,7 @@
 <script src="<?= base_url('assets/js/finalreports.js') ?>"></script>
 <script src="<?= base_url('assets/js/meetingschedule.js') ?>"></script>
 <script src="<?= base_url('assets/js/notifications.js') ?>"></script>
+<script src="<?= base_url('assets/js/documentrequests.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
 </body>
 </html>

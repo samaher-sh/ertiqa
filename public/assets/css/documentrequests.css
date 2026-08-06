@@ -1,0 +1,39 @@
+/* ============================================================
+   قائمة المستندات المطلوبة (Document Requests)
+   ============================================================ */
+.dr-card{ display:flex; flex-direction:column; }
+.dr-body{ padding:16px 24px; display:flex; flex-direction:column; gap:14px; }
+.dr-empty{ text-align:center; color:#9ca3af; font-size:13px; font-weight:600; padding:20px 0; }
+
+.dr-row{ border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; background:#f8fbfd; }
+.dr-row.editable{ background:#fff; }
+.dr-row-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.dr-row-name{ font-size:13px; font-weight:700; color:#152c33; }
+
+.dr-status-badge{ font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
+.dr-status-badge.yes{ background:#eaf4fa; color:var(--pd); }
+.dr-status-badge.no{ background:#fef2f2; color:#b91c1c; }
+.dr-status-badge.pending{ background:#fffbeb; color:#92400e; }
+
+.dr-exists-toggle{ display:flex; gap:14px; }
+.dr-radio{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#4a6b74; cursor:pointer; }
+
+.dr-row-note{ font-size:12px; color:#4a6b74; margin:8px 0 0; }
+.dr-note-input{
+  width:100%; margin-top:10px; border:1px solid #e5e7eb; border-radius:8px;
+  padding:8px 10px; font-size:12px; font-family:inherit; resize:vertical; min-height:44px;
+}
+.dr-note-input:focus{ outline:none; border-color:var(--p); }
+
+.dr-file-row{ display:flex; align-items:center; gap:12px; margin-top:10px; flex-wrap:wrap; }
+.dr-file-input{ font-size:12px; }
+.dr-file-link{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--pd); text-decoration:none; }
+.dr-file-link i{ width:13px; height:13px; }
+
+.dr-footer{ border-top:1px solid #e5e7eb; padding:14px 24px; display:flex; justify-content:flex-end; }
+.dr-submit-btn{
+  display:flex; align-items:center; gap:6px; padding:9px 20px; border-radius:10px; border:none;
+  background:var(--p); color:#fff; font-size:13px; font-weight:700; cursor:pointer;
+}
+.dr-submit-btn:disabled{ opacity:.6; cursor:not-allowed; }
+.dr-submit-btn i{ width:14px; height:14px; }

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\MissionChatMessageModel;
 use App\Models\MeetingModel;
+use App\Models\AuditLogModel;
 
 class MissionChatController extends BaseController
 {
@@ -74,6 +75,8 @@ class MissionChatController extends BaseController
             'created_at'         => date('Y-m-d H:i:s'),
         ]);
 
+        (new AuditLogModel())->log($missionId, (int) session()->get('user_id'), 'meeting_proposed', 'meeting', null);
+
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -121,6 +124,8 @@ class MissionChatController extends BaseController
             'created_at'         => date('Y-m-d H:i:s'),
         ]);
 
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_confirmed', 'meeting', $meeting['id']);
+
         return $this->response->setJSON(['success' => true]);
     }
 
@@ -152,6 +157,8 @@ class MissionChatController extends BaseController
             'type'       => 'cancelled',
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', null);
 
         return $this->response->setJSON(['success' => true]);
     }

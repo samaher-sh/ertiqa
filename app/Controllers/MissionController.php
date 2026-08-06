@@ -8,6 +8,7 @@ use App\Models\DepartmentModel;
 use App\Models\ServiceAgreementModel;
 use App\Models\ServiceAgreementResponseModel;
 use App\Models\DocumentRequestModel;
+use App\Models\AuditLogModel;
 
 class MissionController extends BaseController
 {
@@ -103,6 +104,7 @@ class MissionController extends BaseController
         ], true);
 
         $stageHistoryModel->openStage($missionId, 1, $userId);
+        (new AuditLogModel())->log($missionId, $userId, 'mission_created', 'mission', $missionId);
 
         // اتفاقية مستوى الخدمة - رأس الاتفاقية + كل بنودها (Snapshot) بحالة فارغة
         // (تُملأ فعليًا لاحقًا من قِبل ممثل الإدارة المستهدفة)

@@ -6,31 +6,23 @@ use App\Models\MissionStageHistoryModel;
 use App\Models\RiskMatrixItemModel;
 use App\Models\MeetingModel;
 use App\Models\AuditNoteModel;
+use App\Models\AuditLogModel;
 
 class SentTasksController extends BaseController
 {
-    /** GET /dashboard/sent-tasks/api/timeline?mission_id=X — السجل الزمني الفعلي لمهمة */
+    /**
+     * GET /dashboard/sent-tasks/api/timeline?mission_id=X — السجل الزمني الفعلي لمهمة
+     * المصدر الحقيقي هو audit_logs (حدث منفصل لكل فعل مهم: إنشاء مهمة، رفع مستندات،
+     * حفظ مصفوفة مخاطر، اقتراح/تأكيد/إلغاء موعد، حفظ ملخص اجتماع، إضافة ملاحظة، اعتماد
+     * تقرير) — أدق من mission_stage_history اللي مخصصة لتتبع دخول رقم المرحلة فقط
+     * (تبقى مستخدمة لحساب next_stage تحت، بما إنها مرتبطة بمنطق SLA المرحلي)
+     */
     public function timeline()
     {
         $missionId = (int) $this->request->getGet('mission_id');
         if (!$missionId) return $this->response->setJSON(['success' => true, 'events' => [], 'next_stage' => null]);
 
-        $history = (new MissionStageHistoryModel())
-            ->select('mission_stage_history.*, users.full_name as user_name')
-            ->join('users', 'users.id = mission_stage_history.responsible_user_id', 'left')
-            ->where('mission_id', $missionId)
-            ->orderBy('entered_at', 'ASC')
-            ->findAll();
-
-        $stageNames = [1 => 'طلب المراجعة الداخلية', 2 => 'اتفاقية مستوى الخدمة / المستندات', 3 => 'مصفوفة المخاطر', 4 => 'ملخص الاجتماع', 5 => 'الملاحظات', 6 => 'التوقيع', 7 => 'التقرير النهائي'];
-
-        $events = array_map(function ($h) use ($stageNames) {
-            return [
-                'stage_name' => $stageNames[$h['stage_number']] ?? ('مرحلة ' . $h['stage_number']),
-                'user_name'  => $h['user_name'] ?? '—',
-                'entered_at' => $h['entered_at'],
-            ];
-        }, $history);
+        $events = (new AuditLogModel())->forMission($missionId);
 
         return $this->response->setJSON([
             'success'    => true,

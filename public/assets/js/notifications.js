@@ -64,7 +64,8 @@ function bindNotificationsEvents() {
     el.addEventListener("click", async () => {
       const id = Number(el.dataset.notifId);
       if (!notifReadIds.includes(id)) notifReadIds.push(id);
-      activeContent = "meetingSchedule";
+      activeContent = "documentRequests";
+      drSelectedTaskId = String(id);
       renderSidebar();
       await renderContent();
       lucide.createIcons();

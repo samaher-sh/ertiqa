@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\AuditNoteModel;
+use App\Models\MissionStageHistoryModel;
+use App\Models\AuditLogModel;
 
 class ObservationController extends BaseController
 {
@@ -68,6 +70,13 @@ class ObservationController extends BaseController
             $payload['status']     = 'بانتظار الرد';
             $payload['created_by'] = $userId;
             $id = $model->insert($payload, true);
+
+            $stageHistoryModel = new MissionStageHistoryModel();
+            $alreadyLogged = $stageHistoryModel->where('mission_id', $missionId)->where('stage_number', 5)->countAllResults();
+            if ($alreadyLogged === 0) {
+                $stageHistoryModel->openStage($missionId, 5, $userId);
+            }
+            (new AuditLogModel())->log($missionId, $userId, 'observation_added', 'audit_note', $id);
         }
 
         return $this->response->setJSON(['success' => true, 'id' => $id]);
