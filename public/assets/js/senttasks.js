@@ -106,6 +106,7 @@ function renderSentTaskTimeline() {
             <span class="td-activity-sep">—</span>
             <span class="td-activity-time">${escapeHtml(ev.entered_at)}</span>
           </div>
+          ${ev.detail ? `<p class="td-activity-detail">${escapeHtml(ev.detail)}</p>` : ""}
         </div>
       </div>
     `).join("")}

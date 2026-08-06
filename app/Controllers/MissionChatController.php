@@ -38,14 +38,17 @@ class MissionChatController extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الرسالة فارغة.']);
         }
 
+        $userId = (int) session()->get('user_id');
         $chatModel = new MissionChatMessageModel();
         $chatModel->insert([
             'mission_id' => $missionId,
-            'sender_id'  => (int) session()->get('user_id'),
+            'sender_id'  => $userId,
             'message'    => $message,
             'type'       => 'text',
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+
+        (new AuditLogModel())->log($missionId, $userId, 'chat_message', 'mission_chat_message', null, mb_substr($message, 0, 100));
 
         return $this->response->setJSON(['success' => true]);
     }
@@ -75,7 +78,8 @@ class MissionChatController extends BaseController
             'created_at'         => date('Y-m-d H:i:s'),
         ]);
 
-        (new AuditLogModel())->log($missionId, (int) session()->get('user_id'), 'meeting_proposed', 'meeting', null);
+        $detail = 'التاريخ: ' . $date . ' — الوقت: ' . $time . ($location ? ' — ' . $location : '');
+        (new AuditLogModel())->log($missionId, (int) session()->get('user_id'), 'meeting_proposed', 'meeting', null, $detail);
 
         return $this->response->setJSON(['success' => true]);
     }
@@ -124,7 +128,8 @@ class MissionChatController extends BaseController
             'created_at'         => date('Y-m-d H:i:s'),
         ]);
 
-        (new AuditLogModel())->log($missionId, $userId, 'meeting_confirmed', 'meeting', $meeting['id']);
+        $detail = 'التاريخ: ' . $proposal['proposed_date'] . ' — الوقت: ' . $proposal['proposed_time'];
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_confirmed', 'meeting', $meeting['id'], $detail);
 
         return $this->response->setJSON(['success' => true]);
     }
@@ -158,7 +163,8 @@ class MissionChatController extends BaseController
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', null);
+        $detail = 'التاريخ: ' . $proposal['proposed_date'] . ' — الوقت: ' . $proposal['proposed_time'];
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', null, $detail);
 
         return $this->response->setJSON(['success' => true]);
     }

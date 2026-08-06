@@ -7,20 +7,46 @@ use App\Models\RiskMatrixItemModel;
 use App\Models\MeetingModel;
 use App\Models\AuditNoteModel;
 use App\Models\AuditLogModel;
+use App\Models\MissionModel;
 
 class SentTasksController extends BaseController
 {
+    /** المهمة لو المستخدم الحالي فعليًا طرف فيها (مراجع أو الإدارة المستهدفة)، وإلا null */
+    private function missionForParty(int $missionId): ?array
+    {
+        $missionModel = new MissionModel();
+        $mission = $missionModel->find($missionId);
+        if (!$mission) {
+            return null;
+        }
+
+        $userId = (int) session()->get('user_id');
+        $departmentId = (int) session()->get('department_id');
+
+        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $isAuditSide  = in_array($missionId, $allowedIds, true);
+        $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
+
+        return ($isAuditSide || $isTargetSide) ? $mission : null;
+    }
+
     /**
-     * GET /dashboard/sent-tasks/api/timeline?mission_id=X — السجل الزمني الفعلي لمهمة
+     * GET /dashboard/sent-tasks/api/timeline?mission_id=X — السجل الزمني الفعلي لمهمة،
+     * متاح فقط لطرفي المهمة (المراجع والإدارة الخاضعة للمراجعة)
      * المصدر الحقيقي هو audit_logs (حدث منفصل لكل فعل مهم: إنشاء مهمة، رفع مستندات،
-     * حفظ مصفوفة مخاطر، اقتراح/تأكيد/إلغاء موعد، حفظ ملخص اجتماع، إضافة ملاحظة، اعتماد
-     * تقرير) — أدق من mission_stage_history اللي مخصصة لتتبع دخول رقم المرحلة فقط
-     * (تبقى مستخدمة لحساب next_stage تحت، بما إنها مرتبطة بمنطق SLA المرحلي)
+     * تعبئة اتفاقية مستوى الخدمة، حفظ مصفوفة مخاطر، رسائل/اقتراح/تأكيد/إلغاء موعد
+     * الاجتماع، حفظ ملخص اجتماع، إضافة ملاحظة، اعتماد تقرير) — أدق من
+     * mission_stage_history اللي مخصصة لتتبع دخول رقم المرحلة فقط (تبقى مستخدمة
+     * لحساب next_stage تحت، بما إنها مرتبطة بمنطق SLA المرحلي)
      */
     public function timeline()
     {
         $missionId = (int) $this->request->getGet('mission_id');
         if (!$missionId) return $this->response->setJSON(['success' => true, 'events' => [], 'next_stage' => null]);
+
+        if (!$this->missionForParty($missionId)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لسجل هذه المهمة.']);
+        }
 
         $events = (new AuditLogModel())->forMission($missionId);
 

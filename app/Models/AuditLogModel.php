@@ -22,6 +22,7 @@ class AuditLogModel extends Model
         'sla_submitted'          => 'تم تعبئة اتفاقية مستوى الخدمة',
         'documents_submitted'    => 'تم رفع المستندات المطلوبة',
         'risk_matrix_saved'      => 'تم حفظ مصفوفة المخاطر',
+        'chat_message'           => 'رسالة جديدة بشات جدولة الاجتماع',
         'meeting_proposed'       => 'تم اقتراح موعد اجتماع',
         'meeting_confirmed'      => 'تم تأكيد موعد الاجتماع',
         'meeting_cancelled'      => 'تم إلغاء الموعد المقترح',
@@ -30,7 +31,9 @@ class AuditLogModel extends Model
         'report_finalized'       => 'تم اعتماد التقرير النهائي',
     ];
 
-    public function log(int $missionId, ?int $userId, string $action, ?string $entityType = null, ?int $entityId = null): int
+    /** $detail نص مختصر يوصف الحدث فعليًا (اسم المستند، التاريخ/الوقت المقترح، ...) —
+     *  يُخزَّن بعمود new_values الموجود أصلًا (بدون الحاجة لعمود جديد) */
+    public function log(int $missionId, ?int $userId, string $action, ?string $entityType = null, ?int $entityId = null, ?string $detail = null): int
     {
         return $this->insert([
             'mission_id'   => $missionId,
@@ -38,6 +41,7 @@ class AuditLogModel extends Model
             'action'       => $action,
             'entity_type'  => $entityType,
             'entity_id'    => $entityId,
+            'new_values'   => $detail,
             'created_at'   => date('Y-m-d H:i:s'),
         ], true);
     }
@@ -55,6 +59,7 @@ class AuditLogModel extends Model
             'stage_name' => self::ACTION_LABELS[$r['action']] ?? $r['action'],
             'user_name'  => $r['user_name'] ?? '—',
             'entered_at' => $r['created_at'],
+            'detail'     => $r['new_values'] ?? null,
         ], $rows);
     }
 }

@@ -109,7 +109,7 @@ class MissionController extends BaseController
         ], true);
 
         $stageHistoryModel->openStage($missionId, 1, $userId);
-        (new AuditLogModel())->log($missionId, $userId, 'mission_created', 'mission', $missionId);
+        (new AuditLogModel())->log($missionId, $userId, 'mission_created', 'mission', $missionId, $missionCode . ' — ' . $targetDept['name_ar']);
 
         // إشعار حقيقي لمنسّق الإدارة المستهدفة بمهمة مراجعة جديدة — يوصل لصفحة الإخطارات
         // وبانر التنبيه بالصفحة الرئيسية (homeStats.latest_notification)

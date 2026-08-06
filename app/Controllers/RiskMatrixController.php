@@ -49,7 +49,7 @@ class RiskMatrixController extends BaseController
         if ($alreadyLogged === 0) {
             $stageHistoryModel->openStage($missionId, 3, $userId);
         }
-        (new AuditLogModel())->log($missionId, $userId, 'risk_matrix_saved', 'risk_matrix', null);
+        (new AuditLogModel())->log($missionId, $userId, 'risk_matrix_saved', 'risk_matrix', null, count($rows) . ' صف');
 
         return $this->response->setJSON(['success' => true]);
     }

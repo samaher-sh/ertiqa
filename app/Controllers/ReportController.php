@@ -110,7 +110,7 @@ class ReportController extends BaseController
 
         $report = $reportModel->find($reportId);
         if ($report && !empty($report['mission_id'])) {
-            (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_finalized', 'report', $reportId);
+            (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_finalized', 'report', $reportId, 'رقم التقرير: ' . $reportId);
         }
 
         return $this->response->setJSON(['success' => true]);

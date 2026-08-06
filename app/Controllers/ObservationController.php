@@ -76,7 +76,7 @@ class ObservationController extends BaseController
             if ($alreadyLogged === 0) {
                 $stageHistoryModel->openStage($missionId, 5, $userId);
             }
-            (new AuditLogModel())->log($missionId, $userId, 'observation_added', 'audit_note', $id);
+            (new AuditLogModel())->log($missionId, $userId, 'observation_added', 'audit_note', $id, trim((string) ($payload['title'] ?? '')) ?: null);
         }
 
         return $this->response->setJSON(['success' => true, 'id' => $id]);
