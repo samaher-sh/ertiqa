@@ -9,7 +9,7 @@ let rmToastVisible = false;
 let rmToastTimer = null;
 let rmLoading = false;
 
-const rmIsReadOnly = () => isHrCoordinator || isAuditHead;
+const rmIsReadOnly = () => isHrDept || isHrCoordinator || isAuditHead;
 
 function autoGrowTextareaRM(el) {
   if (!el) return;

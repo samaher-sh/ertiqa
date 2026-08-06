@@ -15,11 +15,16 @@ let stTimelineEvents = [];
 let stTimelineLoading = false;
 let stNextStage = null;
 
+/* forRole يحدد مين عليه الدور الحالي فعليًا بهذي المرحلة: "target" = الإدارة الخاضعة
+   للمراجعة (تعبئة اتفاقية مستوى الخدمة + المستندات)، "audit" = عضو المراجعة (كل
+   الباقي). الطرف الثاني يشوف نفس الصفحة لكن Read-only دائمًا (زر "عرض" بدل
+   "إكمال الحقول") — الصلاحية الفعلية مفروضة من الباك-إند بكل صفحة على حدة */
 const ST_STAGE_TO_PAGE = {
-  3: { key: "riskMatrix",     label: "مصفوفة المخاطر" },
-  4: { key: "meetingSummary", label: "ملخص الاجتماع" },
-  5: { key: "observations",   label: "الملاحظات" },
-  7: { key: "finalReports",   label: "التقرير النهائي" },
+  2: { key: "missionReview",  label: "استكمال الاتفاقية والمستندات", forRole: "target" },
+  3: { key: "riskMatrix",     label: "مصفوفة المخاطر",              forRole: "audit" },
+  4: { key: "meetingSummary", label: "ملخص الاجتماع",                forRole: "audit" },
+  5: { key: "observations",   label: "الملاحظات",                   forRole: "audit" },
+  7: { key: "finalReports",   label: "التقرير النهائي",              forRole: "audit" },
 };
 
 function renderSentTasksPage() {
@@ -114,9 +119,15 @@ function renderSentTaskTimeline() {
 }
 
 /* ---------- Detail ---------- */
+function stIsMyTurn(nextStage) {
+  if (!nextStage) return false;
+  return (nextStage.forRole === "target" && isHrDept) || (nextStage.forRole === "audit" && !isHrDept);
+}
+
 function renderSentTaskDetail() {
   const t = sentTasksSelected;
   const nextStage = ST_STAGE_TO_PAGE[stNextStage];
+  const myTurn = stIsMyTurn(nextStage);
   return `
   <div class="flex flex-col gap-5" dir="rtl">
     <div class="st-detail-header">
@@ -145,10 +156,13 @@ function renderSentTaskDetail() {
         </div>
 
         <div class="st-complete-card">
-          ${nextStage ? `
-          <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بالمراجع في نموذج "${nextStage.label}"</span></div>
+          ${nextStage ? (myTurn ? `
+          <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بك في نموذج "${nextStage.label}"</span></div>
           <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="pencil"></i> إكمال الحقول</button>
           ` : `
+          <div class="st-complete-hint"><i data-lucide="eye"></i><span>بانتظار الطرف الآخر لإكمال "${nextStage.label}" — تقدر تطّلع على آخر تحديث</span></div>
+          <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="eye"></i> عرض</button>
+          `) : `
           <div class="st-complete-hint"><i data-lucide="info"></i><span>لا يوجد نموذج مرتبط مباشرة بالمرحلة الحالية لهذه المهمة</span></div>
           `}
         </div>
@@ -165,7 +179,17 @@ function bindSentTaskDetailEvents() {
   document.getElementById("stBackBtn").addEventListener("click", () => { sentTasksSelected = null; renderSidebar(); renderContent(); lucide.createIcons(); });
   const completeBtn = document.getElementById("stCompleteBtn");
   if (completeBtn) completeBtn.addEventListener("click", () => {
-    activeContent = completeBtn.dataset.nextPage;
+    const missionId = String(sentTasksSelected.id);
+    const nextPage = completeBtn.dataset.nextPage;
+
+    // نحمّل المهمة تلقائيًا بالصفحة الهدف بدل ما يُطلب من المستخدم يعيد اختيارها يدويًا
+    if (nextPage === "missionReview") mrSelectedTaskId = missionId;
+    else if (nextPage === "riskMatrix") rmSelectedTaskId = missionId;
+    else if (nextPage === "meetingSummary") msumSelectedTaskId = missionId;
+    else if (nextPage === "observations") obsSelectedTaskId = missionId;
+    else if (nextPage === "finalReports") { frView = "create"; frCreateSelectedTask = missionId; }
+
+    activeContent = nextPage;
     sentTasksSelected = null;
     renderSidebar(); renderContent(); lucide.createIcons();
   });

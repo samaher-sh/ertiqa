@@ -274,7 +274,7 @@ function renderCreateReportView() {
                 </td>
                 <td style="text-align:center;"><button type="button" class="fr-phase-view-link" data-fr-preview="${item.section_number}"><i data-lucide="eye" style="width:13px;height:13px;"></i> عرض</button></td>
                 <td style="text-align:center;">
-                  <input type="checkbox" class="fr-phase-check" data-fr-check="${item.section_number}" ${isChecked ? "checked" : ""} ${(!isDone || isAuditHead || isPresident) ? "disabled" : ""}>
+                  <input type="checkbox" class="fr-phase-check" data-fr-check="${item.section_number}" ${isChecked ? "checked" : ""} ${(!isDone || isAuditHead || isPresident || frIsHrUser()) ? "disabled" : ""}>
                 </td>
               </tr>`;
             }).join("")}
@@ -282,7 +282,7 @@ function renderCreateReportView() {
         </table>
       </div>
       <div class="fr-phases-footer">
-        ${!isAuditHead && !isPresident ? `
+        ${!isAuditHead && !isPresident && !frIsHrUser() ? `
         <button class="fr-submit-btn" id="frSubmitReportBtn" ${!allChecked || frCurrentReport.status !== "draft" ? "disabled" : ""}>
           <i data-lucide="send"></i> ${frCurrentReport.status === "draft" ? "اعتماد التقرير وإرساله" : "تم الإرسال"}
         </button>` : `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(frCurrentReport ? frCurrentReport.status : "draft")}</span>`}

@@ -26,19 +26,47 @@ class ReportController extends BaseController
         6 => 'الملاحظات',
     ];
 
+    /** true لدور الإدارة الخاضعة للمراجعة (منسق/مدير إدارة) — قراءة فقط بكل نقاط هذا الـ Controller */
+    private function isHrDept(): bool
+    {
+        return in_array(session()->get('role_code'), ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
+    }
+
+    /** المهمة لو المستخدم الحالي طرف فيها فعليًا (مراجع أو الإدارة المستهدفة)، وإلا null */
+    private function missionForParty(int $missionId): ?array
+    {
+        $missionModel = new MissionModel();
+        $mission = $missionModel->find($missionId);
+        if (!$mission) {
+            return null;
+        }
+
+        $userId = (int) session()->get('user_id');
+        $departmentId = (int) session()->get('department_id');
+
+        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $isAuditSide  = in_array($missionId, $allowedIds, true);
+        $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
+
+        return ($isAuditSide || $isTargetSide) ? $mission : null;
+    }
+
     /**
-     * GET /dashboard/reports/api/list — قائمة تقارير المستخدم (لم تكن مذكورة صراحة بالمواصفة،
-     * لكن لازمة لعرض قائمة "التقارير النهائية" — نفس البيانات اللي كانت تُحقن بالـ View القديم)
+     * GET /dashboard/reports/api/list — قائمة تقارير المستخدم. الإدارة الخاضعة للمراجعة
+     * تشوف تقارير مهامها هي تحديدًا (طرف ثاني بالمهمة)، مو تقارير أي مهمة بالنظام
      */
     public function list()
     {
-        $userId = (int) session()->get('user_id');
         $reportModel = new ReportModel();
 
-        return $this->response->setJSON([
-            'success' => true,
-            'reports' => $reportModel->forUser($userId),
-        ]);
+        if ($this->isHrDept()) {
+            $departmentId = (int) session()->get('department_id');
+            $reports = $departmentId ? $reportModel->forTargetDepartment($departmentId) : [];
+        } else {
+            $reports = $reportModel->forUser((int) session()->get('user_id'));
+        }
+
+        return $this->response->setJSON(['success' => true, 'reports' => $reports]);
     }
 
     /**
@@ -49,6 +77,10 @@ class ReportController extends BaseController
     {
         $missionId = (int) $this->request->getGet('mission_id');
         if (!$missionId) return $this->response->setStatusCode(422)->setJSON(['success' => false]);
+
+        if (!$this->missionForParty($missionId)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+        }
 
         $userId = (int) session()->get('user_id');
         $reportModel = new ReportModel();
@@ -75,6 +107,18 @@ class ReportController extends BaseController
         return $this->response->setJSON(['success' => true, 'report' => $report, 'items' => $items, 'completion' => $completion]);
     }
 
+    /** اعتماد/إنشاء التقرير مقصور على عضو المراجعة صاحب المهمة — لا رئيس المراجعة، لا الرئيس التنفيذي، ولا الإدارة الخاضعة للمراجعة (عرض فقط للثلاثة) */
+    private function canEditReport(int $reportId): bool
+    {
+        $roleCode = session()->get('role_code');
+        if ($this->isHrDept() || in_array($roleCode, ['audit_head', 'top_management'], true)) {
+            return false;
+        }
+
+        $report = (new ReportModel())->find($reportId);
+        return $report && $this->missionForParty((int) $report['mission_id']) !== null;
+    }
+
     /** POST /dashboard/reports/api/toggle-check — اعتماد/إلغاء اعتماد مرحلة */
     public function toggleCheck()
     {
@@ -86,6 +130,9 @@ class ReportController extends BaseController
         if (!$reportId || !$section) {
             return $this->response->setStatusCode(422)->setJSON(['success' => false]);
         }
+        if (!$this->canEditReport($reportId)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
+        }
 
         (new ReportChecklistItemModel())->setChecked($reportId, $section, $checked);
         return $this->response->setJSON(['success' => true]);
@@ -96,6 +143,10 @@ class ReportController extends BaseController
     {
         $data = $this->request->getJSON(true);
         $reportId = (int) ($data['report_id'] ?? 0);
+
+        if (!$this->canEditReport($reportId)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
+        }
 
         $itemModel = new ReportChecklistItemModel();
         $items = $itemModel->forReport($reportId);
@@ -129,6 +180,9 @@ class ReportController extends BaseController
 
         if (!$missionId || !isset(self::STEPS[$section])) {
             return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'بيانات غير صحيحة.']);
+        }
+        if (!$this->missionForParty($missionId)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
         }
 
         switch ($section) {
@@ -171,18 +225,25 @@ class ReportController extends BaseController
     /** يتحقق فعليًا هل كل مرحلة فيها بيانات حقيقية بقاعدة البيانات */
     private function realCompletionStatus(int $missionId): array
     {
-        $sla  = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
-        $docs = (new DocumentRequestModel())->where('mission_id', $missionId)->countAllResults();
+        // مجرد وجود صف service_agreement/document_requests لا يعني اكتمال الرد عليه —
+        // الصفوف تُنشأ فارغة أول ما تُنشأ المهمة (Snapshot)، لازم نتحقق من الرد الفعلي
+        $sla = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+        $slaSubmitted = $sla && $sla['status'] === 'submitted';
+
+        $docRequests = (new DocumentRequestModel())->forMissionWithResponses($missionId);
+        $docsComplete = count($docRequests) > 0
+            && count(array_filter($docRequests, fn($d) => $d['exists_flag'] === null)) === 0;
+
         $risk = (new RiskMatrixItemModel())->where('mission_id', $missionId)->countAllResults();
         $meet = (new MeetingModel())->where('mission_id', $missionId)->first();
         $obs  = (new AuditNoteModel())->where('mission_id', $missionId)->countAllResults();
 
         return [
             1 => true,          // طلب المراجعة - موجود أكيد لأن المهمة موجودة
-            2 => (bool) $sla,
-            3 => $docs > 0,
+            2 => $slaSubmitted,
+            3 => $docsComplete,
             4 => $risk > 0,
-            5 => (bool) $meet,
+            5 => (bool) $meet && !empty($meet['meeting_date']),
             6 => $obs > 0,
         ];
     }

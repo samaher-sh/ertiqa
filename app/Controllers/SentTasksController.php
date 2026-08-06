@@ -8,6 +8,7 @@ use App\Models\MeetingModel;
 use App\Models\AuditNoteModel;
 use App\Models\AuditLogModel;
 use App\Models\MissionModel;
+use App\Models\ServiceAgreementModel;
 
 class SentTasksController extends BaseController
 {
@@ -65,6 +66,9 @@ class SentTasksController extends BaseController
      */
     private function computeRealNextStage(int $missionId): int
     {
+        $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+        if (!$agreement || $agreement['status'] !== 'submitted') return 2;
+
         $riskCount = (new RiskMatrixItemModel())->where('mission_id', $missionId)->countAllResults();
         if ($riskCount === 0) return 3;
 
