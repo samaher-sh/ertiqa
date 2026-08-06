@@ -106,6 +106,10 @@ class MissionChatController extends BaseController
             'status'       => 'scheduled',
         ]);
 
+        // نحوّل رسالة الاقتراح الأصلية لنوع "مؤكد" حتى ما يبقى زر التأكيد ظاهرًا
+        // عليها لو تحدّث الشات لاحقًا، ثم نضيف رسالة نظامية منفصلة بوقت التأكيد الفعلي
+        $chatModel->update($messageId, ['type' => 'confirmed']);
+
         $chatModel->insert([
             'mission_id'         => $missionId,
             'sender_id'          => $userId,
@@ -115,6 +119,38 @@ class MissionChatController extends BaseController
             'proposed_time'      => $proposal['proposed_time'],
             'proposed_location'  => $proposal['proposed_location'],
             'created_at'         => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    /** POST /dashboard/meeting-schedule/api/cancel — إلغاء اقتراح موعد لم يُؤكَّد بعد (بالطرف الثاني) */
+    public function cancel()
+    {
+        $data = $this->request->getJSON(true);
+        $missionId = (int) ($data['mission_id'] ?? 0);
+        $messageId = (int) ($data['message_id'] ?? 0);
+        $userId    = (int) session()->get('user_id');
+
+        $chatModel = new MissionChatMessageModel();
+        $proposal  = $chatModel->find($messageId);
+
+        if (!$proposal || (int) $proposal['mission_id'] !== $missionId || $proposal['type'] !== 'proposal') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الاقتراح غير موجود أو تم الرد عليه مسبقًا.']);
+        }
+
+        if ((int) $proposal['sender_id'] === $userId) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'لا يمكنك إلغاء اقتراحك الخاص.']);
+        }
+
+        $chatModel->update($messageId, ['type' => 'cancelled']);
+
+        $chatModel->insert([
+            'mission_id' => $missionId,
+            'sender_id'  => $userId,
+            'message'    => 'تم إلغاء هذا الموعد المقترح',
+            'type'       => 'cancelled',
+            'created_at' => date('Y-m-d H:i:s'),
         ]);
 
         return $this->response->setJSON(['success' => true]);

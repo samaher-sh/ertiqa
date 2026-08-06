@@ -25,6 +25,7 @@ class DashboardController extends BaseController
     {
         $userId   = (int) session()->get('user_id');
         $roleCode = session()->get('role_code');
+        $isHrDept = in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
 
         $missionModel = new MissionModel();
         $meetingModel = new MeetingModel();
@@ -44,10 +45,35 @@ class DashboardController extends BaseController
         }
 
         // مستخدمو الإدارة الخاضعة للمراجعة يحتاجون بيانات شريط الإخطارات بالرئيسية
-        if (in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true)) {
+        if ($isHrDept) {
             $notifModel = new NotificationModel();
             $data['unread_notifications_count'] = $notifModel->unreadCountForUser($userId);
             $data['latest_notification']        = $notifModel->latestUnreadForUser($userId);
+        }
+
+        // تنبيه اجتماع مؤكد بالصفحة الرئيسية — يظهر لطرفي المهمة (عضو المراجعة ومنسّق
+        // الإدارة الخاضعة للمراجعة) فور تأكيد أحدهما لموعد عبر شات "جدولة اجتماع"
+        $data['confirmed_meeting_alert'] = null;
+        $departmentId = (int) session()->get('department_id');
+        $ownMissions = $isHrDept
+            ? ($departmentId ? $missionModel->missionsForTargetDepartment($departmentId) : [])
+            : $missionModel->activeMissionsForUser($userId);
+        $missionIds = array_column($ownMissions, 'id');
+        if (!empty($missionIds)) {
+            $meeting = $meetingModel->confirmedUpcomingForMissions($missionIds);
+            if ($meeting) {
+                $mission = array_values(array_filter(
+                    $ownMissions,
+                    fn($m) => (int) $m['id'] === (int) $meeting['mission_id']
+                ))[0] ?? null;
+
+                $data['confirmed_meeting_alert'] = [
+                    'mission_code' => $mission['mission_code'] ?? '',
+                    'meeting_date' => $meeting['meeting_date'],
+                    'meeting_time' => $meeting['meeting_time'],
+                    'location'     => $meeting['location'],
+                ];
+            }
         }
 
         return $this->response->setJSON($data);

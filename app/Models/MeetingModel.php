@@ -64,4 +64,23 @@ class MeetingModel extends Model
     {
         return count($this->scheduledMeetingsForUser($userId));
     }
+
+    /**
+     * أقرب اجتماع مؤكد (له تاريخ فعلي، اليوم أو مستقبلًا) من بين مجموعة مهام —
+     * يُستخدم لتنبيه الصفحة الرئيسية بعد تأكيد موعد اجتماع عبر شات "جدولة اجتماع".
+     * شرط meeting_date >= اليوم يستثني تلقائيًا اجتماعات findOrCreateForMission()
+     * الفارغة (meeting_date = null) بدون الحاجة لشرط IS NOT NULL منفصل.
+     */
+    public function confirmedUpcomingForMissions(array $missionIds): ?array
+    {
+        if (empty($missionIds)) {
+            return null;
+        }
+
+        return $this->whereIn('mission_id', $missionIds)
+            ->where('status', 'scheduled')
+            ->where('meeting_date >=', date('Y-m-d'))
+            ->orderBy('meeting_date', 'ASC')
+            ->first() ?: null;
+    }
 }

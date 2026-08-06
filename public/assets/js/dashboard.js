@@ -25,6 +25,7 @@ let dismissedMissionIds = [];
 let homeStats    = { active_count: 0, review_count: 0, meetings_count: 0 };
 let activeMissions = [];
 let scheduledMeetings = [];
+let confirmedMeetingAlert = null;
 
 /* ============================================================
    تهيئة الصفحة
@@ -263,11 +264,29 @@ async function loadHomeData() {
     homeStats = stats;
     activeMissions = missionsData.missions || [];
     scheduledMeetings = meetingsData.meetings || [];
+    confirmedMeetingAlert = stats.confirmed_meeting_alert || null;
   } catch (e) {
     homeStats = { active_count: 0, review_count: 0, meetings_count: 0 };
     activeMissions = [];
     scheduledMeetings = [];
+    confirmedMeetingAlert = null;
   }
+}
+
+/* تنبيه اجتماع مؤكد بالصفحة الرئيسية — يظهر لطرفي المهمة فور تأكيد أحدهما لموعد
+   عبر شات "جدولة اجتماع" (بيانات حقيقية ضمن /dashboard/api/home-stats) */
+function renderMeetingAlertBanner() {
+  if (!confirmedMeetingAlert) return "";
+  const a = confirmedMeetingAlert;
+  return `
+  <div class="home-meeting-alert">
+    <i data-lucide="calendar-check"></i>
+    <div class="home-meeting-alert-text">
+      <p class="t1">تم تأكيد موعد اجتماع${a.mission_code ? " — " + escapeHtml(a.mission_code) : ""}</p>
+      <p class="t2">${escapeHtml(a.meeting_date || "")}${a.meeting_time ? " — " + escapeHtml(a.meeting_time) : ""}${a.location ? " · " + escapeHtml(a.location) : ""}</p>
+    </div>
+    <button type="button" class="home-meeting-alert-btn" id="homeMeetingAlertBtn">عرض</button>
+  </div>`;
 }
 
 function incompleteMissions() {
@@ -352,7 +371,7 @@ function renderHomeTab() {
   const incomplete = incompleteMissions();
   const STATS = homeStatsCards();
 
-  let html = renderHomeBanner();
+  let html = renderMeetingAlertBanner() + renderHomeBanner();
 
   html += `<div class="stats-grid ${isAuditMember ? "" : "two-col"}">`;
   if (isAuditMember) {
@@ -491,6 +510,12 @@ function renderStatDetailPanel(idx) {
 }
 
 function bindHomeEvents() {
+  const meetingAlertBtn = document.getElementById("homeMeetingAlertBtn");
+  if (meetingAlertBtn) meetingAlertBtn.addEventListener("click", async () => {
+    activeContent = "meetingSchedule";
+    renderSidebar(); await renderContent(); lucide.createIcons();
+  });
+
   const newTaskCard = document.getElementById("homeNewTaskCard");
   if (newTaskCard) newTaskCard.addEventListener("click", async () => {
     activeContent = "newTask";
