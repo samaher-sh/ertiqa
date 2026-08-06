@@ -29,6 +29,10 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('meetings/api/upload',        'DocumentController::uploadMeetingAttachment');
     $routes->get('meetings/api/attachments',    'DocumentController::meetingAttachments');
     $routes->get('documents/download/(:num)',   'DocumentController::download/$1');
+    $routes->get('meeting-schedule/api/messages', 'MissionChatController::messages');
+    $routes->post('meeting-schedule/api/send',    'MissionChatController::send');
+    $routes->post('meeting-schedule/api/propose', 'MissionChatController::propose');
+    $routes->post('meeting-schedule/api/confirm', 'MissionChatController::confirm');
     $routes->post('documents/delete/(:num)',    'DocumentController::delete/$1');
     $routes->get('observations/api/list',       'ObservationController::list');
     $routes->post('observations/api/save',      'ObservationController::save');
