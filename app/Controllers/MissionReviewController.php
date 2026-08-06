@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\MissionModel;
+use App\Models\ServiceAgreementModel;
+use App\Models\ServiceAgreementResponseModel;
+use App\Models\MissionStageHistoryModel;
+use App\Models\AuditLogModel;
+
+/**
+ * صفحة مراجعة المهمة من طرف الإدارة الخاضعة للمراجعة (dept_coordinator وما شابه):
+ * نفس واجهة "بدء مهمة" اللي يشوفها عضو المراجعة، لكن الخطاب هنا للعرض فقط، واتفاقية
+ * مستوى الخدمة تصير قابلة للتعبئة من طرف الإدارة. قائمة المستندات نفسها تُدار عبر
+ * DocumentRequestController الموجود أصلًا (لا تكرار).
+ */
+class MissionReviewController extends BaseController
+{
+    /** المهمة لو المستخدم الحالي فعليًا من الإدارة المستهدفة لها، وإلا null */
+    private function missionForTargetUser(int $missionId): ?array
+    {
+        $mission = (new MissionModel())->findWithDetails($missionId);
+        if (!$mission) {
+            return null;
+        }
+
+        $departmentId = (int) session()->get('department_id');
+        if (!$departmentId || (int) $mission['target_department_id'] !== $departmentId) {
+            return null;
+        }
+
+        return $mission;
+    }
+
+    /** GET /dashboard/target-mission/api/data?mission_id=X */
+    public function data()
+    {
+        $missionId = (int) $this->request->getGet('mission_id');
+        $mission = $missionId ? $this->missionForTargetUser($missionId) : null;
+        if (!$mission) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+        }
+
+        $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+        $rows = $agreement ? (new ServiceAgreementResponseModel())->forMission($missionId) : [];
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'mission'   => $mission,
+            'agreement' => $agreement,
+            'rows'      => $rows,
+        ]);
+    }
+
+    /** POST /dashboard/target-mission/api/save-agreement — يحفظ ردود بنود الاتفاقية + بيانات المنسّق دفعة وحدة */
+    public function saveAgreement()
+    {
+        $data = $this->request->getJSON(true);
+        $missionId = (int) ($data['mission_id'] ?? 0);
+        $mission = $missionId ? $this->missionForTargetUser($missionId) : null;
+        if (!$mission) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+        }
+
+        $agreementModel = new ServiceAgreementModel();
+        $agreement = $agreementModel->where('mission_id', $missionId)->first();
+        if (!$agreement) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا توجد اتفاقية مستوى خدمة لهذه المهمة.']);
+        }
+
+        $userId = (int) session()->get('user_id');
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $agreementModel->update($agreement['id'], [
+            'coordinator_name'  => trim($data['coordinator_name'] ?? '') ?: null,
+            'coordinator_email' => trim($data['coordinator_email'] ?? '') ?: null,
+            'coordinator_phone' => trim($data['coordinator_phone'] ?? '') ?: null,
+            'status'            => 'submitted',
+            'submitted_by'      => $userId,
+            'submitted_at'      => date('Y-m-d H:i:s'),
+        ]);
+
+        $responseModel = new ServiceAgreementResponseModel();
+        $ownRowIds = array_column(
+            $responseModel->select('id')->where('service_agreement_id', $agreement['id'])->findAll(),
+            'id'
+        );
+
+        foreach (($data['rows'] ?? []) as $row) {
+            $rowId = (int) ($row['id'] ?? 0);
+            if (!$rowId || !in_array($rowId, $ownRowIds, true)) {
+                continue; // تجاهل أي معرّف مو تابع فعليًا لاتفاقية هذي المهمة
+            }
+            $responseModel->update($rowId, [
+                'agree'    => !empty($row['agree']) ? 1 : 0,
+                'disagree' => !empty($row['disagree']) ? 1 : 0,
+                'note'     => $row['note'] ?? null,
+            ]);
+        }
+
+        $stageHistoryModel = new MissionStageHistoryModel();
+        $alreadyLogged = $stageHistoryModel->where('mission_id', $missionId)->where('stage_number', 2)->countAllResults();
+        if ($alreadyLogged === 0) {
+            $stageHistoryModel->openStage($missionId, 2, $userId);
+        }
+        (new AuditLogModel())->log($missionId, $userId, 'sla_submitted', 'service_agreement', $agreement['id']);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'حدث خطأ أثناء حفظ الاتفاقية. حاول مرة أخرى.']);
+        }
+
+        return $this->response->setJSON(['success' => true]);
+    }
+}
