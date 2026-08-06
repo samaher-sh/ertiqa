@@ -57,6 +57,7 @@ abstract class BaseController extends Controller
             'riskMatrix'        => ['label' => 'مصفوفة المخاطر',     'desc' => 'Risk Matrix',         'url' => base_url('dashboard/risk-matrix'),      'icon' => 'bar-chart-2'],
             'meetingSummary'    => ['label' => 'ملخص اجتماع',        'desc' => 'Meeting Summary',     'url' => base_url('dashboard/meetings'),         'icon' => 'users'],
             'observations'      => ['label' => 'الملاحظات',          'desc' => 'Observations',        'url' => base_url('dashboard/observations'),     'icon' => 'book-open'],
+            'notifications'     => ['label' => 'الإخطارات',          'desc' => 'Notifications',       'url' => base_url('dashboard/notifications'),    'icon' => 'bell'],
             'finalReports'      => ['label' => 'تقرير نهائي',        'desc' => 'Final Reports',       'url' => base_url('dashboard/reports'),          'icon' => 'file-text'],
             'sentTasks'         => ['label' => 'المراسلات المشتركة', 'desc' => 'Sent Tasks',          'url' => base_url('dashboard/sent-tasks'),       'icon' => 'send'],
         ];
@@ -68,12 +69,14 @@ abstract class BaseController extends Controller
     protected function navItemsForRole(bool $isPresident, bool $isHrDept, bool $isAuditHead): array
     {
         $all  = $this->allNavItems();
-        $keys = array_keys($all);
+        // 'notifications' خاصة بمستخدمي الإدارة الخاضعة للمراجعة فقط (isHrDept) —
+        // بقية الأدوار (عضو/رئيس فريق المراجعة) تشوف القائمة الكاملة عدا هذا العنصر
+        $keys = array_values(array_diff(array_keys($all), ['notifications']));
 
         if ($isPresident) {
             $keys = ['home', 'finalReports'];
         } elseif ($isHrDept) {
-            $keys = ['home', 'meetingSchedule', 'meetingSummary', 'observations', 'finalReports', 'sentTasks'];
+            $keys = ['home', 'meetingSchedule', 'notifications', 'finalReports', 'sentTasks'];
         } elseif ($isAuditHead) {
             $keys = ['home', 'finalReports'];
         }

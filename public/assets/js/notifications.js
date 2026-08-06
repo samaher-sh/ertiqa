@@ -1,22 +1,31 @@
 /* ============================================================
-   صفحة الإخطارات — متصلة بالـ API الحقيقي (جدول notifications)
+   صفحة الإخطارات — لمستخدمي الإدارة الخاضعة للمراجعة (dept_coordinator وما شابه)
+   كل مهمة موجّهة فعليًا لإدارة المستخدم (نفس /dashboard/api/target-missions
+   المستخدم أصلًا لعرض المهام بصفحات أخرى) تظهر كإخطار "طلب مراجعة داخلية جديد".
+   حالة القراءة محلية بالجلسة فقط (ما فيه عمود "مقروء" لكل مهمة بقاعدة البيانات).
    ============================================================ */
-let notifItems = [];
 let notifLoading = false;
+let notifReadIds = [];
 
 async function loadNotifications() {
   notifLoading = true;
   try {
-    const data = await apiGet(base + "/dashboard/notifications/api/list");
-    notifItems = data.notifications || [];
-  } catch (e) {
-    notifItems = [];
-  }
+    await loadMissionsForSelector();
+  } catch (e) {}
   notifLoading = false;
 }
 
 function renderNotificationsPage() {
-  const unreadCount = notifItems.filter(n => !Number(n.is_read)).length;
+  const items = missionsForSelector.map(m => ({
+    id: m.id,
+    unread: !notifReadIds.includes(m.id),
+    type: m.status === "active" ? "مهمة نشطة" : "مكتملة",
+    title: "طلب مراجعة داخلية — " + (m.target_department_name || ""),
+    body: `تم إرسال طلب مراجعة داخلية من إدارة المراجعة الداخلية بخصوص المهمة ${m.mission_code || ""}. يرجى الاطلاع على الخطاب الرسمي ومتابعة مراحل المهمة.`,
+    time: m.mission_code || "",
+  }));
+
+  const unreadCount = items.filter(n => n.unread).length;
 
   const root = document.getElementById("tpl-notifications").content.cloneNode(true);
   const card = root.querySelector(".notif-card");
@@ -30,19 +39,19 @@ function renderNotificationsPage() {
   const list = card.querySelector('[data-slot="list"]');
   if (notifLoading) {
     list.innerHTML = `<div class="notif-empty">جارِ التحميل...</div>`;
-  } else if (notifItems.length === 0) {
+  } else if (items.length === 0) {
     list.innerHTML = `<div class="notif-empty">لا توجد إخطارات حاليًا</div>`;
   } else {
     const itemTpl = document.getElementById("tpl-notif-item");
-    notifItems.forEach(n => {
+    items.forEach(n => {
       const item = itemTpl.content.cloneNode(true);
       const row = item.querySelector(".notif-item");
-      row.classList.toggle("unread", !Number(n.is_read));
+      row.classList.toggle("unread", n.unread);
       row.dataset.notifId = n.id;
-      row.querySelector('[data-slot="title"]').textContent = n.title == null ? "" : String(n.title);
-      row.querySelector('[data-slot="type"]').textContent = n.type == null ? "" : String(n.type);
-      row.querySelector('[data-slot="body"]').textContent = n.body == null ? "" : String(n.body);
-      row.querySelector('[data-slot="time"]').textContent = n.created_at == null ? "" : String(n.created_at);
+      row.querySelector('[data-slot="title"]').textContent = n.title;
+      row.querySelector('[data-slot="type"]').textContent = n.type;
+      row.querySelector('[data-slot="body"]').textContent = n.body;
+      row.querySelector('[data-slot="time"]').textContent = n.time;
       list.appendChild(item);
     });
   }
@@ -53,14 +62,12 @@ function renderNotificationsPage() {
 function bindNotificationsEvents() {
   document.querySelectorAll("[data-notif-id]").forEach(el => {
     el.addEventListener("click", async () => {
-      const id = el.dataset.notifId;
-      const n = notifItems.find(x => String(x.id) === String(id));
-      if (!n || Number(n.is_read)) return;
-      n.is_read = 1;
-      rerenderNotifContent();
-      try {
-        await apiPost(base + "/dashboard/notifications/api/mark-read/" + id, {});
-      } catch (e) {}
+      const id = Number(el.dataset.notifId);
+      if (!notifReadIds.includes(id)) notifReadIds.push(id);
+      activeContent = "meetingSchedule";
+      renderSidebar();
+      await renderContent();
+      lucide.createIcons();
     });
   });
 }
