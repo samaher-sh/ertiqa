@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\RiskMatrixItemModel;
+use App\Models\MissionStageHistoryModel;
+use App\Models\AuditLogModel;
 
 class RiskMatrixController extends BaseController
 {
@@ -40,6 +42,14 @@ class RiskMatrixController extends BaseController
 
         $itemModel = new RiskMatrixItemModel();
         $itemModel->replaceForMission($missionId, $rows);
+
+        $userId = (int) session()->get('user_id');
+        $stageHistoryModel = new MissionStageHistoryModel();
+        $alreadyLogged = $stageHistoryModel->where('mission_id', $missionId)->where('stage_number', 3)->countAllResults();
+        if ($alreadyLogged === 0) {
+            $stageHistoryModel->openStage($missionId, 3, $userId);
+        }
+        (new AuditLogModel())->log($missionId, $userId, 'risk_matrix_saved', 'risk_matrix', null);
 
         return $this->response->setJSON(['success' => true]);
     }

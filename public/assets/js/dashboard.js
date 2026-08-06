@@ -231,6 +231,11 @@ async function renderContent() {
     await loadNotifications();
     el.innerHTML = renderNotificationsPage();
     bindNotificationsEvents();
+  } else if (activeContent === "documentRequests") {
+    await loadMissionsForSelector();
+    if (drSelectedTaskId) await loadDocumentRequests(drSelectedTaskId);
+    el.innerHTML = renderDocumentRequestsPage();
+    bindDocumentRequestsEvents();
   } else {
     el.innerHTML = renderPlaceholder(activeContent);
   }

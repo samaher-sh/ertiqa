@@ -6,6 +6,8 @@ use App\Models\MeetingModel;
 use App\Models\MeetingAttendeeModel;
 use App\Models\MeetingSummaryPointModel;
 use App\Models\MeetingApprovalModel;
+use App\Models\MissionStageHistoryModel;
+use App\Models\AuditLogModel;
 
 class MeetingSummaryController extends BaseController
 {
@@ -101,6 +103,13 @@ class MeetingSummaryController extends BaseController
         if (!$flags['isHrUser']) {
             $approvalModel->replaceForMeeting($meeting['id'], $data['approvals'] ?? []);
         }
+
+        $stageHistoryModel = new MissionStageHistoryModel();
+        $alreadyLogged = $stageHistoryModel->where('mission_id', $missionId)->where('stage_number', 4)->countAllResults();
+        if ($alreadyLogged === 0) {
+            $stageHistoryModel->openStage($missionId, 4, $userId);
+        }
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_summary_saved', 'meeting', $meeting['id']);
 
         return $this->response->setJSON(['success' => true]);
     }
