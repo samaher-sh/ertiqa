@@ -223,6 +223,7 @@ async function renderContent() {
     el.innerHTML = renderFinalReportsPage();
     bindFinalReportsEvents();
   } else if (activeContent === "meetingSchedule") {
+    await loadMissionsForSelector();
     el.innerHTML = renderMeetingSchedulePage();
     bindMeetingScheduleEvents();
   } else if (activeContent === "notifications") {
