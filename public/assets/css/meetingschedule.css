@@ -31,13 +31,16 @@
 .mc-proposal-card i{ width:18px; height:18px; color:var(--pd); flex-shrink:0; }
 .mc-proposal-title{ font-size:11px; font-weight:700; color:var(--pd); margin:0; }
 .mc-proposal-detail{ font-size:12px; font-weight:600; color:#152c33; margin:2px 0 0; }
-.mc-confirm-btn{
-  display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
-  margin-top:6px; padding:7px; border-radius:10px; border:none;
-  background:var(--p); color:#fff; font-size:12px; font-weight:700; cursor:pointer;
+.mc-proposal-actions{ display:flex; gap:8px; margin-top:6px; }
+.mc-confirm-btn, .mc-cancel-btn{
+  display:flex; align-items:center; justify-content:center; gap:6px; flex:1;
+  padding:7px; border-radius:10px; border:none;
+  font-size:12px; font-weight:700; cursor:pointer;
 }
-.mc-confirm-btn i{ width:13px; height:13px; }
-.mc-confirm-btn:disabled{ opacity:.6; cursor:not-allowed; }
+.mc-confirm-btn{ background:var(--p); color:#fff; }
+.mc-cancel-btn{ background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+.mc-confirm-btn i, .mc-cancel-btn i{ width:13px; height:13px; }
+.mc-confirm-btn:disabled, .mc-cancel-btn:disabled{ opacity:.6; cursor:not-allowed; }
 .mc-waiting-hint{ display:block; margin-top:6px; font-size:11px; color:#9ca3af; text-align:center; }
 
 .mc-bubble-confirmed{
@@ -45,6 +48,12 @@
   border:1px solid var(--pb); border-radius:999px; padding:8px 16px; font-size:12px; font-weight:700;
 }
 .mc-bubble-confirmed i{ width:15px; height:15px; }
+
+.mc-bubble-cancelled{
+  display:flex; align-items:center; gap:8px; background:#fef2f2; color:#b91c1c;
+  border:1px solid #fecaca; border-radius:999px; padding:8px 16px; font-size:12px; font-weight:700;
+}
+.mc-bubble-cancelled i{ width:15px; height:15px; }
 
 .mc-confirmed-badge{
   display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700;

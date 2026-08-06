@@ -89,7 +89,12 @@ function renderChatBubble(m) {
             <p class="mc-proposal-detail">${escapeHtml(m.proposed_date)} — ${escapeHtml(m.proposed_time)}${m.proposed_location ? " · " + escapeHtml(m.proposed_location) : ""}</p>
           </div>
         </div>
-        ${!isMine ? `<button type="button" class="mc-confirm-btn" data-confirm-msg="${m.id}"><i data-lucide="check"></i> تأكيد هذا الموعد</button>` : `<span class="mc-waiting-hint">بانتظار تأكيد الطرف الآخر</span>`}
+        ${!isMine ? `
+          <div class="mc-proposal-actions">
+            <button type="button" class="mc-confirm-btn" data-confirm-msg="${m.id}"><i data-lucide="check"></i> تأكيد هذا الموعد</button>
+            <button type="button" class="mc-cancel-btn" data-cancel-msg="${m.id}"><i data-lucide="x"></i> إلغاء الموعد</button>
+          </div>
+        ` : `<span class="mc-waiting-hint">بانتظار تأكيد الطرف الآخر</span>`}
         <span class="mc-bubble-time">${escapeHtml(time)}</span>
       </div>
     </div>`;
@@ -101,6 +106,16 @@ function renderChatBubble(m) {
       <div class="mc-bubble-confirmed">
         <i data-lucide="check-circle"></i>
         تم تأكيد الموعد: ${escapeHtml(m.proposed_date)} — ${escapeHtml(m.proposed_time)}${m.proposed_location ? " · " + escapeHtml(m.proposed_location) : ""}
+      </div>
+    </div>`;
+  }
+
+  if (m.type === "cancelled") {
+    return `
+    <div class="mc-bubble-row center">
+      <div class="mc-bubble-cancelled">
+        <i data-lucide="x-circle"></i>
+        ${escapeHtml(m.message)}
       </div>
     </div>`;
   }
@@ -149,6 +164,9 @@ function mcUpdateChatBodyOnly() {
     body.querySelectorAll("[data-confirm-msg]").forEach(btn => {
       btn.addEventListener("click", () => mcHandleConfirm(btn));
     });
+    body.querySelectorAll("[data-cancel-msg]").forEach(btn => {
+      btn.addEventListener("click", () => mcHandleCancel(btn));
+    });
   }
   const badgeHolder = document.getElementById("mcConfirmedBadgeHolder");
   if (badgeHolder) badgeHolder.innerHTML = renderConfirmedBadge();
@@ -162,6 +180,17 @@ async function mcHandleConfirm(btn) {
     await mcLoadMessages(true, false);
   } catch (e) {
     showToast(e.message || "تعذّر تأكيد الموعد", "error");
+    btn.disabled = false;
+  }
+}
+
+async function mcHandleCancel(btn) {
+  btn.disabled = true;
+  try {
+    await apiPost(base + "/dashboard/meeting-schedule/api/cancel", { mission_id: mcSelectedTaskId, message_id: btn.dataset.cancelMsg });
+    await mcLoadMessages(true, false);
+  } catch (e) {
+    showToast(e.message || "تعذّر إلغاء الموعد", "error");
     btn.disabled = false;
   }
 }
@@ -240,6 +269,9 @@ function bindMeetingScheduleEvents() {
 
   document.querySelectorAll("[data-confirm-msg]").forEach(btn => {
     btn.addEventListener("click", () => mcHandleConfirm(btn));
+  });
+  document.querySelectorAll("[data-cancel-msg]").forEach(btn => {
+    btn.addEventListener("click", () => mcHandleCancel(btn));
   });
 
   mcScrollToBottom();

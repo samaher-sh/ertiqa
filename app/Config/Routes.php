@@ -33,6 +33,7 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('meeting-schedule/api/send',    'MissionChatController::send');
     $routes->post('meeting-schedule/api/propose', 'MissionChatController::propose');
     $routes->post('meeting-schedule/api/confirm', 'MissionChatController::confirm');
+    $routes->post('meeting-schedule/api/cancel',  'MissionChatController::cancel');
     $routes->post('documents/delete/(:num)',    'DocumentController::delete/$1');
     $routes->get('observations/api/list',       'ObservationController::list');
     $routes->post('observations/api/save',      'ObservationController::save');
