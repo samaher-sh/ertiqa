@@ -10,6 +10,21 @@ let mcMyUserId = null;
 let mcPollTimer = null;
 let mcShowProposeForm = false;
 
+function renderConfirmedBadge() {
+  if (!mcMeeting || !mcMeeting.meeting_date) return "";
+  return `
+    <span class="mc-confirmed-badge">
+      <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
+      الموعد المؤكد: ${escapeHtml(mcMeeting.meeting_date)} ${escapeHtml(mcMeeting.meeting_time || "")}
+    </span>`;
+}
+
+function renderChatBodyContent() {
+  return mcMessages.length === 0
+    ? `<p class="mc-empty">لا توجد رسائل بعد — ابدأ المحادثة لتحديد موعد الاجتماع</p>`
+    : mcMessages.map(m => renderChatBubble(m)).join("");
+}
+
 function renderMeetingSchedulePage() {
   const locked = !mcSelectedTaskId;
 
@@ -22,15 +37,11 @@ function renderMeetingSchedulePage() {
         <div class="wiz-card-head">
           <i data-lucide="calendar"></i>
           <div><h2>جدولة اجتماع</h2><p>Meeting Schedule</p></div>
-          ${mcMeeting && mcMeeting.meeting_date ? `
-            <span class="mc-confirmed-badge" style="margin-right:auto;">
-              <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
-              الموعد المؤكد: ${mcMeeting.meeting_date} ${mcMeeting.meeting_time || ""}
-            </span>` : ""}
+          <span id="mcConfirmedBadgeHolder" style="margin-right:auto;">${renderConfirmedBadge()}</span>
         </div>
 
         <div class="mc-chat-body" id="mcChatBody">
-          ${mcMessages.length === 0 ? `<p class="mc-empty">لا توجد رسائل بعد — ابدأ المحادثة لتحديد موعد الاجتماع</p>` : mcMessages.map(m => renderChatBubble(m)).join("")}
+          ${renderChatBodyContent()}
         </div>
 
         <div class="mc-compose">
@@ -104,7 +115,13 @@ function renderChatBubble(m) {
   </div>`;
 }
 
-async function mcLoadMessages(scrollToBottom) {
+/**
+ * fullRender=true يعيد رسم الصفحة كاملة (لازم أول ما تُفتح المحادثة أو تتغيّر المهمة).
+ * fullRender=false يحدّث بس منطقة الفقاعات + شارة الموعد المؤكد بأعلى البطاقة، بدون
+ * لمس صندوق الكتابة إطلاقًا — هذا يمنع اختفاء أي نص لسا المستخدم يكتبه كل ما يوصل
+ * تحديث دوري (كل 5 ثواني) أو رسالة جديدة من الطرف الثاني.
+ */
+async function mcLoadMessages(scrollToBottom, fullRender) {
   if (!mcSelectedTaskId) return;
   try {
     const data = await apiGet(base + "/dashboard/meeting-schedule/api/messages?mission_id=" + encodeURIComponent(mcSelectedTaskId));
@@ -112,11 +129,40 @@ async function mcLoadMessages(scrollToBottom) {
       mcMessages = data.messages || [];
       mcMeeting = data.meeting || null;
       mcMyUserId = data.my_user_id || null;
-      rerenderMSContent();
+
+      if (fullRender) {
+        rerenderMSContent();
+      } else {
+        mcUpdateChatBodyOnly();
+      }
       if (scrollToBottom) mcScrollToBottom();
     }
   } catch (e) {
     console.error("تعذّر تحميل المحادثة:", e);
+  }
+}
+
+function mcUpdateChatBodyOnly() {
+  const body = document.getElementById("mcChatBody");
+  if (body) {
+    body.innerHTML = renderChatBodyContent();
+    body.querySelectorAll("[data-confirm-msg]").forEach(btn => {
+      btn.addEventListener("click", () => mcHandleConfirm(btn));
+    });
+  }
+  const badgeHolder = document.getElementById("mcConfirmedBadgeHolder");
+  if (badgeHolder) badgeHolder.innerHTML = renderConfirmedBadge();
+  lucide.createIcons();
+}
+
+async function mcHandleConfirm(btn) {
+  btn.disabled = true;
+  try {
+    await apiPost(base + "/dashboard/meeting-schedule/api/confirm", { mission_id: mcSelectedTaskId, message_id: btn.dataset.confirmMsg });
+    await mcLoadMessages(true, false);
+  } catch (e) {
+    showToast(e.message || "تعذّر تأكيد الموعد", "error");
+    btn.disabled = false;
   }
 }
 
@@ -133,7 +179,7 @@ function mcStartPolling() {
       mcPollTimer = null;
       return;
     }
-    if (mcSelectedTaskId) mcLoadMessages(false);
+    if (mcSelectedTaskId) mcLoadMessages(false, false);
   }, 5000);
 }
 
@@ -144,7 +190,7 @@ function bindMeetingScheduleEvents() {
     mcMessages = [];
     mcShowProposeForm = false;
     rerenderMSContent();
-    if (mcSelectedTaskId) { mcLoadMessages(true); mcStartPolling(); }
+    if (mcSelectedTaskId) { mcLoadMessages(true, true); mcStartPolling(); }
   });
 
   const sendBtn = document.getElementById("mcSendBtn");
@@ -157,7 +203,7 @@ function bindMeetingScheduleEvents() {
       try {
         await apiPost(base + "/dashboard/meeting-schedule/api/send", { mission_id: mcSelectedTaskId, message: text });
         msgInput.value = "";
-        await mcLoadMessages(true);
+        await mcLoadMessages(true, false);
       } catch (e) {
         showToast(e.message || "تعذّر إرسال الرسالة", "error");
       } finally {
@@ -184,7 +230,7 @@ function bindMeetingScheduleEvents() {
     try {
       await apiPost(base + "/dashboard/meeting-schedule/api/propose", { mission_id: mcSelectedTaskId, date, time, location });
       mcShowProposeForm = false;
-      await mcLoadMessages(true);
+      await mcLoadMessages(true, true);
     } catch (e) {
       showToast(e.message || "تعذّر إرسال الاقتراح", "error");
     } finally {
@@ -193,16 +239,7 @@ function bindMeetingScheduleEvents() {
   });
 
   document.querySelectorAll("[data-confirm-msg]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      try {
-        await apiPost(base + "/dashboard/meeting-schedule/api/confirm", { mission_id: mcSelectedTaskId, message_id: btn.dataset.confirmMsg });
-        await mcLoadMessages(true);
-      } catch (e) {
-        showToast(e.message || "تعذّر تأكيد الموعد", "error");
-        btn.disabled = false;
-      }
-    });
+    btn.addEventListener("click", () => mcHandleConfirm(btn));
   });
 
   mcScrollToBottom();
