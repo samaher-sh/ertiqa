@@ -35,6 +35,18 @@ class ReportModel extends Model
         return $builder->orderBy('reports.created_at', 'DESC')->findAll();
     }
 
+    /** تقارير المهام الموجّهة فعليًا لإدارة مستخدم "الإدارة محل المراجعة" (منسق/مدير إدارة) */
+    public function forTargetDepartment(int $departmentId): array
+    {
+        return $this->select('reports.*, m.mission_code, m.year, m.audit_department_id, m.target_department_id, ad.name_ar as audit_dept_name, td.name_ar as target_dept_name')
+            ->join('missions m', 'm.id = reports.mission_id')
+            ->join('departments ad', 'ad.id = m.audit_department_id', 'left')
+            ->join('departments td', 'td.id = m.target_department_id', 'left')
+            ->where('m.target_department_id', $departmentId)
+            ->orderBy('reports.created_at', 'DESC')
+            ->findAll();
+    }
+
     /**
      * عدد التقارير حسب الحالة على مستوى إدارة المراجعة الداخلية كاملة
      * (يُستخدم لإحصائيات رئيس إدارة المراجعة الداخلية، اللي يشرف على كل التقارير مو بس تقاريره)

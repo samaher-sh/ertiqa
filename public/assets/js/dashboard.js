@@ -192,10 +192,12 @@ async function renderContent() {
     bindHomeEvents();
   } else if (activeContent === "riskMatrix") {
     await loadMissionsForSelector();
+    if (rmSelectedTaskId) await rmLoadItems(rmSelectedTaskId);
     el.innerHTML = renderRiskMatrixPage();
     bindRiskMatrixEvents();
   } else if (activeContent === "meetingSummary") {
     await loadMissionsForSelector();
+    if (msumSelectedTaskId) await msumLoadData(msumSelectedTaskId);
     el.innerHTML = renderMeetingSummaryPage();
     bindMeetingSummaryEvents();
   } else if (activeContent === "newTask") {
@@ -209,6 +211,7 @@ async function renderContent() {
     bindScheduledMeetingsEvents();
   } else if (activeContent === "observations") {
     await loadMissionsForSelector();
+    if (obsSelectedTaskId) await obsLoadList(obsSelectedTaskId);
     el.innerHTML = renderObservationsPage();
     bindObservationsEvents();
   } else if (activeContent === "taskDetail" && typeof selectedTaskDetail !== "undefined" && selectedTaskDetail) {
@@ -221,6 +224,7 @@ async function renderContent() {
   } else if (activeContent === "finalReports") {
     await loadMissionsForSelector();
     await initFinalReportsData();
+    if (frView === "create" && frCreateSelectedTask) await frLoadChecklist(frCreateSelectedTask);
     el.innerHTML = renderFinalReportsPage();
     bindFinalReportsEvents();
   } else if (activeContent === "meetingSchedule") {

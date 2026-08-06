@@ -32,11 +32,31 @@ class MissionReviewController extends BaseController
         return $mission;
     }
 
-    /** GET /dashboard/target-mission/api/data?mission_id=X */
+    /** المهمة لو المستخدم الحالي طرف فيها فعليًا (مراجع أو الإدارة المستهدفة)، وإلا null —
+     *  يسمح للمراجع بمعاينة (قراءة فقط) اللي عبّته الإدارة المستهدفة بعد إرساله */
+    private function missionForParty(int $missionId): ?array
+    {
+        $missionModel = new MissionModel();
+        $mission = $missionModel->findWithDetails($missionId);
+        if (!$mission) {
+            return null;
+        }
+
+        $userId = (int) session()->get('user_id');
+        $departmentId = (int) session()->get('department_id');
+
+        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $isAuditSide  = in_array($missionId, $allowedIds, true);
+        $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
+
+        return ($isAuditSide || $isTargetSide) ? $mission : null;
+    }
+
+    /** GET /dashboard/target-mission/api/data?mission_id=X — قراءة متاحة لطرفي المهمة، الكتابة (saveAgreement) للإدارة المستهدفة فقط */
     public function data()
     {
         $missionId = (int) $this->request->getGet('mission_id');
-        $mission = $missionId ? $this->missionForTargetUser($missionId) : null;
+        $mission = $missionId ? $this->missionForParty($missionId) : null;
         if (!$mission) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
         }
