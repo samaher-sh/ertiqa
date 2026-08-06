@@ -19,6 +19,7 @@ class AuditLogModel extends Model
     /** يعرّبها senttasks.js إلى سجل زمني حقيقي لكل الأحداث المهمة بالمهمة */
     private const ACTION_LABELS = [
         'mission_created'        => 'تم إنشاء المهمة وإرسال طلب المراجعة الداخلية',
+        'sla_submitted'          => 'تم تعبئة اتفاقية مستوى الخدمة',
         'documents_submitted'    => 'تم رفع المستندات المطلوبة',
         'risk_matrix_saved'      => 'تم حفظ مصفوفة المخاطر',
         'meeting_proposed'       => 'تم اقتراح موعد اجتماع',

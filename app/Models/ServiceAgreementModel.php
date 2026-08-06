@@ -11,5 +11,8 @@ class ServiceAgreementModel extends Model
     protected $returnType    = 'array';
     protected $useTimestamps = true;
 
-    protected $allowedFields = ['mission_id', 'status', 'submitted_by', 'submitted_at'];
+    protected $allowedFields = [
+        'mission_id', 'status', 'submitted_by', 'submitted_at',
+        'coordinator_name', 'coordinator_email', 'coordinator_phone',
+    ];
 }

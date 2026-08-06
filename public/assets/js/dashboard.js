@@ -236,6 +236,11 @@ async function renderContent() {
     if (drSelectedTaskId) await loadDocumentRequests(drSelectedTaskId);
     el.innerHTML = renderDocumentRequestsPage();
     bindDocumentRequestsEvents();
+  } else if (activeContent === "missionReview") {
+    await loadMissionsForSelector();
+    if (mrSelectedTaskId) await loadMissionReviewData(mrSelectedTaskId);
+    el.innerHTML = renderMissionReviewPage();
+    bindMissionReviewEvents();
   } else {
     el.innerHTML = renderPlaceholder(activeContent);
   }

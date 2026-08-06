@@ -1,0 +1,20 @@
+/* ============================================================
+   مراجعة المهمة (Mission Review) — خاص بالإدارة الخاضعة للمراجعة
+   ============================================================ */
+.mr-toggle{ cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; }
+.mr-toggle.checked{ border-width:2px; }
+.wiz-checkbox-visual.mr-toggle.checked{ background:#eaf4fa; }
+.wiz-checkbox-visual.no.mr-toggle.checked{ background:#fef2f2; }
+
+.mr-exists-toggle{ display:flex; flex-direction:column; gap:4px; align-items:center; }
+
+.mr-sla-note-input{
+  width:100%; border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px;
+  font-size:12px; font-family:inherit; outline:none;
+}
+.mr-sla-note-input:focus{ border-color:var(--p); }
+.mr-sla-note-input[readonly]{ background:#f8fafc; color:#6b7280; }
+
+.mr-doc-file-input{ font-size:11px; margin-bottom:6px; display:block; }
+
+.wiz-doc-note-input[readonly]{ background:#f8fafc; color:#6b7280; }
