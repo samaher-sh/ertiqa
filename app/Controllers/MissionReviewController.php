@@ -87,14 +87,20 @@ class MissionReviewController extends BaseController
             'id'
         );
 
+        $agreeCount = 0;
+        $disagreeCount = 0;
         foreach (($data['rows'] ?? []) as $row) {
             $rowId = (int) ($row['id'] ?? 0);
             if (!$rowId || !in_array($rowId, $ownRowIds, true)) {
                 continue; // تجاهل أي معرّف مو تابع فعليًا لاتفاقية هذي المهمة
             }
+            $agree = !empty($row['agree']) ? 1 : 0;
+            $disagree = !empty($row['disagree']) ? 1 : 0;
+            if ($agree) $agreeCount++;
+            if ($disagree) $disagreeCount++;
             $responseModel->update($rowId, [
-                'agree'    => !empty($row['agree']) ? 1 : 0,
-                'disagree' => !empty($row['disagree']) ? 1 : 0,
+                'agree'    => $agree,
+                'disagree' => $disagree,
                 'note'     => $row['note'] ?? null,
             ]);
         }
@@ -104,7 +110,10 @@ class MissionReviewController extends BaseController
         if ($alreadyLogged === 0) {
             $stageHistoryModel->openStage($missionId, 2, $userId);
         }
-        (new AuditLogModel())->log($missionId, $userId, 'sla_submitted', 'service_agreement', $agreement['id']);
+
+        $coordName = trim($data['coordinator_name'] ?? '');
+        $detail = ($coordName ? 'المنسّق: ' . $coordName . ' — ' : '') . $agreeCount . ' بند موافق، ' . $disagreeCount . ' غير موافق';
+        (new AuditLogModel())->log($missionId, $userId, 'sla_submitted', 'service_agreement', $agreement['id'], $detail);
 
         $db->transComplete();
 

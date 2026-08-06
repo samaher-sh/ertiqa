@@ -87,8 +87,10 @@ class DocumentRequestController extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا يوجد أي رد لإرساله.']);
         }
 
-        $requestModel  = new DocumentRequestModel();
-        $ownRequestIds = array_column($requestModel->where('mission_id', $missionId)->findAll(), 'id');
+        $requestModel = new DocumentRequestModel();
+        $ownRequests  = $requestModel->where('mission_id', $missionId)->findAll();
+        $ownRequestIds = array_column($ownRequests, 'id');
+        $docNameById   = array_column($ownRequests, 'doc_name', 'id');
 
         $db = \Config\Database::connect();
         $db->transStart();
@@ -96,12 +98,14 @@ class DocumentRequestController extends BaseController
         $responseModel = new DocumentResponseModel();
         $docModel      = new DocumentModel();
         $now = date('Y-m-d H:i:s');
+        $submittedDocNames = [];
 
         foreach ($responses as $row) {
             $requestId = (int) ($row['document_request_id'] ?? 0);
             if (!$requestId || !in_array($requestId, $ownRequestIds, true)) {
                 continue; // تجاهل أي معرّف مو تابع فعليًا لهذي المهمة
             }
+            $submittedDocNames[] = $docNameById[$requestId] ?? '';
 
             $responseModel->upsertForRequest($requestId, [
                 'exists_flag'  => isset($row['exists_flag']) && $row['exists_flag'] !== '' ? (int) $row['exists_flag'] : null,
@@ -158,7 +162,8 @@ class DocumentRequestController extends BaseController
             $stageHistoryModel->openStage($missionId, 2, $userId);
         }
 
-        (new AuditLogModel())->log($missionId, $userId, 'documents_submitted', 'document_request', null);
+        $detail = implode('، ', array_filter($submittedDocNames));
+        (new AuditLogModel())->log($missionId, $userId, 'documents_submitted', 'document_request', null, $detail ?: null);
 
         $db->transComplete();
 

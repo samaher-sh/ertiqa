@@ -109,7 +109,7 @@ class MeetingSummaryController extends BaseController
         if ($alreadyLogged === 0) {
             $stageHistoryModel->openStage($missionId, 4, $userId);
         }
-        (new AuditLogModel())->log($missionId, $userId, 'meeting_summary_saved', 'meeting', $meeting['id']);
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_summary_saved', 'meeting', $meeting['id'], trim((string) ($data['title'] ?? '')) ?: null);
 
         return $this->response->setJSON(['success' => true]);
     }
