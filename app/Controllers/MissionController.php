@@ -177,6 +177,8 @@ class MissionController extends BaseController
             ]);
         }
 
+        $missionModel->syncCurrentStage($missionId);
+
         return $this->response->setJSON([
             'success'      => true,
             'mission_code' => $missionCode,

@@ -171,6 +171,8 @@ class DocumentRequestController extends BaseController
             return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'حدث خطأ أثناء حفظ المستندات. حاول مرة أخرى.']);
         }
 
+        (new MissionModel())->syncCurrentStage($missionId);
+
         return $this->response->setJSON(['success' => true]);
     }
 }

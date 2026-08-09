@@ -8,6 +8,7 @@ use App\Models\MeetingSummaryPointModel;
 use App\Models\MeetingApprovalModel;
 use App\Models\MissionStageHistoryModel;
 use App\Models\AuditLogModel;
+use App\Models\MissionModel;
 
 class MeetingSummaryController extends BaseController
 {
@@ -110,6 +111,7 @@ class MeetingSummaryController extends BaseController
             $stageHistoryModel->openStage($missionId, 4, $userId);
         }
         (new AuditLogModel())->log($missionId, $userId, 'meeting_summary_saved', 'meeting', $meeting['id'], trim((string) ($data['title'] ?? '')) ?: null);
+        (new MissionModel())->syncCurrentStage($missionId);
 
         return $this->response->setJSON(['success' => true]);
     }

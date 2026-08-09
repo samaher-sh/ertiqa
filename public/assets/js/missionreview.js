@@ -337,7 +337,12 @@ function bindMrPage2Events() {
   const saveBtn = document.getElementById("mrSaveAgreementBtn");
   if (saveBtn) saveBtn.addEventListener("click", async () => {
     const coordName = (mrAgreement.coordinator_name || "").trim();
-    if (!coordName) { showToast("يرجى إدخال اسم المنسّق.", "error"); return; }
+    if (!coordName) {
+      showToast("يرجى إدخال اسم المنسّق.", "error");
+      const coordNameInput = document.getElementById("mrCoordName");
+      if (coordNameInput) { coordNameInput.focus(); coordNameInput.classList.add("err"); }
+      return;
+    }
 
     mrSlaSaving = true;
     rerenderMRContent();

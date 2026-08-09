@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\AuditNoteModel;
 use App\Models\MissionStageHistoryModel;
 use App\Models\AuditLogModel;
+use App\Models\MissionModel;
 
 class ObservationController extends BaseController
 {
@@ -77,6 +78,7 @@ class ObservationController extends BaseController
                 $stageHistoryModel->openStage($missionId, 5, $userId);
             }
             (new AuditLogModel())->log($missionId, $userId, 'observation_added', 'audit_note', $id, trim((string) ($payload['title'] ?? '')) ?: null);
+            (new MissionModel())->syncCurrentStage($missionId);
         }
 
         return $this->response->setJSON(['success' => true, 'id' => $id]);

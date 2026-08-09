@@ -66,6 +66,19 @@ class MissionModel extends Model
         return 7;
     }
 
+    /**
+     * يحسب المرحلة الحقيقية ويكتبها فعليًا بعمود missions.current_stage (بالإضافة
+     * لكونها محسوبة حيًا بكل مكان يستخدم computeRealNextStage) — عشان أي استعلام
+     * SQL مباشر على العمود يعكس الواقع أيضًا، ويشتغل عليها countInStageForUser()
+     * (إحصائية "قيد المراجعة" بالصفحة الرئيسية) اللي تعتمد على العمود الخام تحديدًا
+     */
+    public function syncCurrentStage(int $missionId): int
+    {
+        $stage = $this->computeRealNextStage($missionId);
+        $this->update($missionId, ['current_stage' => $stage]);
+        return $stage;
+    }
+
     public function countInStageForUser(int $userId, int $stage): int
     {
         return count(array_filter(
