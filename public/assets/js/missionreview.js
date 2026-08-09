@@ -175,7 +175,7 @@ function renderMrPage2() {
           ${Object.keys(rowsBySection).map((title, si) => `
             <tr class="wiz-sla-section-row"><td colspan="4"><span class="num">${si + 1}</span>${escapeHtml(title)}</td></tr>
             ${rowsBySection[title].map(row => `
-              <tr class="wiz-sla-row" data-row-id="${row.id}">
+              <tr class="wiz-sla-row ${mrCanEdit && !Number(row.agree) && !Number(row.disagree) ? "mr-row-unanswered" : ""}" data-row-id="${row.id}">
                 <td><div class="lbl"><span class="dot"></span><span>${escapeHtml(row.row_text)}</span></div></td>
                 <td style="text-align:center;">
                   <div class="wiz-checkbox-visual mr-toggle ${Number(row.agree) ? "checked" : ""}" data-mr-agree="${row.id}" ${mrCanEdit ? "" : "style=\"pointer-events:none;\""}>
@@ -341,6 +341,20 @@ function bindMrPage2Events() {
       showToast("يرجى إدخال اسم المنسّق.", "error");
       const coordNameInput = document.getElementById("mrCoordName");
       if (coordNameInput) { coordNameInput.focus(); coordNameInput.classList.add("err"); }
+      return;
+    }
+
+    // لازم رد فعلي (موافق أو غير موافق) على كل بند قبل الإرسال -- وإلا الباك-إند
+    // يرفض الطلب أصلًا الآن، لكن نتحقق هنا أول عشان المستخدم يشوف بالضبط وين
+    // البنود الناقصة بدل ما ينتظر رحلة الشبكة كاملة عشان يعرف
+    const unanswered = mrRows.filter(r => !r.agree && !r.disagree);
+    if (unanswered.length > 0) {
+      showToast("يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.", "error");
+      const firstRow = document.querySelector(`[data-mr-agree="${unanswered[0].id}"]`);
+      const firstRowEl = firstRow && firstRow.closest(".wiz-sla-row");
+      if (firstRowEl && typeof firstRowEl.scrollIntoView === "function") {
+        firstRowEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
