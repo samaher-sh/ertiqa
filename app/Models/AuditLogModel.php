@@ -56,6 +56,7 @@ class AuditLogModel extends Model
             ->findAll();
 
         return array_map(fn($r) => [
+            'action'     => $r['action'],
             'stage_name' => self::ACTION_LABELS[$r['action']] ?? $r['action'],
             'user_name'  => $r['user_name'] ?? '—',
             'entered_at' => $r['created_at'],
