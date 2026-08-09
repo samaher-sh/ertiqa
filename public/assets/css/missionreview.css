@@ -18,3 +18,6 @@
 .mr-doc-file-input{ font-size:11px; margin-bottom:6px; display:block; }
 
 .wiz-doc-note-input[readonly]{ background:#f8fafc; color:#6b7280; }
+
+.mr-row-unanswered{ background:#fffbeb; }
+.mr-row-unanswered .lbl span:last-child{ color:#92400e; }

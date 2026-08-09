@@ -88,6 +88,33 @@ class MissionReviewController extends BaseController
             return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا توجد اتفاقية مستوى خدمة لهذه المهمة.']);
         }
 
+        // نبني ردود الطلب بمصفوفة id => row أول شي، ونتحقق قبل أي حفظ إن كل بند
+        // فعليًا معه رد (موافق أو غير موافق -- مو الاثنين صفر) -- بدون هذا التحقق،
+        // اتفاقية ما ردّ عليها المستخدم فعليًا كانت تُعتمَد "submitted" بس لأن الزر
+        // انضغط، فتتقدّم المرحلة بدون أي بيانات حقيقية محفوظة
+        $responseModel = new ServiceAgreementResponseModel();
+        $ownRows = $responseModel->select('id')->where('service_agreement_id', $agreement['id'])->findAll();
+        $ownRowIds = array_column($ownRows, 'id');
+
+        $incomingById = [];
+        foreach (($data['rows'] ?? []) as $row) {
+            $rowId = (int) ($row['id'] ?? 0);
+            if ($rowId && in_array($rowId, $ownRowIds, true)) {
+                $incomingById[$rowId] = $row;
+            }
+        }
+
+        $unanswered = array_filter($ownRowIds, function ($id) use ($incomingById) {
+            $row = $incomingById[$id] ?? null;
+            return !$row || (empty($row['agree']) && empty($row['disagree']));
+        });
+        if (!empty($unanswered)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.',
+            ]);
+        }
+
         $userId = (int) session()->get('user_id');
         $db = \Config\Database::connect();
         $db->transStart();
@@ -101,19 +128,9 @@ class MissionReviewController extends BaseController
             'submitted_at'      => date('Y-m-d H:i:s'),
         ]);
 
-        $responseModel = new ServiceAgreementResponseModel();
-        $ownRowIds = array_column(
-            $responseModel->select('id')->where('service_agreement_id', $agreement['id'])->findAll(),
-            'id'
-        );
-
         $agreeCount = 0;
         $disagreeCount = 0;
-        foreach (($data['rows'] ?? []) as $row) {
-            $rowId = (int) ($row['id'] ?? 0);
-            if (!$rowId || !in_array($rowId, $ownRowIds, true)) {
-                continue; // تجاهل أي معرّف مو تابع فعليًا لاتفاقية هذي المهمة
-            }
+        foreach ($incomingById as $rowId => $row) {
             $agree = !empty($row['agree']) ? 1 : 0;
             $disagree = !empty($row['disagree']) ? 1 : 0;
             if ($agree) $agreeCount++;

@@ -54,6 +54,14 @@ class MissionModel extends Model
         $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
         if (!$agreement || $agreement['status'] !== 'submitted') return 2;
 
+        // "submitted" وحدها ما تكفي -- لازم قائمة المستندات نفسها فعليًا مكتملة
+        // (رد حقيقي على كل مستند مطلوب)، وإلا المرحلة تبقى 2 حتى لو الاتفاقية
+        // نفسها اتحفظت. نفس معيار ReportController::realCompletionStatus() تمامًا.
+        $docRequests = (new DocumentRequestModel())->forMissionWithResponses($missionId);
+        $docsComplete = count($docRequests) > 0
+            && count(array_filter($docRequests, fn($d) => $d['exists_flag'] === null)) === 0;
+        if (!$docsComplete) return 2;
+
         $riskCount = (new RiskMatrixItemModel())->where('mission_id', $missionId)->countAllResults();
         if ($riskCount === 0) return 3;
 
