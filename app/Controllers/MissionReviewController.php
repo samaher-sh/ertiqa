@@ -45,7 +45,7 @@ class MissionReviewController extends BaseController
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
 
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);
         $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
 
@@ -94,7 +94,11 @@ class MissionReviewController extends BaseController
         // انضغط، فتتقدّم المرحلة بدون أي بيانات حقيقية محفوظة
         $responseModel = new ServiceAgreementResponseModel();
         $ownRows = $responseModel->select('id')->where('service_agreement_id', $agreement['id'])->findAll();
-        $ownRowIds = array_column($ownRows, 'id');
+        // (int) إلزامي هنا: سائق MySQLi بهذا السيرفر يرجّع عمود id كسلسلة نصية
+        // ("65" لا 65)، فلو تركناها كما هي، in_array(..., true) الصارمة تحتها
+        // ترفض كل صف بصمت لأن النوع يختلف عن $rowId المُحوَّل (int) -- بالضبط
+        // سبب رفض بيانات مكتملة فعليًا كأنها فارغة بالكامل
+        $ownRowIds = array_map('intval', array_column($ownRows, 'id'));
 
         $incomingById = [];
         foreach (($data['rows'] ?? []) as $row) {

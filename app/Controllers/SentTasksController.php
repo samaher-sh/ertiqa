@@ -19,7 +19,7 @@ class SentTasksController extends BaseController
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
 
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);
         $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
 

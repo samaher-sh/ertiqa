@@ -43,7 +43,7 @@ class PdfController extends BaseController
         $userId = (int) session()->get('user_id');
         $missionModel = new MissionModel();
         $allowed = $missionModel->activeMissionsForUser($userId);
-        $ids = array_column($allowed, 'id');
+        $ids = array_map('intval', array_column($allowed, 'id'));
 
         if ((int) $mission['mission_head_id'] !== $userId && !in_array((int) $mission['id'], $ids, true)) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');

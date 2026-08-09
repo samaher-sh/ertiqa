@@ -27,7 +27,7 @@ class DocumentRequestController extends BaseController
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
 
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);
         $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
 
@@ -89,7 +89,7 @@ class DocumentRequestController extends BaseController
 
         $requestModel = new DocumentRequestModel();
         $ownRequests  = $requestModel->where('mission_id', $missionId)->findAll();
-        $ownRequestIds = array_column($ownRequests, 'id');
+        $ownRequestIds = array_map('intval', array_column($ownRequests, 'id'));
         $docNameById   = array_column($ownRequests, 'doc_name', 'id');
 
         $db = \Config\Database::connect();

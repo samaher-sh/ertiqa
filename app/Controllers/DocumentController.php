@@ -25,7 +25,7 @@ class DocumentController extends BaseController
         // تحقق من صلاحية الوصول للمهمة
         $userId = (int) session()->get('user_id');
         $missionModel = new MissionModel();
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         if (!in_array($missionId, $allowedIds, true)) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
         }
@@ -80,7 +80,7 @@ class DocumentController extends BaseController
         $userId = (int) session()->get('user_id');
 
         $missionModel = new MissionModel();
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         if (!in_array($missionId, $allowedIds, true)) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false]);
         }
@@ -106,7 +106,7 @@ class DocumentController extends BaseController
 
         $userId = (int) session()->get('user_id');
         $missionModel = new MissionModel();
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         if (!in_array((int) $doc['mission_id'], $allowedIds, true)) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذا الملف.');
         }
