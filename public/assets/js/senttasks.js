@@ -27,6 +27,20 @@ const ST_STAGE_TO_PAGE = {
   7: { key: "finalReports",   label: "التقرير النهائي",              forRole: "audit" },
 };
 
+/* مراحل "عرض" المتسلسلة (فين وصلت المهمة بالضبط) -- كل مرحلة تظهر فقط لو فيها
+   حدث حقيقي واحد على الأقل بسجل audit_logs (action يطابق أحد actions المذكورة)،
+   بنفس ترتيبها هنا دائمًا (مو ترتيب وقوع الأحداث) -- ما تظهر مراحل المستقبل قبل
+   ما تصير فعليًا */
+const ST_STAGE_STEPPER_GROUPS = [
+  { label: "إنشاء المهمة وإرسال طلب المراجعة", actions: ["mission_created"] },
+  { label: "اتفاقية مستوى الخدمة",              actions: ["sla_submitted"] },
+  { label: "رفع المستندات المطلوبة",            actions: ["documents_submitted"] },
+  { label: "مصفوفة المخاطر",                    actions: ["risk_matrix_saved"] },
+  { label: "الاجتماع",                          actions: ["meeting_confirmed", "meeting_summary_saved"] },
+  { label: "الملاحظات",                         actions: ["observation_added"] },
+  { label: "التقرير النهائي",                   actions: ["report_finalized"] },
+];
+
 function renderSentTasksPage() {
   return sentTasksSelected ? renderSentTaskDetail() : renderSentTasksList();
 }
@@ -128,6 +142,34 @@ function renderSentTaskTimeline() {
   </div>`;
 }
 
+function renderSentTaskStageStepper() {
+  const reached = ST_STAGE_STEPPER_GROUPS
+    .map(group => {
+      const matches = stTimelineEvents.filter(ev => group.actions.includes(ev.action));
+      if (matches.length === 0) return null;
+      return { label: group.label, last: matches[matches.length - 1] };
+    })
+    .filter(Boolean);
+
+  if (reached.length === 0) return "";
+
+  return `
+  <div class="st-stepper-card">
+    <div class="st-log-head"><i data-lucide="list-checks"></i><div><p class="t">مراحل المهمة</p><p class="s">فين وصلت بالضبط -- بالتسلسل</p></div></div>
+    <div class="st-stage-stepper">
+      ${reached.map((r, i) => `
+        <div class="st-stage-row ${i === reached.length - 1 ? "current" : "done"}">
+          <span class="st-stage-dot">${i === reached.length - 1 ? (i + 1) : '<i data-lucide="check"></i>'}</span>
+          <div class="st-stage-body">
+            <span class="st-stage-label">${escapeHtml(r.label)}</span>
+            <span class="st-stage-meta">${escapeHtml(r.last.user_name)} — ${escapeHtml(r.last.entered_at)}</span>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  </div>`;
+}
+
 /* ---------- Detail ---------- */
 function stIsMyTurn(nextStage) {
   if (!nextStage) return false;
@@ -149,6 +191,8 @@ function renderSentTaskDetail() {
       </div>
       <span class="st-detail-status">${escapeHtml(stStageBadgeText({ next_stage: stNextStage || t.current_stage }))}</span>
     </div>
+
+    ${renderSentTaskStageStepper()}
 
     <div class="st-detail-grid">
       <div class="st-detail-left">
