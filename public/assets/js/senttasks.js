@@ -153,17 +153,21 @@ function renderSentTaskStageStepper() {
 
   if (reached.length === 0) return "";
 
+  // نفس مكوّن wiz-steps الأفقي المستخدم بمعالج "بدء مهمة" -- بس هنا كل خطوة
+  // تظهر فقط لو وصلتها المهمة فعليًا (بدل عرض كل الخطوات الست دائمًا)
   return `
   <div class="st-stepper-card">
     <div class="st-log-head"><i data-lucide="list-checks"></i><div><p class="t">مراحل المهمة</p><p class="s">فين وصلت بالضبط -- بالتسلسل</p></div></div>
-    <div class="st-stage-stepper">
+    <div class="wiz-steps" style="padding:20px 24px;">
       ${reached.map((r, i) => `
-        <div class="st-stage-row ${i === reached.length - 1 ? "current" : "done"}">
-          <span class="st-stage-dot">${i === reached.length - 1 ? (i + 1) : '<i data-lucide="check"></i>'}</span>
-          <div class="st-stage-body">
-            <span class="st-stage-label">${escapeHtml(r.label)}</span>
-            <span class="st-stage-meta">${escapeHtml(r.last.user_name)} — ${escapeHtml(r.last.entered_at)}</span>
+        <div class="wiz-step" title="${escapeHtml(r.last.user_name)} — ${escapeHtml(r.last.entered_at)}">
+          <div class="wiz-step-btn">
+            <span class="wiz-step-circle ${i === reached.length - 1 ? "current" : "done"}">
+              ${i === reached.length - 1 ? (i + 1) : '<i data-lucide="check"></i>'}
+            </span>
+            <span class="wiz-step-label ${i === reached.length - 1 ? "current" : "done"}">${escapeHtml(r.label)}</span>
           </div>
+          ${i < reached.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
         </div>
       `).join("")}
     </div>
