@@ -94,7 +94,7 @@ class DashboardController extends BaseController
         $missionModel = new MissionModel();
         return $this->response->setJSON([
             'success'  => true,
-            'missions' => $missionModel->missionsForTargetDepartment((int) $departmentId),
+            'missions' => $this->withRealStage($missionModel, $missionModel->missionsForTargetDepartment((int) $departmentId)),
         ]);
     }
 
@@ -107,8 +107,22 @@ class DashboardController extends BaseController
         $missionModel = new MissionModel();
 
         return $this->response->setJSON([
-            'missions' => $missionModel->activeMissionsForUser($userId),
+            'missions' => $this->withRealStage($missionModel, $missionModel->activeMissionsForUser($userId)),
         ]);
+    }
+
+    /**
+     * يلحق next_stage الحقيقي (من MissionModel::computeRealNextStage) بكل مهمة —
+     * missions.current_stage الخام يبقى 1 دائمًا (لا يتحدّث بأي مكان بالنظام)، وهذا
+     * كان يجعل شارة "المرحلة" بقائمة "المراسلات المشتركة" تعرض دايمًا "مرحلة 1"
+     * حتى بعد ما ترد الإدارة الخاضعة للمراجعة فعليًا وتُرسل ردها
+     */
+    private function withRealStage(MissionModel $missionModel, array $missions): array
+    {
+        foreach ($missions as &$m) {
+            $m['next_stage'] = $missionModel->computeRealNextStage((int) $m['id']);
+        }
+        return $missions;
     }
 
     /**

@@ -2,13 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Models\MissionStageHistoryModel;
-use App\Models\RiskMatrixItemModel;
-use App\Models\MeetingModel;
-use App\Models\AuditNoteModel;
 use App\Models\AuditLogModel;
 use App\Models\MissionModel;
-use App\Models\ServiceAgreementModel;
 
 class SentTasksController extends BaseController
 {
@@ -54,30 +49,7 @@ class SentTasksController extends BaseController
         return $this->response->setJSON([
             'success'    => true,
             'events'     => $events,
-            'next_stage' => $this->computeRealNextStage($missionId),
+            'next_stage' => (new MissionModel())->computeRealNextStage($missionId),
         ]);
-    }
-
-    /**
-     * missions.current_stage لا يتحدّث تلقائيًا حاليًا بأي مكان بالنظام (يبقى 1 دائمًا)،
-     * فزر "إكمال الحقول" ما كان له معنى حقيقي يعتمد عليه. هذي الدالة تحدد فعليًا أول
-     * مرحلة غير مكتملة بالمهمة من واقع قاعدة البيانات — نفس منطق
-     * ReportController::realCompletionStatus() بالضبط لتبقى النتيجتان متوافقتين.
-     */
-    private function computeRealNextStage(int $missionId): int
-    {
-        $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
-        if (!$agreement || $agreement['status'] !== 'submitted') return 2;
-
-        $riskCount = (new RiskMatrixItemModel())->where('mission_id', $missionId)->countAllResults();
-        if ($riskCount === 0) return 3;
-
-        $meeting = (new MeetingModel())->where('mission_id', $missionId)->first();
-        if (!$meeting || !$meeting['meeting_date']) return 4;
-
-        $obsCount = (new AuditNoteModel())->where('mission_id', $missionId)->countAllResults();
-        if ($obsCount === 0) return 5;
-
-        return 7;
     }
 }
