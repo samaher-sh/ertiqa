@@ -45,7 +45,7 @@ class MissionReviewController extends BaseController
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
 
-        $allowedIds = array_column($missionModel->activeMissionsForUser($userId), 'id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);
         $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
 
@@ -94,7 +94,11 @@ class MissionReviewController extends BaseController
         // انضغط، فتتقدّم المرحلة بدون أي بيانات حقيقية محفوظة
         $responseModel = new ServiceAgreementResponseModel();
         $ownRows = $responseModel->select('id')->where('service_agreement_id', $agreement['id'])->findAll();
-        $ownRowIds = array_column($ownRows, 'id');
+        // (int) إلزامي هنا: سائق MySQLi بهذا السيرفر يرجّع عمود id كسلسلة نصية
+        // ("65" لا 65)، فلو تركناها كما هي، in_array(..., true) الصارمة تحتها
+        // ترفض كل صف بصمت لأن النوع يختلف عن $rowId المُحوَّل (int) -- بالضبط
+        // سبب رفض بيانات مكتملة فعليًا كأنها فارغة بالكامل
+        $ownRowIds = array_map('intval', array_column($ownRows, 'id'));
 
         $incomingById = [];
         foreach (($data['rows'] ?? []) as $row) {
@@ -109,18 +113,9 @@ class MissionReviewController extends BaseController
             return !$row || (empty($row['agree']) && empty($row['disagree']));
         });
         if (!empty($unanswered)) {
-            // تشخيص مؤقت -- يُحذف فور ما نلقى سبب الرفض الحقيقي (بلاغ حي: بيانات
-            // تبدو مكتملة بالواجهة لكن هذا الفحص يرفضها رغم ذلك)
             return $this->response->setStatusCode(422)->setJSON([
                 'success' => false,
                 'message' => 'يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.',
-                'debug'   => [
-                    'own_row_ids'      => $ownRowIds,
-                    'own_row_ids_type' => array_map('gettype', $ownRowIds),
-                    'incoming_row_ids' => array_keys($incomingById),
-                    'unanswered_ids'   => array_values($unanswered),
-                    'raw_rows_from_request' => $data['rows'] ?? null,
-                ],
             ]);
         }
 
