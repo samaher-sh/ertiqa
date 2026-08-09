@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\RiskMatrixItemModel;
 use App\Models\MissionStageHistoryModel;
 use App\Models\AuditLogModel;
+use App\Models\MissionModel;
 
 class RiskMatrixController extends BaseController
 {
@@ -51,6 +52,7 @@ class RiskMatrixController extends BaseController
             $stageHistoryModel->openStage($missionId, 3, $userId);
         }
         (new AuditLogModel())->log($missionId, $userId, 'risk_matrix_saved', 'risk_matrix', null, count($rows) . ' صف');
+        (new MissionModel())->syncCurrentStage($missionId);
 
         return $this->response->setJSON(['success' => true]);
     }
