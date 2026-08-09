@@ -42,6 +42,30 @@ class MissionModel extends Model
         return count($this->activeMissionsForUser($userId));
     }
 
+    /**
+     * missions.current_stage لا يتحدّث تلقائيًا بأي مكان بالنظام (يبقى 1 دائمًا منذ
+     * الإنشاء) — هذي الدالة تحدد فعليًا أول مرحلة غير مكتملة بالمهمة من واقع قاعدة
+     * البيانات نفسها. مصدر واحد مشترك يستخدمه SentTasksController (زر إكمال
+     * الحقول/عرض) و DashboardController (شارة المرحلة بقائمة المراسلات المشتركة)
+     * و ReportController (نفس منطق realCompletionStatus) لتبقى النتائج متوافقة دومًا.
+     */
+    public function computeRealNextStage(int $missionId): int
+    {
+        $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+        if (!$agreement || $agreement['status'] !== 'submitted') return 2;
+
+        $riskCount = (new RiskMatrixItemModel())->where('mission_id', $missionId)->countAllResults();
+        if ($riskCount === 0) return 3;
+
+        $meeting = (new MeetingModel())->where('mission_id', $missionId)->first();
+        if (!$meeting || !$meeting['meeting_date']) return 4;
+
+        $obsCount = (new AuditNoteModel())->where('mission_id', $missionId)->countAllResults();
+        if ($obsCount === 0) return 5;
+
+        return 7;
+    }
+
     public function countInStageForUser(int $userId, int $stage): int
     {
         return count(array_filter(

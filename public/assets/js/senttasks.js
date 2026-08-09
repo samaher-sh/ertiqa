@@ -36,6 +36,16 @@ function bindSentTasksEvents() {
 }
 
 /* ---------- List ---------- */
+/* المرحلة الحقيقية (task.next_stage، من MissionModel::computeRealNextStage) بدل
+   missions.current_stage الخام اللي يبقى 1 دائمًا -- هذا كان يخلي القائمة تعرض
+   "مرحلة 1" حتى بعد ما ترد الإدارة الخاضعة للمراجعة فعليًا وتُرسل ردها */
+function stStageBadgeText(task) {
+  const stage = task.next_stage;
+  const info = ST_STAGE_TO_PAGE[stage];
+  if (!info) return stage === 7 ? "التقرير النهائي" : "المرحلة " + stage;
+  return stIsMyTurn(info) ? "بانتظارك — " + info.label : "بانتظار الطرف الآخر — " + info.label;
+}
+
 function renderSentTasksList() {
   return `
   <div class="flex flex-col gap-5">
@@ -59,7 +69,7 @@ function renderSentTasksList() {
               <td class="st-dept-cell">${escapeHtml(task.target_department_name)}</td>
               <td class="st-sentby-cell">${escapeHtml(task.reviewer_name || "—")}</td>
               <td class="st-sentat-cell" dir="ltr">${escapeHtml(task.created_at || "—")}</td>
-              <td><span class="st-status-pill">المرحلة ${task.current_stage}</span></td>
+              <td><span class="st-status-pill">${escapeHtml(stStageBadgeText(task))}</span></td>
               <td style="text-align:center;"><button class="st-view-btn" data-view-sent="${task.id}" title="عرض التفاصيل والسجل">عرض</button></td>
             </tr>
           `).join("")}
@@ -137,7 +147,7 @@ function renderSentTaskDetail() {
         <h2 class="st-detail-title">${escapeHtml(t.title)}</h2>
         <p class="st-detail-sub">${escapeHtml(t.mission_code)} · ${escapeHtml(t.target_department_name)}</p>
       </div>
-      <span class="st-detail-status">المرحلة ${stNextStage || t.current_stage}</span>
+      <span class="st-detail-status">${escapeHtml(stStageBadgeText({ next_stage: stNextStage || t.current_stage }))}</span>
     </div>
 
     <div class="st-detail-grid">
