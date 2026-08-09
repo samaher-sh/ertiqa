@@ -27,18 +27,15 @@ const ST_STAGE_TO_PAGE = {
   7: { key: "finalReports",   label: "التقرير النهائي",              forRole: "audit" },
 };
 
-/* مراحل "عرض" المتسلسلة (فين وصلت المهمة بالضبط) -- كل مرحلة تظهر فقط لو فيها
-   حدث حقيقي واحد على الأقل بسجل audit_logs (action يطابق أحد actions المذكورة)،
-   بنفس ترتيبها هنا دائمًا (مو ترتيب وقوع الأحداث) -- ما تظهر مراحل المستقبل قبل
-   ما تصير فعليًا */
+/* الحزمة الأولية الثابتة اللي عضو المراجعة يرسلها للإدارة الخاضعة فور إنشاء
+   المهمة (الخطاب + قالب اتفاقية مستوى الخدمة + قائمة المستندات المطلوبة) --
+   تظهر دائمًا مع بعض فور فتح "عرض" لأي مهمة، بغض النظر عن اكتمالها فعليًا؛
+   أي مرحلة بعدها (مصفوفة المخاطر، الاجتماع، الملاحظات، التقرير) ما تظهر هنا
+   إطلاقًا -- تُعرَض فقط عبر تلميح "بانتظار الطرف الآخر" بزر الإكمال أسفل الصفحة */
 const ST_STAGE_STEPPER_GROUPS = [
-  { label: "إنشاء المهمة وإرسال طلب المراجعة", actions: ["mission_created"] },
-  { label: "اتفاقية مستوى الخدمة",              actions: ["sla_submitted"] },
-  { label: "رفع المستندات المطلوبة",            actions: ["documents_submitted"] },
-  { label: "مصفوفة المخاطر",                    actions: ["risk_matrix_saved"] },
-  { label: "الاجتماع",                          actions: ["meeting_confirmed", "meeting_summary_saved"] },
-  { label: "الملاحظات",                         actions: ["observation_added"] },
-  { label: "التقرير النهائي",                   actions: ["report_finalized"] },
+  { label: "الخطاب الرسمي" },
+  { label: "اتفاقية مستوى الخدمة" },
+  { label: "قائمة المستندات المرسلة" },
 ];
 
 function renderSentTasksPage() {
@@ -143,31 +140,20 @@ function renderSentTaskTimeline() {
 }
 
 function renderSentTaskStageStepper() {
-  const reached = ST_STAGE_STEPPER_GROUPS
-    .map(group => {
-      const matches = stTimelineEvents.filter(ev => group.actions.includes(ev.action));
-      if (matches.length === 0) return null;
-      return { label: group.label, last: matches[matches.length - 1] };
-    })
-    .filter(Boolean);
-
-  if (reached.length === 0) return "";
-
-  // نفس مكوّن wiz-steps الأفقي المستخدم بمعالج "بدء مهمة" -- بس هنا كل خطوة
-  // تظهر فقط لو وصلتها المهمة فعليًا (بدل عرض كل الخطوات الست دائمًا)
+  // نفس مكوّن wiz-steps الأفقي المستخدم بمعالج "بدء مهمة" -- الثلاث خطوات هنا
+  // ثابتة دائمًا (الحزمة الأولية المُرسلة فور إنشاء المهمة)، ما تتغيّر حسب
+  // اكتمالها الفعلي؛ أي مرحلة بعدها تظهر فقط بتلميح "بانتظار الطرف الآخر" أسفل
   return `
   <div class="st-stepper-card">
-    <div class="st-log-head"><i data-lucide="list-checks"></i><div><p class="t">مراحل المهمة</p><p class="s">فين وصلت بالضبط -- بالتسلسل</p></div></div>
+    <div class="st-log-head"><i data-lucide="list-checks"></i><div><p class="t">مراحل المهمة</p><p class="s">الحزمة الأولية المُرسلة من عضو المراجعة</p></div></div>
     <div class="wiz-steps" style="padding:20px 24px;">
-      ${reached.map((r, i) => `
-        <div class="wiz-step" title="${escapeHtml(r.last.user_name)} — ${escapeHtml(r.last.entered_at)}">
+      ${ST_STAGE_STEPPER_GROUPS.map((g, i) => `
+        <div class="wiz-step">
           <div class="wiz-step-btn">
-            <span class="wiz-step-circle ${i === reached.length - 1 ? "current" : "done"}">
-              ${i === reached.length - 1 ? (i + 1) : '<i data-lucide="check"></i>'}
-            </span>
-            <span class="wiz-step-label ${i === reached.length - 1 ? "current" : "done"}">${escapeHtml(r.label)}</span>
+            <span class="wiz-step-circle done"><i data-lucide="check"></i></span>
+            <span class="wiz-step-label done">${escapeHtml(g.label)}</span>
           </div>
-          ${i < reached.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
+          ${i < ST_STAGE_STEPPER_GROUPS.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
         </div>
       `).join("")}
     </div>
