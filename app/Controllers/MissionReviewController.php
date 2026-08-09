@@ -109,9 +109,18 @@ class MissionReviewController extends BaseController
             return !$row || (empty($row['agree']) && empty($row['disagree']));
         });
         if (!empty($unanswered)) {
+            // تشخيص مؤقت -- يُحذف فور ما نلقى سبب الرفض الحقيقي (بلاغ حي: بيانات
+            // تبدو مكتملة بالواجهة لكن هذا الفحص يرفضها رغم ذلك)
             return $this->response->setStatusCode(422)->setJSON([
                 'success' => false,
                 'message' => 'يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.',
+                'debug'   => [
+                    'own_row_ids'      => $ownRowIds,
+                    'own_row_ids_type' => array_map('gettype', $ownRowIds),
+                    'incoming_row_ids' => array_keys($incomingById),
+                    'unanswered_ids'   => array_values($unanswered),
+                    'raw_rows_from_request' => $data['rows'] ?? null,
+                ],
             ]);
         }
 
