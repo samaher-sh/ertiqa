@@ -66,12 +66,18 @@ table.st-table td{ padding:16px 24px; font-size:12px; }
 .st-log-head{ padding:12px 20px; display:flex; align-items:center; gap:8px; background:#f8fbfd; border-bottom:1px solid #d8e6eb; }.st-log-head i, .st-log-head svg{ width:15px; height:15px; color:#f59e0b; }
 .st-log-head p.t{ font-size:12px; font-weight:700; color:#1f2937; margin:0; }
 .st-log-head p.s{ font-size:10px; color:#9ca3af; margin:2px 0 0; }
+.st-log-toggle{ width:100%; border:none; cursor:pointer; text-align:right; }
+.st-log-chevron{ margin-right:auto; width:15px; height:15px; color:#9ca3af; flex-shrink:0; }
 
-.st-stepper-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.05); }
-.st-stepper-card .wiz-steps{ overflow-x:auto; }
-
-.st-progress-view{ width:100%; display:flex; flex-direction:column; gap:8px; }
-.st-progress-back{ display:flex; align-items:center; gap:4px; align-self:flex-start; background:none; border:none; color:var(--p); font-size:12px; font-weight:700; padding:2px; }
+.st-progress-view{ width:100%; display:flex; flex-direction:column; gap:14px; }
+.st-progress-back{ display:flex; align-items:center; gap:4px; align-self:flex-start; background:none; border:none; color:var(--p); font-size:12px; font-weight:700; padding:2px; cursor:pointer; }
 .st-progress-back:hover{ text-decoration:underline; }
 .st-progress-back i{ width:14px; height:14px; }
 .st-progress-steps{ overflow-x:auto; padding:4px 0; }
+
+.st-tour-card{ width:100%; box-sizing:border-box; padding:18px 20px; }
+.st-tour-nav{ display:flex; align-items:center; justify-content:space-between; }
+.st-tour-nav-btn{ display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; font-size:12px; font-weight:700; background:#fff; color:var(--p); border:1px solid var(--pb); cursor:pointer; }
+.st-tour-nav-btn i{ width:14px; height:14px; }
+.st-tour-nav-btn.primary{ background:var(--p); color:#fff; border-color:var(--pd); }
+.st-tour-nav-btn:disabled{ opacity:.4; cursor:not-allowed; }
