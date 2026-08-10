@@ -24,9 +24,6 @@ let obsAdvDateFrom = "";
 let obsAdvDateTo = "";
 let obsOpenMenuId = null;
 
-let obsSubItems = [];
-let obsSubExpanded = null;
-
 const isObsHrUser = () => isHrDept || isHrCoordinator;
 const obsIsReadOnly = () => isObsHrUser() || isAuditHead;
 
@@ -461,8 +458,6 @@ function obsOpenNew() {
     observation: "", standard: "", reason: "", impact: "",
     recommendations: "", addToReport: null, attachments: [],
   };
-  obsSubItems = [];
-  obsSubExpanded = null;
   obsView = "new";
   rerenderObsContent();
 }
@@ -471,8 +466,6 @@ function obsOpenEdit(id) {
   if (!obs) return;
   const md = obsMissionDept();
   obsDraft = { ...obs, deptId: md.deptId, dept: md.dept, attachments: [] };
-  obsSubItems = [];
-  obsSubExpanded = null;
   obsOpenMenuId = null;
   obsView = "edit";
   rerenderObsContent();
@@ -537,12 +530,6 @@ async function obsSave() {
     if (!result.success) {
       showToast(result.message || "تعذّر الحفظ", "error");
       return;
-    }
-
-    // كل "ملاحظة فرعية" تُحفظ كصف مستقل إضافي بنفس المهمة (audit_notes لا يدعم علاقة أب/ابن)
-    for (const sub of obsSubItems) {
-      if (!sub.deptId || !sub.observation.trim()) continue;
-      await obsSaveOne(sub);
     }
 
     showToast(obsView === "new" ? "تم رصد الملاحظة واعتمادها" : "تم حفظ التعديلات", "success");
@@ -633,6 +620,13 @@ function renderObsForm() {
       <div class="obs-divider"></div>
 
       <div class="obs-attach-row">
+        <div class="wiz-field" style="gap:8px;">
+          <label class="wiz-label">تضاف للتقرير؟</label>
+          <div class="obs-radio-group">
+            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === true ? "checked" : ""} data-add-report="true"> نعم</label>
+            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === false ? "checked" : ""} data-add-report="false"> لا</label>
+          </div>
+        </div>
         <div>
           <input type="file" id="obsFileInput" style="display:none;">
           <button class="obs-attach-btn" id="obsAttachBtn"><i data-lucide="paperclip"></i> إرفاق</button>
@@ -647,18 +641,7 @@ function renderObsForm() {
               `).join("")}
             </div>` : ""}
         </div>
-        <div class="wiz-field" style="gap:8px;">
-          <label class="wiz-label">تضاف للتقرير؟</label>
-          <div class="obs-radio-group">
-            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === true ? "checked" : ""} data-add-report="true"> نعم</label>
-            <label class="obs-radio-label"><input type="radio" name="obsAddToReport" ${d.addToReport === false ? "checked" : ""} data-add-report="false"> لا</label>
-          </div>
-        </div>
       </div>
-
-      <div class="obs-divider"></div>
-
-      ${renderSubObservations()}
     </div>
   </div>`;
 }
@@ -697,176 +680,6 @@ function bindObsFormEvents() {
 
   document.querySelectorAll("[data-add-report]").forEach(radio => {
     radio.addEventListener("change", () => { d.addToReport = radio.dataset.addReport === "true"; rerenderObsContent(); });
-  });
-
-  bindSubObservationsEvents();
-}
-
-/* ============================================================
-   الملاحظات الفرعية (SubObservations)
-   ============================================================ */
-function renderSubObservations() {
-  return `
-  <div class="obs-sub-wrap">
-    <div class="obs-sub-header">
-      <span class="lbl">ملاحظات إضافية${obsSubItems.length > 0 ? ` (${obsSubItems.length})` : ""}</span>
-      <button class="obs-sub-add-btn" id="obsSubAddBtn"><i data-lucide="plus"></i> إضافة ملاحظة</button>
-    </div>
-
-    ${obsSubItems.map((item, idx) => {
-      const open = obsSubExpanded === item.id;
-      const rc = item.risk ? (OBS_RISK_COLORS[item.risk] || { bg: "#f3f4f6", text: "#4b5563" }) : null;
-      return `
-      <div class="obs-sub-card ${open ? "open" : ""}">
-        <div class="obs-sub-card-head" data-sub-toggle="${item.id}">
-          <span class="obs-sub-num">${idx + 1}</span>
-          <span class="obs-sub-title">${escapeHtml(item.title || "ملاحظة غير معنونة")}</span>
-          ${rc ? `<span class="obs-pill" style="background:${rc.bg};color:${rc.text};">${escapeHtml(item.risk)}</span>` : ""}
-          <button class="obs-sub-del" data-sub-del="${item.id}"><i data-lucide="x"></i></button>
-          <i data-lucide="chevron-left" class="obs-sub-chevron ${open ? "open" : ""}"></i>
-        </div>
-        ${open ? `
-        <div class="obs-sub-body">
-          <div class="obs-grid-3">
-            <div class="wiz-field">
-              <label class="wiz-label">الإدارة محل المراجعة</label>
-              <div class="obs-auto-field"><span class="val">${escapeHtml(item.dept) || "—"}</span></div>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">عنوان الملاحظة <span class="wiz-req">*</span></label>
-              <input type="text" id="sub-${item.id}-title" class="wiz-input plain" data-sub-field="title" data-sub-id="${item.id}" placeholder="عنوان مختصر..." value="${escapeHtml(item.title)}">
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">التاريخ</label>
-              <input type="date" id="sub-${item.id}-date" class="wiz-input plain" data-sub-field="date" data-sub-id="${item.id}" value="${item.date}" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-            </div>
-          </div>
-
-          <div class="obs-divider"></div>
-
-          <div class="obs-grid-2">
-            <div class="wiz-field">
-              <label class="wiz-label">الملاحظة <span class="wiz-req">*</span></label>
-              <textarea rows="4" id="sub-${item.id}-observation" class="wiz-textarea plain" data-sub-field="observation" data-sub-id="${item.id}" placeholder="أدخل نص الملاحظة المكتشفة بوضوح...">${escapeHtml(item.observation)}</textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">المعيار أو النظام <span class="wiz-req">*</span></label>
-              <textarea rows="4" id="sub-${item.id}-standard" class="wiz-textarea plain" data-sub-field="standard" data-sub-id="${item.id}" placeholder="المادة النظامية أو السياسة التي تمت مخالفتها...">${escapeHtml(item.standard)}</textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">السبب <span class="wiz-req">*</span></label>
-              <textarea rows="3" id="sub-${item.id}-reason" class="wiz-textarea plain" data-sub-field="reason" data-sub-id="${item.id}" placeholder="الأسباب الجذرية لحدوث هذه الملاحظة...">${escapeHtml(item.reason)}</textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">الأثر <span class="wiz-req">*</span></label>
-              <textarea rows="3" id="sub-${item.id}-impact" class="wiz-textarea plain" data-sub-field="impact" data-sub-id="${item.id}" placeholder="الأثر المالي أو التشغيلي المترتب...">${escapeHtml(item.impact)}</textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">التوصيات <span class="wiz-req">*</span></label>
-              <textarea rows="2" id="sub-${item.id}-recommendations" class="wiz-textarea plain" data-sub-field="recommendations" data-sub-id="${item.id}" placeholder="الإجراءات التصحيحية المقترحة...">${escapeHtml(item.recommendations)}</textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">الحالة (الخطر):</label>
-              <input type="text" id="sub-${item.id}-risk" class="wiz-input plain" data-sub-field="risk" data-sub-id="${item.id}" placeholder="اكتب حالة/خطورة الملاحظة..." value="${escapeHtml(item.risk)}">
-            </div>
-          </div>
-
-          <div class="obs-divider"></div>
-
-          <div class="obs-attach-row">
-            <div>
-              <input type="file" id="obsSubFile-${item.id}" style="display:none;">
-              <button class="obs-attach-btn" data-sub-attach-btn="${item.id}"><i data-lucide="paperclip"></i> إرفاق</button>
-              ${item.attachments.length > 0 ? `
-                <div class="obs-attach-list">
-                  ${item.attachments.map((f, ai) => `
-                    <div class="obs-attach-chip">
-                      <i class="pin" data-lucide="paperclip"></i>
-                      <span>${escapeHtml(f)}</span>
-                      <button data-sub-remove-attach="${item.id}" data-attach-idx="${ai}"><i data-lucide="x" style="width:12px;height:12px;"></i></button>
-                    </div>
-                  `).join("")}
-                </div>` : ""}
-            </div>
-            <div class="wiz-field" style="gap:8px;">
-              <label class="wiz-label">تضاف للتقرير؟</label>
-              <div class="obs-radio-group">
-                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === true ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="true"> نعم</label>
-                <label class="obs-radio-label"><input type="radio" name="subAddToReport-${item.id}" ${item.addToReport === false ? "checked" : ""} data-sub-add-report="${item.id}" data-add-val="false"> لا</label>
-              </div>
-            </div>
-          </div>
-        </div>` : ""}
-      </div>`;
-    }).join("")}
-  </div>`;
-}
-
-function bindSubObservationsEvents() {
-  document.getElementById("obsSubAddBtn").addEventListener("click", () => {
-    const id = Date.now();
-    const md = obsMissionDept();
-    obsSubItems.push({
-      id, date: new Date().toISOString().slice(0, 10),
-      deptId: md.deptId, dept: md.dept, title: "", risk: "",
-      observation: "", standard: "", reason: "", impact: "",
-      recommendations: "", addToReport: null, attachments: [],
-    });
-    obsSubExpanded = id;
-    rerenderObsContent();
-  });
-
-  document.querySelectorAll("[data-sub-toggle]").forEach(el => {
-    el.addEventListener("click", e => {
-      if (e.target.closest("[data-sub-del]")) return;
-      const id = parseInt(el.dataset.subToggle, 10);
-      obsSubExpanded = obsSubExpanded === id ? null : id;
-      rerenderObsContent();
-    });
-  });
-  document.querySelectorAll("[data-sub-del]").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.stopPropagation();
-      const id = parseInt(btn.dataset.subDel, 10);
-      obsSubItems = obsSubItems.filter(it => it.id !== id);
-      rerenderObsContent();
-    });
-  });
-
-  document.querySelectorAll("[data-sub-field]").forEach(el => {
-    const evt = el.tagName === "SELECT" ? "change" : "input";
-    el.addEventListener(evt, () => {
-      const id = parseInt(el.dataset.subId, 10);
-      const field = el.dataset.subField;
-      const item = obsSubItems.find(it => it.id === id);
-      if (item) { item[field] = el.value; rerenderObsContent(); }
-    });
-  });
-  obsSubItems.forEach(item => {
-    const btn = document.querySelector(`[data-sub-attach-btn="${item.id}"]`);
-    const input = document.getElementById(`obsSubFile-${item.id}`);
-    if (btn && input) {
-      btn.addEventListener("click", () => input.click());
-      input.addEventListener("change", e => {
-        const file = e.target.files && e.target.files[0];
-        if (file) { item.attachments.push(file.name); rerenderObsContent(); }
-      });
-    }
-  });
-  document.querySelectorAll("[data-sub-remove-attach]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = parseInt(btn.dataset.subRemoveAttach, 10);
-      const ai = parseInt(btn.dataset.attachIdx, 10);
-      const item = obsSubItems.find(it => it.id === id);
-      if (item) { item.attachments.splice(ai, 1); rerenderObsContent(); }
-    });
-  });
-  document.querySelectorAll("[data-sub-add-report]").forEach(radio => {
-    radio.addEventListener("change", () => {
-      const id = parseInt(radio.dataset.subAddReport, 10);
-      const item = obsSubItems.find(it => it.id === id);
-      if (item) { item.addToReport = radio.dataset.addVal === "true"; rerenderObsContent(); }
-    });
   });
 }
 
@@ -933,7 +746,6 @@ function bindObsViewEvents() {
   const editBtn = document.getElementById("obsViewEditBtn");
   if (editBtn) editBtn.addEventListener("click", () => {
     obsDraft = { ...obsViewTarget, attachments: [] };
-    obsSubItems = []; obsSubExpanded = null;
     obsView = "edit";
     rerenderObsContent();
   });
