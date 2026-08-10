@@ -14,6 +14,7 @@ let sentTasksSelected = null;
 let stTimelineEvents = [];
 let stTimelineLoading = false;
 let stNextStage = null;
+let stShowProgress = false;
 
 /* forRole يحدد مين عليه الدور الحالي فعليًا بهذي المرحلة: "target" = الإدارة الخاضعة
    للمراجعة (تعبئة اتفاقية مستوى الخدمة + المستندات)، "audit" = عضو المراجعة (كل
@@ -36,6 +37,17 @@ const ST_STAGE_STEPPER_GROUPS = [
   { label: "الخطاب الرسمي" },
   { label: "اتفاقية مستوى الخدمة" },
   { label: "قائمة المستندات المرسلة" },
+];
+
+/* مراحل عضو المراجعة اللي تجي بعد الحزمة الأولية -- كل وحدة تظهر فقط لو فيها
+   حدث حقيقي واحد على الأقل بسجل audit_logs (action يطابق أحد actions
+   المذكورة)، بنفس ترتيبها هنا دائمًا. تُستخدم بمُدرّج التقدّم الكامل اللي يظهر
+   لما تضغطين "عرض" داخل بطاقة "بانتظار الطرف الآخر" تحديدًا */
+const ST_PROGRESS_EXTRA_GROUPS = [
+  { label: "مصفوفة المخاطر", actions: ["risk_matrix_saved"] },
+  { label: "الاجتماع",       actions: ["meeting_confirmed", "meeting_summary_saved"] },
+  { label: "الملاحظات",      actions: ["observation_added"] },
+  { label: "التقرير النهائي", actions: ["report_finalized"] },
 ];
 
 function renderSentTasksPage() {
@@ -96,6 +108,7 @@ function bindSentTasksListEvents() {
       const task = missionsForSelector.find(m => String(m.id) === String(btn.dataset.viewSent));
       if (!task) return;
       sentTasksSelected = task;
+      stShowProgress = false;
       await stLoadTimeline(task.id);
       renderSidebar(); renderContent(); lucide.createIcons();
     });
@@ -160,6 +173,36 @@ function renderSentTaskStageStepper() {
   </div>`;
 }
 
+/* مُدرّج التقدّم الكامل: الحزمة الأولية الثابتة (دائمًا "تم") + أي مرحلة حقيقية
+   وصلتها المهمة بعدها (تظهر تدريجيًا حسب أحداث audit_logs الفعلية، آخر وحدة
+   وصلتها المهمة تتعلّم "current") -- يظهر بدل بطاقة "بانتظار الطرف الآخر" لما
+   تُضغط "عرض" فيها، بدل ما ينتقل مباشرة لصفحة النموذج الخام */
+function renderSentTaskProgressStepper() {
+  const dynamicReached = ST_PROGRESS_EXTRA_GROUPS.filter(g => stTimelineEvents.some(ev => g.actions.includes(ev.action)));
+  const steps = [
+    ...ST_STAGE_STEPPER_GROUPS.map(g => ({ label: g.label, current: false })),
+    ...dynamicReached.map((g, i) => ({ label: g.label, current: i === dynamicReached.length - 1 })),
+  ];
+
+  return `
+  <div class="st-progress-view">
+    <button type="button" class="st-progress-back" id="stProgressBack"><i data-lucide="chevron-right"></i> رجوع</button>
+    <div class="wiz-steps st-progress-steps">
+      ${steps.map((s, i) => `
+        <div class="wiz-step">
+          <div class="wiz-step-btn">
+            <span class="wiz-step-circle ${s.current ? "current" : "done"}">
+              ${s.current ? (i + 1) : '<i data-lucide="check"></i>'}
+            </span>
+            <span class="wiz-step-label ${s.current ? "current" : "done"}">${escapeHtml(s.label)}</span>
+          </div>
+          ${i < steps.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  </div>`;
+}
+
 /* ---------- Detail ---------- */
 function stIsMyTurn(nextStage) {
   if (!nextStage) return false;
@@ -200,15 +243,15 @@ function renderSentTaskDetail() {
         </div>
 
         <div class="st-complete-card">
-          ${nextStage ? (myTurn ? `
+          ${stShowProgress ? renderSentTaskProgressStepper() : (nextStage ? (myTurn ? `
           <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بك في نموذج "${nextStage.label}"</span></div>
           <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="pencil"></i> إكمال الحقول</button>
           ` : `
-          <div class="st-complete-hint"><i data-lucide="eye"></i><span>بانتظار الطرف الآخر لإكمال "${nextStage.label}" — تقدر تطّلع على آخر تحديث</span></div>
-          <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="eye"></i> عرض</button>
+          <div class="st-complete-hint"><i data-lucide="eye"></i><span>بانتظار الطرف الآخر لإكمال "${nextStage.label}" — تقدر تطّلع على المراحل المنجزة</span></div>
+          <button class="st-complete-btn" id="stCompleteBtn" data-mode="progress"><i data-lucide="eye"></i> عرض</button>
           `) : `
           <div class="st-complete-hint"><i data-lucide="info"></i><span>لا يوجد نموذج مرتبط مباشرة بالمرحلة الحالية لهذه المهمة</span></div>
-          `}
+          `)}
         </div>
       </div>
 
@@ -220,9 +263,21 @@ function renderSentTaskDetail() {
   </div>`;
 }
 function bindSentTaskDetailEvents() {
-  document.getElementById("stBackBtn").addEventListener("click", () => { sentTasksSelected = null; renderSidebar(); renderContent(); lucide.createIcons(); });
+  document.getElementById("stBackBtn").addEventListener("click", () => { sentTasksSelected = null; stShowProgress = false; renderSidebar(); renderContent(); lucide.createIcons(); });
+
+  const progressBack = document.getElementById("stProgressBack");
+  if (progressBack) progressBack.addEventListener("click", () => { stShowProgress = false; renderSidebar(); renderContent(); lucide.createIcons(); });
+
   const completeBtn = document.getElementById("stCompleteBtn");
   if (completeBtn) completeBtn.addEventListener("click", () => {
+    // زر "عرض" ببطاقة "بانتظار الطرف الآخر" يعرض مُدرّج التقدّم الكامل مكانه
+    // بدل ما ينتقل مباشرة لصفحة النموذج الخام لمرحلة عضو المراجعة
+    if (completeBtn.dataset.mode === "progress") {
+      stShowProgress = true;
+      renderSidebar(); renderContent(); lucide.createIcons();
+      return;
+    }
+
     const missionId = String(sentTasksSelected.id);
     const nextPage = completeBtn.dataset.nextPage;
 
