@@ -19,7 +19,6 @@ let mobileOpen      = false;
 let profileOpen     = false;
 let activeContent   = "home";
 let activeStatCard  = null;
-let dismissedMissionIds = [];
 
 /* بيانات الرئيسية الحقيقية - تُملأ بعد fetch */
 let homeStats    = { active_count: 0, review_count: 0, meetings_count: 0 };
@@ -298,10 +297,6 @@ function renderMeetingAlertBanner() {
   </div>`;
 }
 
-function incompleteMissions() {
-  return activeMissions.filter(m => !dismissedMissionIds.includes(m.id));
-}
-
 /* مصفوفة بطاقات الإحصائيات تختلف حسب الدور: رئيس المراجعة يشرف على التقارير
    (لا مهام شخصية له)، بينما بقية الأدوار ترى اجتماعاتها/مهامها النشطة */
 function homeStatsCards() {
@@ -311,14 +306,10 @@ function homeStatsCards() {
       { key: "reportsApproved", label: "التقارير المعتمدة",   sub: "Approved Reports",           value: homeStats.reports_approved_count || 0 },
     ];
   }
-  // عضو المراجعة (audit_member) ما يحتاج بطاقة "المهام النشطة" بالرئيسية -- عنده أصلًا
-  // بطاقة "بدء مهمة" وقائمة "استئناف العمل" بنفس الصفحة تغطي نفس الغرض
-  const cards = [];
-  if (!isAuditMember) {
-    cards.push({ key: "activeMissions", label: "المهام النشطة", sub: "Active Tasks", value: activeMissions.length });
-  }
-  cards.push({ key: "scheduledMeetings", label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length });
-  return cards;
+  return [
+    { key: "activeMissions",    label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
+    { key: "scheduledMeetings", label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
+  ];
 }
 
 /* بطاقة/شريط الإخطار العلوي بالرئيسية — يختلف حسب الدور، ويعتمد فقط على بيانات حقيقية
@@ -382,7 +373,6 @@ function renderHomeBanner() {
 }
 
 function renderHomeTab() {
-  const incomplete = incompleteMissions();
   const STATS = homeStatsCards();
 
   let html = renderMeetingAlertBanner() + renderHomeBanner();
@@ -416,38 +406,6 @@ function renderHomeTab() {
     `;
   });
   html += `</div>`;
-
-  if (isAuditMember && incomplete.length > 0) {
-    html += `
-      <div class="alert-card">
-        <div class="alert-head">
-          <div class="alert-icon"><i data-lucide="alert-triangle"></i></div>
-          <div>
-            <p class="alert-title">لديك ${incomplete.length} ${incomplete.length === 1 ? "مهمة نشطة" : "مهام نشطة"}</p>
-            <p class="alert-sub">يرجى إكمال هذه المهام في أقرب وقت لتجنب التأخير في سير العمل واعتماد النماذج.</p>
-          </div>
-        </div>
-        <div class="alert-list">
-          ${incomplete.map(m => `
-            <div class="alert-item">
-              <button class="alert-item-btn" data-mission="${m.id}">
-                <div class="alert-item-icon"><i data-lucide="file-text"></i></div>
-                <div class="alert-item-body">
-                  <p class="alert-item-title">${escapeHtml(m.target_department_name || "")}</p>
-                  <div class="alert-item-meta">
-                    <span>${escapeHtml(m.mission_code)}</span>
-                    <span><i data-lucide="clock"></i>المرحلة ${m.current_stage}</span>
-                  </div>
-                </div>
-                <span class="resume-badge">استئناف العمل</span>
-              </button>
-              <button class="alert-item-remove" data-dismiss="${m.id}"><i data-lucide="trash-2"></i></button>
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `;
-  }
 
   if (activeStatCard !== null) {
     html += renderStatDetailPanel(activeStatCard);
@@ -567,16 +525,6 @@ function bindHomeEvents() {
     el.innerHTML = renderHomeTab();
     bindHomeEvents();
     lucide.createIcons();
-  });
-
-  document.querySelectorAll("[data-dismiss]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      dismissedMissionIds.push(Number(btn.dataset.dismiss));
-      const el = document.getElementById("contentArea");
-      el.innerHTML = renderHomeTab();
-      bindHomeEvents();
-      lucide.createIcons();
-    });
   });
 
   document.querySelectorAll("[data-mission]").forEach(btn => {
