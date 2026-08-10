@@ -240,12 +240,12 @@ function renderMeetingSummaryCards() {
                       : `<textarea rows="2" id="pt-${pt.id}-text" class="wiz-textarea plain" placeholder="النقطة ${i + 1}..." data-pt-field="text" data-pt-id="${pt.id}" ${allReadOnly ? "readonly" : ""}>${escapeHtml(pt.text)}</textarea>`}
                   </td>
                   <td>
-                    ${(hrUser && !allReadOnly)
+                    ${!allReadOnly
                       ? `<textarea rows="2" class="wiz-textarea" style="border:1.5px solid ${pt.opinion ? "#b3d4e5" : "var(--pb)"};background:${pt.opinion ? "#f0fdf4" : "#f0f8fd"};" id="pt-${pt.id}-opinion" placeholder="اكتب الرأي..." data-pt-field="opinion" data-pt-id="${pt.id}">${escapeHtml(pt.opinion)}</textarea>`
                       : `<div class="msum-opinion-readonly ${pt.opinion ? "has" : "empty"}">${escapeHtml(pt.opinion || "—")}</div>`}
                   </td>
                   <td>
-                    ${(hrUser && !allReadOnly)
+                    ${!allReadOnly
                       ? `<textarea rows="2" class="wiz-textarea plain" id="pt-${pt.id}-reason" placeholder="اكتب السبب أو التوضيح..." data-pt-field="reason" data-pt-id="${pt.id}">${escapeHtml(pt.reason)}</textarea>`
                       : `<div class="msum-opinion-readonly empty" style="color:${pt.reason ? "#152c33" : "#9ca3af"};">${escapeHtml(pt.reason || "—")}</div>`}
                   </td>
