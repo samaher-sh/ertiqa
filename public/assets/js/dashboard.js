@@ -532,8 +532,15 @@ function bindHomeEvents() {
   });
 
   document.querySelectorAll("[data-mission]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      showToast("عرض تفاصيل المهمة " + btn.dataset.mission + " — سيتوفر في المرحلة القادمة", "default");
+    btn.addEventListener("click", async () => {
+      // بطاقة "المهام النشطة" بالصفحة الرئيسية -- الضغط على مهمة يوديها مباشرة
+      // لتفاصيلها بـ"المراسلات المشتركة" بدل رسالة "سيتوفر لاحقًا" المؤقتة
+      const missionId = btn.dataset.mission;
+      await loadMissionsForSelector();
+      const task = missionsForSelector.find(m => String(m.id) === String(missionId));
+      if (task) await stOpenTaskDetail(task);
+      activeContent = "sentTasks";
+      renderSidebar(); await renderContent(); lucide.createIcons();
     });
   });
 }
