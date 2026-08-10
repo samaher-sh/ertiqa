@@ -14,7 +14,15 @@ let sentTasksSelected = null;
 let stTimelineEvents = [];
 let stTimelineLoading = false;
 let stNextStage = null;
-let stShowProgress = false;
+let stLogCollapsed = false;
+
+/* جولة "عرض" (Tour): تُفتح مكان بطاقة "بانتظار الطرف الآخر" -- تصفّح بالتالي/
+   السابق بين المراحل اللي فعليًا وصلتها المهمة (تدريجيًا)، كل مرحلة تحت اسمها
+   محتواها الحقيقي (نفس معاينة "تقرير نهائي" الجاهزة، القراءة فقط بطبيعتها) */
+let stShowTour = false;
+let stTourIndex = 0;
+let stTourSectionData = {};
+let stTourLoading = false;
 
 /* forRole يحدد مين عليه الدور الحالي فعليًا بهذي المرحلة: "target" = الإدارة الخاضعة
    للمراجعة (تعبئة اتفاقية مستوى الخدمة + المستندات)، "audit" = عضو المراجعة (كل
@@ -28,26 +36,20 @@ const ST_STAGE_TO_PAGE = {
   7: { key: "finalReports",   label: "التقرير النهائي",              forRole: "audit" },
 };
 
-/* الحزمة الأولية الثابتة اللي عضو المراجعة يرسلها للإدارة الخاضعة فور إنشاء
-   المهمة (الخطاب + قالب اتفاقية مستوى الخدمة + قائمة المستندات المطلوبة) --
-   تظهر دائمًا مع بعض فور فتح "عرض" لأي مهمة، بغض النظر عن اكتمالها فعليًا؛
-   أي مرحلة بعدها (مصفوفة المخاطر، الاجتماع، الملاحظات، التقرير) ما تظهر هنا
-   إطلاقًا -- تُعرَض فقط عبر تلميح "بانتظار الطرف الآخر" بزر الإكمال أسفل الصفحة */
-const ST_STAGE_STEPPER_GROUPS = [
-  { label: "الخطاب الرسمي" },
-  { label: "اتفاقية مستوى الخدمة" },
-  { label: "قائمة المستندات المرسلة" },
-];
-
-/* مراحل عضو المراجعة اللي تجي بعد الحزمة الأولية -- كل وحدة تظهر فقط لو فيها
-   حدث حقيقي واحد على الأقل بسجل audit_logs (action يطابق أحد actions
-   المذكورة)، بنفس ترتيبها هنا دائمًا. تُستخدم بمُدرّج التقدّم الكامل اللي يظهر
-   لما تضغطين "عرض" داخل بطاقة "بانتظار الطرف الآخر" تحديدًا */
-const ST_PROGRESS_EXTRA_GROUPS = [
-  { label: "مصفوفة المخاطر", actions: ["risk_matrix_saved"] },
-  { label: "الاجتماع",       actions: ["meeting_confirmed", "meeting_summary_saved"] },
-  { label: "الملاحظات",      actions: ["observation_added"] },
-  { label: "التقرير النهائي", actions: ["report_finalized"] },
+/* مراحل جولة "عرض" -- كل مرحلة تظهر بالجولة فقط لو فيها حدث حقيقي واحد على
+   الأقل بسجل audit_logs (action يطابق أحد actions المذكورة)، بنفس ترتيبها هنا
+   دائمًا (تدريجيًا، مو كل الست مرات مرة وحدة). section تطابق section_number
+   بجدول report_checklist_items وتُستخدم لجلب نفس بيانات معاينة "تقرير نهائي"
+   الجاهزة (GET /dashboard/reports/api/preview) -- لا يوجد معاينة قسم مخصصة
+   لـ"التقرير النهائي" نفسه فنكتفي بتفصيل حدث اعتماده من السجل الزمني */
+const ST_TOUR_STAGES = [
+  { label: "الخطاب الرسمي",           actions: ["mission_created"],                            section: 1 },
+  { label: "اتفاقية مستوى الخدمة",     actions: ["sla_submitted"],                              section: 2 },
+  { label: "قائمة المستندات المرسلة",  actions: ["documents_submitted"],                        section: 3 },
+  { label: "مصفوفة المخاطر",          actions: ["risk_matrix_saved"],                           section: 4 },
+  { label: "الاجتماع",                actions: ["meeting_confirmed", "meeting_summary_saved"],  section: 5 },
+  { label: "الملاحظات",               actions: ["observation_added"],                           section: 6 },
+  { label: "التقرير النهائي",         actions: ["report_finalized"],                            section: null },
 ];
 
 function renderSentTasksPage() {
@@ -108,7 +110,9 @@ function bindSentTasksListEvents() {
       const task = missionsForSelector.find(m => String(m.id) === String(btn.dataset.viewSent));
       if (!task) return;
       sentTasksSelected = task;
-      stShowProgress = false;
+      stShowTour = false;
+      stTourIndex = 0;
+      stTourSectionData = {};
       await stLoadTimeline(task.id);
       renderSidebar(); renderContent(); lucide.createIcons();
     });
@@ -152,53 +156,83 @@ function renderSentTaskTimeline() {
   </div>`;
 }
 
-function renderSentTaskStageStepper() {
-  // نفس مكوّن wiz-steps الأفقي المستخدم بمعالج "بدء مهمة" -- الثلاث خطوات هنا
-  // ثابتة دائمًا (الحزمة الأولية المُرسلة فور إنشاء المهمة)، ما تتغيّر حسب
-  // اكتمالها الفعلي؛ أي مرحلة بعدها تظهر فقط بتلميح "بانتظار الطرف الآخر" أسفل
-  return `
-  <div class="st-stepper-card">
-    <div class="st-log-head"><i data-lucide="list-checks"></i><div><p class="t">مراحل المهمة</p><p class="s">الحزمة الأولية المُرسلة من عضو المراجعة</p></div></div>
-    <div class="wiz-steps" style="padding:20px 24px;">
-      ${ST_STAGE_STEPPER_GROUPS.map((g, i) => `
-        <div class="wiz-step">
-          <div class="wiz-step-btn">
-            <span class="wiz-step-circle done"><i data-lucide="check"></i></span>
-            <span class="wiz-step-label done">${escapeHtml(g.label)}</span>
-          </div>
-          ${i < ST_STAGE_STEPPER_GROUPS.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
-        </div>
-      `).join("")}
-    </div>
-  </div>`;
+function stReachedTourStages() {
+  return ST_TOUR_STAGES.filter(g => stTimelineEvents.some(ev => g.actions.includes(ev.action)));
 }
 
-/* مُدرّج التقدّم الكامل: الحزمة الأولية الثابتة (دائمًا "تم") + أي مرحلة حقيقية
-   وصلتها المهمة بعدها (تظهر تدريجيًا حسب أحداث audit_logs الفعلية، آخر وحدة
-   وصلتها المهمة تتعلّم "current") -- يظهر بدل بطاقة "بانتظار الطرف الآخر" لما
-   تُضغط "عرض" فيها، بدل ما ينتقل مباشرة لصفحة النموذج الخام */
-function renderSentTaskProgressStepper() {
-  const dynamicReached = ST_PROGRESS_EXTRA_GROUPS.filter(g => stTimelineEvents.some(ev => g.actions.includes(ev.action)));
-  const steps = [
-    ...ST_STAGE_STEPPER_GROUPS.map(g => ({ label: g.label, current: false })),
-    ...dynamicReached.map((g, i) => ({ label: g.label, current: i === dynamicReached.length - 1 })),
-  ];
+/* يجيب بيانات معاينة قسم معيّن (لو ما كانت محمّلة فعليًا مسبقًا) -- يعيد
+   استخدام نفس endpoint معاينة "تقرير نهائي" الجاهزة (قراءة فقط بطبيعتها) بدل
+   تكرار منطق جلب كل صفحة (اتفاقية/مستندات/مصفوفة مخاطر/اجتماع/ملاحظات) لحالها */
+async function stGotoTourStage(i) {
+  const stages = stReachedTourStages();
+  if (i < 0 || i >= stages.length) return;
+  stTourIndex = i;
+  const stage = stages[i];
+
+  if (stage.section !== null && !stTourSectionData[stage.section]) {
+    stTourLoading = true;
+    renderSidebar(); renderContent(); lucide.createIcons();
+    try {
+      stTourSectionData[stage.section] = await apiGet(base + "/dashboard/reports/api/preview?mission_id=" + sentTasksSelected.id + "&section=" + stage.section);
+    } catch (e) {
+      stTourSectionData[stage.section] = null;
+    }
+    stTourLoading = false;
+  }
+  renderSidebar(); renderContent(); lucide.createIcons();
+}
+
+function stTourStageBody(stage) {
+  if (stage.section === null) {
+    const ev = [...stTimelineEvents].reverse().find(e => stage.actions.includes(e.action));
+    return `<div class="fr-preview-grid"><div class="fr-preview-field span2"><span class="lbl">${escapeHtml(stage.label)}</span><span class="val">${escapeHtml((ev && ev.detail) || "تم الاعتماد")}${ev ? " — " + escapeHtml(ev.entered_at) : ""}</span></div></div>`;
+  }
+  if (stTourLoading && !stTourSectionData[stage.section]) {
+    return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
+  }
+  // نفس دالة معاينة "تقرير نهائي" الجاهزة (القراءة فقط بطبيعتها) تُعيد استخدامها
+  // مباشرة عبر متغيّراتها العامة بدل تكرار منطق عرض كل قسم من الصفر
+  frPreviewSection = stage.section;
+  frPreviewData = stTourSectionData[stage.section] || null;
+  return frRenderPreviewBody();
+}
+
+/* جولة "عرض": المراحل اللي فعليًا وصلتها المهمة بس (تدريجيًا)، بالتالي/السابق
+   بينها، وتحت كل مرحلة محتواها الحقيقي -- تظهر مكان بطاقة "بانتظار الطرف
+   الآخر" بدل ما تنتقل مباشرة لصفحة نموذج خام لمرحلة الطرف الآخر */
+function renderSentTaskTour() {
+  const stages = stReachedTourStages();
+  if (stages.length === 0) {
+    return `
+    <div class="st-progress-view">
+      <button type="button" class="st-progress-back" id="stProgressBack"><i data-lucide="chevron-right"></i> رجوع</button>
+      <p class="dr-empty">لا يوجد سجل بعد لهذه المهمة</p>
+    </div>`;
+  }
+
+  const idx = Math.min(stTourIndex, stages.length - 1);
+  const stage = stages[idx];
 
   return `
   <div class="st-progress-view">
     <button type="button" class="st-progress-back" id="stProgressBack"><i data-lucide="chevron-right"></i> رجوع</button>
     <div class="wiz-steps st-progress-steps">
-      ${steps.map((s, i) => `
+      ${stages.map((s, i) => `
         <div class="wiz-step">
-          <div class="wiz-step-btn">
-            <span class="wiz-step-circle ${s.current ? "current" : "done"}">
-              ${s.current ? (i + 1) : '<i data-lucide="check"></i>'}
+          <button type="button" class="wiz-step-btn" data-tour-goto="${i}">
+            <span class="wiz-step-circle ${idx === i ? "current" : "done"}">
+              ${idx === i ? (i + 1) : '<i data-lucide="check"></i>'}
             </span>
-            <span class="wiz-step-label ${s.current ? "current" : "done"}">${escapeHtml(s.label)}</span>
-          </div>
-          ${i < steps.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
+            <span class="wiz-step-label ${idx === i ? "current" : "done"}">${escapeHtml(s.label)}</span>
+          </button>
+          ${i < stages.length - 1 ? `<span class="wiz-step-line done"></span>` : ""}
         </div>
       `).join("")}
+    </div>
+    <div class="wiz-card st-tour-card">${stTourStageBody(stage)}</div>
+    <div class="st-tour-nav">
+      <button type="button" class="st-tour-nav-btn" id="stTourPrev" ${idx === 0 ? "disabled" : ""}><i data-lucide="chevron-right"></i> السابق</button>
+      <button type="button" class="st-tour-nav-btn primary" id="stTourNext" ${idx === stages.length - 1 ? "disabled" : ""}>التالي <i data-lucide="chevron-left"></i></button>
     </div>
   </div>`;
 }
@@ -225,8 +259,6 @@ function renderSentTaskDetail() {
       <span class="st-detail-status">${escapeHtml(stStageBadgeText({ next_stage: stNextStage || t.current_stage }))}</span>
     </div>
 
-    ${renderSentTaskStageStepper()}
-
     <div class="st-detail-grid">
       <div class="st-detail-left">
         <div class="st-phase-card">
@@ -243,7 +275,7 @@ function renderSentTaskDetail() {
         </div>
 
         <div class="st-complete-card">
-          ${stShowProgress ? renderSentTaskProgressStepper() : (nextStage ? (myTurn ? `
+          ${stShowTour ? renderSentTaskTour() : (nextStage ? (myTurn ? `
           <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بك في نموذج "${nextStage.label}"</span></div>
           <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="pencil"></i> إكمال الحقول</button>
           ` : `
@@ -256,25 +288,52 @@ function renderSentTaskDetail() {
       </div>
 
       <div class="st-log-card">
-        <div class="st-log-head"><i data-lucide="clock"></i><div><p class="t">سجل النشاط والتدقيق</p><p class="s">سجل زمني لجميع الإجراءات</p></div></div>
-        ${renderSentTaskTimeline()}
+        <button type="button" class="st-log-head st-log-toggle" id="stLogToggle">
+          <i data-lucide="clock"></i><div><p class="t">سجل النشاط والتدقيق</p><p class="s">سجل زمني لجميع الإجراءات</p></div>
+          <i data-lucide="${stLogCollapsed ? "chevron-down" : "chevron-up"}" class="st-log-chevron"></i>
+        </button>
+        ${stLogCollapsed ? "" : renderSentTaskTimeline()}
       </div>
     </div>
   </div>`;
 }
 function bindSentTaskDetailEvents() {
-  document.getElementById("stBackBtn").addEventListener("click", () => { sentTasksSelected = null; stShowProgress = false; renderSidebar(); renderContent(); lucide.createIcons(); });
+  document.getElementById("stBackBtn").addEventListener("click", () => {
+    sentTasksSelected = null;
+    stShowTour = false;
+    frPreviewSection = null; frPreviewData = null; // ما نسيب حالة معاينة "تقرير نهائي" متسربة من هنا
+    renderSidebar(); renderContent(); lucide.createIcons();
+  });
+
+  const logToggle = document.getElementById("stLogToggle");
+  if (logToggle) logToggle.addEventListener("click", () => {
+    stLogCollapsed = !stLogCollapsed;
+    renderSidebar(); renderContent(); lucide.createIcons();
+  });
 
   const progressBack = document.getElementById("stProgressBack");
-  if (progressBack) progressBack.addEventListener("click", () => { stShowProgress = false; renderSidebar(); renderContent(); lucide.createIcons(); });
+  if (progressBack) progressBack.addEventListener("click", () => {
+    stShowTour = false;
+    frPreviewSection = null; frPreviewData = null;
+    renderSidebar(); renderContent(); lucide.createIcons();
+  });
+
+  document.querySelectorAll("[data-tour-goto]").forEach(btn => {
+    btn.addEventListener("click", () => stGotoTourStage(parseInt(btn.dataset.tourGoto, 10)));
+  });
+  const tourPrev = document.getElementById("stTourPrev");
+  if (tourPrev) tourPrev.addEventListener("click", () => stGotoTourStage(stTourIndex - 1));
+  const tourNext = document.getElementById("stTourNext");
+  if (tourNext) tourNext.addEventListener("click", () => stGotoTourStage(stTourIndex + 1));
 
   const completeBtn = document.getElementById("stCompleteBtn");
   if (completeBtn) completeBtn.addEventListener("click", () => {
-    // زر "عرض" ببطاقة "بانتظار الطرف الآخر" يعرض مُدرّج التقدّم الكامل مكانه
-    // بدل ما ينتقل مباشرة لصفحة النموذج الخام لمرحلة عضو المراجعة
+    // زر "عرض" ببطاقة "بانتظار الطرف الآخر" يفتح جولة "عرض" مكانه بدل ما ينتقل
+    // مباشرة لصفحة النموذج الخام لمرحلة عضو المراجعة
     if (completeBtn.dataset.mode === "progress") {
-      stShowProgress = true;
-      renderSidebar(); renderContent(); lucide.createIcons();
+      stShowTour = true;
+      stTourIndex = 0;
+      stGotoTourStage(0);
       return;
     }
 
