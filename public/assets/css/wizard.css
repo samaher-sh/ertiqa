@@ -154,8 +154,19 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-sla-row td{ padding:16px 20px; }
 .wiz-sla-row .lbl{ display:flex; align-items:flex-start; gap:10px; color:#374151; line-height:1.7; }
 .wiz-sla-row .lbl .dot{ width:6px; height:6px; border-radius:50%; background:var(--p); margin-top:7px; flex-shrink:0; }
-.wiz-checkbox-visual{ width:24px; height:24px; border-radius:6px; margin:0 auto; border:2px solid var(--pb); background:#f0f8fd; }
+.wiz-checkbox-visual{
+  width:32px; height:32px; border-radius:8px; margin:0 auto; padding:0;
+  border:2px solid var(--pb); background:#f0f8fd;
+  display:flex; align-items:center; justify-content:center; transition:all .12s;
+}
 .wiz-checkbox-visual.no{ border-color:#fca5a5; background:#fff5f5; }
+.wiz-checkbox-visual.wiz-sla-toggle{ cursor:pointer; }
+.wiz-checkbox-visual.wiz-sla-toggle:hover{ box-shadow:0 0 0 4px rgba(49,133,179,.15); border-color:var(--p); }
+.wiz-checkbox-visual.no.wiz-sla-toggle:hover{ box-shadow:0 0 0 4px rgba(220,38,38,.12); border-color:#dc2626; }
+.wiz-checkbox-visual:not(.no).checked{ background:var(--p); border-color:var(--p); }
+.wiz-checkbox-visual.no.checked{ background:#dc2626; border-color:#dc2626; }
+.wiz-checkbox-visual i, .wiz-checkbox-visual svg{ width:18px; height:18px; }
+.wiz-checkbox-visual.checked i, .wiz-checkbox-visual.checked svg{ color:#fff; }
 .wiz-note-line{ height:1px; width:100%; margin-top:16px; background:#d1d5db; }
 .wiz-table-footnote{ padding:12px 24px; font-size:11px; color:#9ca3af; text-align:right; background:#f0f8fd; border-top:1px solid var(--pb); }
 
