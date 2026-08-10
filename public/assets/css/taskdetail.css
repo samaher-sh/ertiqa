@@ -39,8 +39,8 @@
 .td-timeline-rail{ position:absolute; top:8px; bottom:8px; right:39px; width:1px; background:#e5e7eb; }
 .td-activity-row{ display:flex; gap:16px; position:relative; z-index:1; }
 .td-activity-avatar{ width:40px; height:40px; border-radius:9999px; background:#fff; border:3px solid #f0f8fd; box-shadow:0 1px 4px rgba(0,0,0,.04); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:var(--p); flex-shrink:0; }
-.td-activity-body{ display:flex; flex-direction:column; justify-content:center; padding-bottom:4px; }
-.td-activity-user{ font-size:13px; font-weight:700; color:#1f2937; }
+.td-activity-body{ display:flex; flex-direction:column; justify-content:center; padding-bottom:4px; flex:1; min-width:0; }
+.td-activity-user{ font-size:13px; font-weight:700; color:#1f2937; overflow-wrap:break-word; line-height:1.5; }
 .td-activity-user .role{ font-weight:400; color:#6b7280; font-size:12px; }
 .td-activity-meta{ font-size:11px; color:#4b5563; margin-top:4px; display:flex; align-items:center; flex-wrap:wrap; gap:6px; line-height:1.7; }
 .td-activity-btn-tag{ font-weight:700; color:#f59e0b; background:#fffbeb; padding:2px 8px; border-radius:6px; white-space:nowrap; }

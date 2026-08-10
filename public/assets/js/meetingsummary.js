@@ -149,13 +149,13 @@ function renderMeetingSummaryCards() {
         <div class="wiz-card-head">
           <i data-lucide="users"></i>
           <div><h2>ملخص الاجتماع</h2><p>Meeting Summary</p></div>
-          ${allReadOnly ? `<span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>` : ""}
+          ${allReadOnly && !msumForceReadOnly ? `<span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>` : ""}
           <div style="display:flex;gap:8px;margin-right:auto;">
             ${!allReadOnly ? `<label class="msum-attach-btn" style="cursor:pointer;box-shadow:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);">
               <i data-lucide="upload"></i> إرفاق ملفات
               <input type="file" id="msumAttachInput" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" ${locked ? "disabled" : ""}>
             </label>` : ""}
-            <button class="obs-btn-pdf" id="msumExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
+            ${!msumForceReadOnly ? `<button class="obs-btn-pdf" id="msumExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>` : ""}
           </div>
         </div>
         ${msumAttachments.length > 0 ? `<div style="padding:8px 24px 0;"><span class="msum-attach-empty">${msumAttachments.map(d => `<a href="${base}/dashboard/documents/download/${d.id}" target="_blank" style="color:var(--p);text-decoration:underline;">${escapeHtml(d.file_name)}</a>`).join("، ")}</span></div>` : ""}

@@ -82,11 +82,11 @@ function renderRiskMatrixCard() {
       <div class="rm-head-left">
         <div class="rm-head-icon"><i data-lucide="bar-chart-2"></i></div>
         <div><h2>مصفوفة المخاطر</h2><p>Risk Matrix Form</p></div>
-        ${readOnly ? `<span class="rm-readonly-badge"><i data-lucide="lock" style="width:10px;height:10px;"></i> عرض فقط</span>` : ""}
+        ${readOnly && !rmForceReadOnly ? `<span class="rm-readonly-badge"><i data-lucide="lock" style="width:10px;height:10px;"></i> عرض فقط</span>` : ""}
       </div>
       <div style="display:flex;gap:8px;">
         ${!readOnly ? `<button class="obs-btn-add" id="rmAddBtn"><i data-lucide="plus"></i> إضافة مخاطر</button>` : ""}
-        <button class="obs-btn-pdf" id="rmExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>
+        ${!rmForceReadOnly ? `<button class="obs-btn-pdf" id="rmExportBtn" ${locked ? "disabled" : ""}><i data-lucide="file-text"></i> تصدير PDF</button>` : ""}
       </div>
     </div>
 
