@@ -18,7 +18,6 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/senttasks.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/finalreports.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/meetingschedule.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/notifications.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/documentrequests.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/css/missionreview.css') ?>">
 </head>
@@ -114,34 +113,6 @@
 <!-- Toast container -->
 <div id="toastContainer" class="toast-container"></div>
 
-<!-- قوالب HTML الثابتة للصفحات (تُستنسخ وتُملأ ديناميكيًا من ملفات JS بدل بناء HTML كامل
-     داخل template strings JS مباشرة) -->
-<template id="tpl-notifications">
-  <div class="notif-card">
-    <div class="notif-head">
-      <i data-lucide="bell"></i>
-      <div><h2>الإخطارات</h2><p>Notifications</p></div>
-      <span class="notif-unread-badge" data-slot="badge" hidden></span>
-    </div>
-    <div class="notif-list" data-slot="list"></div>
-  </div>
-</template>
-
-<template id="tpl-notif-item">
-  <div class="notif-item" data-notif-id="">
-    <div class="notif-dot-wrap"><span class="notif-dot"></span></div>
-    <div class="notif-icon"><i data-lucide="bell"></i></div>
-    <div class="notif-body">
-      <div class="notif-title-row">
-        <p class="notif-title" data-slot="title"></p>
-        <span class="notif-type-tag" data-slot="type"></span>
-      </div>
-      <p class="notif-text" data-slot="body"></p>
-      <span class="notif-time" dir="ltr" data-slot="time"></span>
-    </div>
-  </div>
-</template>
-
 <script>
   window.APP = { baseUrl: "<?= rtrim(base_url(), '/') ?>" };
   // مُعرَّفة هنا مرة وحدة فقط - كل ملفات الصفحات (wizard.js, riskmatrix.js, ...) تستخدمها مباشرة
@@ -158,7 +129,6 @@
 <script src="<?= base_url('assets/js/senttasks.js') ?>"></script>
 <script src="<?= base_url('assets/js/finalreports.js') ?>"></script>
 <script src="<?= base_url('assets/js/meetingschedule.js') ?>"></script>
-<script src="<?= base_url('assets/js/notifications.js') ?>"></script>
 <script src="<?= base_url('assets/js/documentrequests.js') ?>"></script>
 <script src="<?= base_url('assets/js/missionreview.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>

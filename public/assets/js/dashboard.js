@@ -225,10 +225,6 @@ async function renderContent() {
     await loadMissionsForSelector();
     el.innerHTML = renderMeetingSchedulePage();
     bindMeetingScheduleEvents();
-  } else if (activeContent === "notifications") {
-    await loadNotifications();
-    el.innerHTML = renderNotificationsPage();
-    bindNotificationsEvents();
   } else if (activeContent === "documentRequests") {
     await loadMissionsForSelector();
     if (drSelectedTaskId) await loadDocumentRequests(drSelectedTaskId);
