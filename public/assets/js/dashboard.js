@@ -305,15 +305,20 @@ function incompleteMissions() {
 /* مصفوفة بطاقات الإحصائيات تختلف حسب الدور: رئيس المراجعة يشرف على التقارير
    (لا مهام شخصية له)، بينما بقية الأدوار ترى اجتماعاتها/مهامها النشطة */
 function homeStatsCards() {
-  return isAuditHead
-    ? [
-        { label: "تقارير تحتاج اعتماد", sub: "Reports Requiring Approval", value: homeStats.reports_pending_count || 0 },
-        { label: "التقارير المعتمدة",   sub: "Approved Reports",           value: homeStats.reports_approved_count || 0 },
-      ]
-    : [
-        { label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
-        { label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
-      ];
+  if (isAuditHead) {
+    return [
+      { key: "reportsPending",  label: "تقارير تحتاج اعتماد", sub: "Reports Requiring Approval", value: homeStats.reports_pending_count || 0 },
+      { key: "reportsApproved", label: "التقارير المعتمدة",   sub: "Approved Reports",           value: homeStats.reports_approved_count || 0 },
+    ];
+  }
+  // عضو المراجعة (audit_member) ما يحتاج بطاقة "المهام النشطة" بالرئيسية -- عنده أصلًا
+  // بطاقة "بدء مهمة" وقائمة "استئناف العمل" بنفس الصفحة تغطي نفس الغرض
+  const cards = [];
+  if (!isAuditMember) {
+    cards.push({ key: "activeMissions", label: "المهام النشطة", sub: "Active Tasks", value: activeMissions.length });
+  }
+  cards.push({ key: "scheduledMeetings", label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length });
+  return cards;
 }
 
 /* بطاقة/شريط الإخطار العلوي بالرئيسية — يختلف حسب الدور، ويعتمد فقط على بيانات حقيقية
@@ -453,7 +458,8 @@ function renderHomeTab() {
 
 function renderStatDetailPanel(idx) {
   const cards = homeStatsCards();
-  const label = cards[idx] ? cards[idx].label : "";
+  const card = cards[idx] || null;
+  const label = card ? card.label : "";
 
   if (isAuditHead) {
     return `
@@ -477,7 +483,7 @@ function renderStatDetailPanel(idx) {
   }
 
   let bodyHtml;
-  if (idx === 0) {
+  if (card && card.key === "activeMissions") {
     bodyHtml = activeMissions.length === 0
       ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
       : activeMissions.map(m => `
