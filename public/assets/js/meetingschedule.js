@@ -10,13 +10,18 @@ let mcMyUserId = null;
 let mcPollTimer = null;
 let mcShowProposeForm = false;
 
+/* status !== "scheduled" (ألغي أو انعقد) يعني ما عاد اجتماعًا مؤكَّدًا فعليًا --
+   نفس الشرط اللي يعتمد عليه مؤشر الصفحة الرئيسية (MeetingModel::confirmedUpcomingForMissions) */
 function renderConfirmedBadge() {
-  if (!mcMeeting || !mcMeeting.meeting_date) return "";
+  if (!mcMeeting || !mcMeeting.meeting_date || mcMeeting.status !== "scheduled") return "";
   return `
     <span class="mc-confirmed-badge">
       <i data-lucide="check-circle" style="width:12px;height:12px;"></i>
       الموعد المؤكد: ${escapeHtml(mcMeeting.meeting_date)} ${escapeHtml(mcMeeting.meeting_time || "")}
-    </span>`;
+    </span>
+    <button type="button" class="mc-cancel-confirmed-btn" id="mcCancelConfirmedBtn" title="إلغاء هذا الموعد">
+      <i data-lucide="x" style="width:12px;height:12px;"></i>
+    </button>`;
 }
 
 function renderChatBodyContent() {
@@ -169,7 +174,11 @@ function mcUpdateChatBodyOnly() {
     });
   }
   const badgeHolder = document.getElementById("mcConfirmedBadgeHolder");
-  if (badgeHolder) badgeHolder.innerHTML = renderConfirmedBadge();
+  if (badgeHolder) {
+    badgeHolder.innerHTML = renderConfirmedBadge();
+    const cancelConfirmedBtn = document.getElementById("mcCancelConfirmedBtn");
+    if (cancelConfirmedBtn) cancelConfirmedBtn.addEventListener("click", () => mcHandleCancelConfirmed(cancelConfirmedBtn));
+  }
   lucide.createIcons();
 }
 
@@ -188,6 +197,20 @@ async function mcHandleCancel(btn) {
   btn.disabled = true;
   try {
     await apiPost(base + "/dashboard/meeting-schedule/api/cancel", { mission_id: mcSelectedTaskId, message_id: btn.dataset.cancelMsg });
+    await mcLoadMessages(true, false);
+  } catch (e) {
+    showToast(e.message || "تعذّر إلغاء الموعد", "error");
+    btn.disabled = false;
+  }
+}
+
+/* إلغاء موعد مؤكَّد فعليًا (بعد الاتفاق عليه) -- يختلف عن mcHandleCancel اللي يلغي
+   اقتراحًا لسا ما تأكّد؛ نجاحها يخلي renderConfirmedBadge() يرجّع فاضي، وبالتبعية
+   المؤشر بالصفحة الرئيسية (يعتمد على نفس status='scheduled') يختفي تلقائيًا */
+async function mcHandleCancelConfirmed(btn) {
+  btn.disabled = true;
+  try {
+    await apiPost(base + "/dashboard/meeting-schedule/api/cancel-confirmed", { mission_id: mcSelectedTaskId });
     await mcLoadMessages(true, false);
   } catch (e) {
     showToast(e.message || "تعذّر إلغاء الموعد", "error");
@@ -273,6 +296,8 @@ function bindMeetingScheduleEvents() {
   document.querySelectorAll("[data-cancel-msg]").forEach(btn => {
     btn.addEventListener("click", () => mcHandleCancel(btn));
   });
+  const cancelConfirmedBtn = document.getElementById("mcCancelConfirmedBtn");
+  if (cancelConfirmedBtn) cancelConfirmedBtn.addEventListener("click", () => mcHandleCancelConfirmed(cancelConfirmedBtn));
 
   mcScrollToBottom();
 

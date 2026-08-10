@@ -168,4 +168,37 @@ class MissionChatController extends BaseController
 
         return $this->response->setJSON(['success' => true]);
     }
+
+    /** POST /dashboard/meeting-schedule/api/cancel-confirmed — إلغاء موعد مؤكَّد فعليًا (بعد الاتفاق عليه من الطرفين) --
+     *  يختلف عن cancel() اللي يلغي اقتراحًا لسا ما تأكّد؛ هذا يلغي اجتماعًا صار مُجدولًا فعليًا،
+     *  وأي طرف بالمهمة يقدر يبدأه (ما يحتاج يكون الطرف الثاني تحديدًا زي إلغاء الاقتراح) */
+    public function cancelConfirmed()
+    {
+        $data = $this->request->getJSON(true);
+        $missionId = (int) ($data['mission_id'] ?? 0);
+        $userId    = (int) session()->get('user_id');
+
+        $meetingModel = new MeetingModel();
+        $meeting = $meetingModel->firstForMission($missionId);
+
+        if (!$meeting || $meeting['status'] !== 'scheduled') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا يوجد موعد مؤكَّد لإلغائه.']);
+        }
+
+        $meetingModel->update($meeting['id'], ['status' => 'cancelled']);
+
+        $chatModel = new MissionChatMessageModel();
+        $chatModel->insert([
+            'mission_id' => $missionId,
+            'sender_id'  => $userId,
+            'message'    => 'تم إلغاء الموعد المؤكَّد',
+            'type'       => 'cancelled',
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $detail = 'التاريخ: ' . $meeting['meeting_date'] . ' — الوقت: ' . $meeting['meeting_time'];
+        (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', $meeting['id'], $detail);
+
+        return $this->response->setJSON(['success' => true]);
+    }
 }
