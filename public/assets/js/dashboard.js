@@ -497,7 +497,18 @@ function bindHomeEvents() {
 
   const bannerOpenBtn = document.getElementById("homeBannerOpenBtn");
   if (bannerOpenBtn) bannerOpenBtn.addEventListener("click", async () => {
-    activeContent = isAuditHead ? "finalReports" : "notifications";
+    if (isAuditHead) {
+      activeContent = "finalReports";
+    } else {
+      // بانر "لديك إخطارات جديدة" مرتبط دائمًا بمهمة معيّنة (homeStats.confirmed_meeting_alert
+      // مختلف، هذا latest_notification) -- نوديه مباشرة لتفاصيلها بـ"المراسلات المشتركة"
+      // بدل صفحة إخطارات عامة
+      const missionId = homeStats.latest_notification && homeStats.latest_notification.mission_id;
+      await loadMissionsForSelector();
+      const task = missionId ? missionsForSelector.find(m => Number(m.id) === Number(missionId)) : null;
+      if (task) await stOpenTaskDetail(task);
+      activeContent = "sentTasks";
+    }
     renderSidebar(); await renderContent(); lucide.createIcons();
   });
 

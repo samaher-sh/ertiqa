@@ -115,19 +115,26 @@ function renderSentTasksList() {
     </div>
   </div>`;
 }
+/* يفتح تفاصيل مهمة معيّنة بـ"المراسلات المشتركة" -- مستخدمة من قائمة هذي الصفحة
+   نفسها، وكمان من صفحات ثانية (الإخطارات، بانر الصفحة الرئيسية) لما تحتاج توديك
+   مباشرة لمهمة محددة بدل قائمة عامة */
+async function stOpenTaskDetail(task) {
+  sentTasksSelected = task;
+  stShowTour = false;
+  stTourIndex = 0;
+  stTourMrLoaded = false;
+  stTourRmLoaded = false;
+  stTourMsumLoaded = false;
+  stTourObsLoaded = false;
+  await stLoadTimeline(task.id);
+}
+
 function bindSentTasksListEvents() {
   document.querySelectorAll("[data-view-sent]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const task = missionsForSelector.find(m => String(m.id) === String(btn.dataset.viewSent));
       if (!task) return;
-      sentTasksSelected = task;
-      stShowTour = false;
-      stTourIndex = 0;
-      stTourMrLoaded = false;
-      stTourRmLoaded = false;
-      stTourMsumLoaded = false;
-      stTourObsLoaded = false;
-      await stLoadTimeline(task.id);
+      await stOpenTaskDetail(task);
       renderSidebar(); renderContent(); lucide.createIcons();
     });
   });

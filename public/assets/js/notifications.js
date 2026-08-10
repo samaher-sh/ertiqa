@@ -64,8 +64,11 @@ function bindNotificationsEvents() {
     el.addEventListener("click", async () => {
       const id = Number(el.dataset.notifId);
       if (!notifReadIds.includes(id)) notifReadIds.push(id);
-      activeContent = "missionReview";
-      mrSelectedTaskId = String(id);
+      // كل إخطار مبني أصلًا من مهمة حقيقية بـ missionsForSelector -- نفتح
+      // "المراسلات المشتركة" الخاصة بنفس المهمة مباشرة بدل صفحة مراجعة عامة
+      const task = missionsForSelector.find(m => Number(m.id) === id);
+      if (task) await stOpenTaskDetail(task);
+      activeContent = "sentTasks";
       renderSidebar();
       await renderContent();
       lucide.createIcons();
