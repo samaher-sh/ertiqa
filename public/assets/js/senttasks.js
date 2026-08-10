@@ -18,9 +18,11 @@ let stLogCollapsed = false;
 
 /* جولة "عرض" (Tour): تُفتح مكان بطاقة "بانتظار الطرف الآخر" -- تصفّح بالتالي/
    السابق بين المراحل اللي فعليًا وصلتها المهمة (تدريجيًا)، كل مرحلة تحت اسمها
-   محتواها الحقيقي (نفس معاينة "تقرير نهائي" الجاهزة، القراءة فقط بطبيعتها) */
+   نفس نموذجها الحقيقي بالضبط (نفس شكل الخطاب/الاتفاقية/المستندات كما تظهر
+   بصفحة "مراجعة المهمة" الفعلية) -- قراءة فقط دائمًا بإجبار mrCanEdit=false */
 let stShowTour = false;
 let stTourIndex = 0;
+let stTourMrLoaded = false;
 let stTourSectionData = {};
 let stTourLoading = false;
 
@@ -38,18 +40,21 @@ const ST_STAGE_TO_PAGE = {
 
 /* مراحل جولة "عرض" -- كل مرحلة تظهر بالجولة فقط لو فيها حدث حقيقي واحد على
    الأقل بسجل audit_logs (action يطابق أحد actions المذكورة)، بنفس ترتيبها هنا
-   دائمًا (تدريجيًا، مو كل الست مرات مرة وحدة). section تطابق section_number
-   بجدول report_checklist_items وتُستخدم لجلب نفس بيانات معاينة "تقرير نهائي"
-   الجاهزة (GET /dashboard/reports/api/preview) -- لا يوجد معاينة قسم مخصصة
-   لـ"التقرير النهائي" نفسه فنكتفي بتفصيل حدث اعتماده من السجل الزمني */
+   دائمًا (تدريجيًا، مو كل السبع مرة وحدة). renderer يحدد مصدر المحتوى:
+   "mr1/mr2/mr3" = نفس renderMrPage1/2/3 الحقيقية من missionreview.js (نفس
+   شكل الخطاب/الاتفاقية/المستندات بالضبط، بإجبار القراءة فقط)؛ "preview" =
+   نفس بيانات معاينة "تقرير نهائي" الجاهزة (GET /dashboard/reports/api/preview)
+   لعدم وجود مكوّن قراءة-فقط منفصل جاهز لمصفوفة المخاطر/الاجتماع/الملاحظات
+   بعد؛ "log" = لا يوجد معاينة قسم مخصصة لـ"التقرير النهائي" نفسه فنكتفي
+   بتفصيل حدث اعتماده من السجل الزمني */
 const ST_TOUR_STAGES = [
-  { label: "الخطاب الرسمي",           actions: ["mission_created"],                            section: 1 },
-  { label: "اتفاقية مستوى الخدمة",     actions: ["sla_submitted"],                              section: 2 },
-  { label: "قائمة المستندات المرسلة",  actions: ["documents_submitted"],                        section: 3 },
-  { label: "مصفوفة المخاطر",          actions: ["risk_matrix_saved"],                           section: 4 },
-  { label: "الاجتماع",                actions: ["meeting_confirmed", "meeting_summary_saved"],  section: 5 },
-  { label: "الملاحظات",               actions: ["observation_added"],                           section: 6 },
-  { label: "التقرير النهائي",         actions: ["report_finalized"],                            section: null },
+  { label: "الخطاب الرسمي",           actions: ["mission_created"],                            renderer: "mr1" },
+  { label: "اتفاقية مستوى الخدمة",     actions: ["sla_submitted"],                              renderer: "mr2" },
+  { label: "قائمة المستندات المرسلة",  actions: ["documents_submitted"],                        renderer: "mr3" },
+  { label: "مصفوفة المخاطر",          actions: ["risk_matrix_saved"],                           renderer: "preview", section: 4 },
+  { label: "الاجتماع",                actions: ["meeting_confirmed", "meeting_summary_saved"],  renderer: "preview", section: 5 },
+  { label: "الملاحظات",               actions: ["observation_added"],                           renderer: "preview", section: 6 },
+  { label: "التقرير النهائي",         actions: ["report_finalized"],                            renderer: "log" },
 ];
 
 function renderSentTasksPage() {
@@ -112,6 +117,7 @@ function bindSentTasksListEvents() {
       sentTasksSelected = task;
       stShowTour = false;
       stTourIndex = 0;
+      stTourMrLoaded = false;
       stTourSectionData = {};
       await stLoadTimeline(task.id);
       renderSidebar(); renderContent(); lucide.createIcons();
@@ -160,16 +166,28 @@ function stReachedTourStages() {
   return ST_TOUR_STAGES.filter(g => stTimelineEvents.some(ev => g.actions.includes(ev.action)));
 }
 
-/* يجيب بيانات معاينة قسم معيّن (لو ما كانت محمّلة فعليًا مسبقًا) -- يعيد
-   استخدام نفس endpoint معاينة "تقرير نهائي" الجاهزة (قراءة فقط بطبيعتها) بدل
-   تكرار منطق جلب كل صفحة (اتفاقية/مستندات/مصفوفة مخاطر/اجتماع/ملاحظات) لحالها */
+const ST_TOUR_MR_RENDERERS = ["mr1", "mr2", "mr3"];
+
+/* يجيب بيانات المرحلة المطلوبة (لو ما كانت محمّلة فعليًا مسبقًا) -- الخطاب/
+   الاتفاقية/المستندات الثلاثة يشتركون بنفس تحميلة missionreview.js الحقيقية
+   (loadMissionReviewData) مرة وحدة، والباقي يستخدم endpoint معاينة "تقرير
+   نهائي" الجاهزة (قراءة فقط بطبيعتها) بدل تكرار منطق جلب كل صفحة لحالها */
 async function stGotoTourStage(i) {
   const stages = stReachedTourStages();
   if (i < 0 || i >= stages.length) return;
   stTourIndex = i;
   const stage = stages[i];
 
-  if (stage.section !== null && !stTourSectionData[stage.section]) {
+  if (ST_TOUR_MR_RENDERERS.includes(stage.renderer)) {
+    if (!stTourMrLoaded) {
+      stTourLoading = true;
+      renderSidebar(); renderContent(); lucide.createIcons();
+      await loadMissionReviewData(sentTasksSelected.id);
+      mrCanEdit = false; // الجولة قراءة فقط دائمًا، بغض النظر عن صلاحية التعديل الفعلية للمشاهِد
+      stTourMrLoaded = true;
+      stTourLoading = false;
+    }
+  } else if (stage.renderer === "preview" && !stTourSectionData[stage.section]) {
     stTourLoading = true;
     renderSidebar(); renderContent(); lucide.createIcons();
     try {
@@ -183,10 +201,21 @@ async function stGotoTourStage(i) {
 }
 
 function stTourStageBody(stage) {
-  if (stage.section === null) {
+  if (stage.renderer === "log") {
     const ev = [...stTimelineEvents].reverse().find(e => stage.actions.includes(e.action));
     return `<div class="fr-preview-grid"><div class="fr-preview-field span2"><span class="lbl">${escapeHtml(stage.label)}</span><span class="val">${escapeHtml((ev && ev.detail) || "تم الاعتماد")}${ev ? " — " + escapeHtml(ev.entered_at) : ""}</span></div></div>`;
   }
+
+  if (ST_TOUR_MR_RENDERERS.includes(stage.renderer)) {
+    if (stTourLoading && !stTourMrLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
+    // نفس دوال missionreview.js الحقيقية (renderMrPage1/2/3) تُعاد استخدامها
+    // مباشرة -- نفس شكل الخطاب/الاتفاقية/المستندات بالضبط، بدل تكرار العرض
+    if (stage.renderer === "mr1") return renderMrPage1();
+    if (stage.renderer === "mr2") return renderMrPage2();
+    return renderMrPage3();
+  }
+
+  // preview (مصفوفة المخاطر / الاجتماع / الملاحظات)
   if (stTourLoading && !stTourSectionData[stage.section]) {
     return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
   }
