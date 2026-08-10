@@ -22,7 +22,7 @@
     <table class="rm">
         <thead>
             <tr>
-                <th style="width:30px;">م</th>
+                <th style="width:30px;">الرقم</th>
                 <th>المخاطر</th>
                 <th style="width:70px;">التقييم</th>
                 <th>وصف الضوابط</th>

@@ -379,9 +379,82 @@ function renderWizPage1() {
   `;
 }
 
+/* تصدير PDF لنموذج الخطاب الرسمي (صفحة 1) بحالته الحالية غير المحفوظة بعد --
+   نفس نمط exportObservationToPDF() بصفحة الملاحظات بالضبط (نافذة طباعة مستقلة
+   بمحتوى نظيف فقط، بدون شريط جانبي/عناصر تحكم التطبيق) لأن المهمة لسا ما اتحفظت
+   بقاعدة البيانات (ما فيه mission_id بعد لاستخدام /dashboard/pdf/mission-letter
+   الحقيقي، المخصص للمهام المُنشأة فعليًا) */
+function exportWizP1ToPDF() {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
+
+  const s = wizP1;
+  const todayD = new Date();
+  const refNumber = String((todayD.getMonth() + 1) * 100 + todayD.getDate()).padStart(4, "0");
+  const deptAbbr = DEPT_ABBR[s.deptName] || "AUD";
+  const missionCode = deptAbbr + refNumber;
+
+  printWindow.document.write(`
+    <html dir="rtl">
+      <head>
+        <title>الخطاب الرسمي - ${escapeHtml(missionCode)}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.8; }
+          .letterhead { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
+          .letterhead h1 { font-size: 18px; color: #196b7f; margin:0; }
+          .letterhead .sub { font-size:12px; color:#6b8c95; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:12px; color:#4b5563; }
+          .letterhead-meta p { margin:2px 0; }
+          p { margin: 0 0 14px; font-size: 13px; }
+          mark { background:#eaf4fa; color:#196b7f; padding:1px 6px; border-radius:4px; font-weight:700; }
+          .procedure-box { background:#f8fbfd; border:1px solid #d8e6eb; border-radius:8px; padding:14px; margin-bottom:14px; }
+          .procedure-box .head { font-weight:700; color:#196b7f; margin-bottom:6px; font-size:12px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #9ca3af; border-top:1px solid #d8e6eb; padding-top:15px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="letterhead">
+          <div>
+            <h1>إدارة المراجعة الداخلية</h1>
+            <p class="sub">Internal Audit Department</p>
+          </div>
+          <div class="letterhead-meta">
+            <p>التاريخ: ${escapeHtml(todayD.toLocaleDateString("en-GB"))}</p>
+            <p>رقم المهمة: <strong dir="ltr">${escapeHtml(missionCode)}</strong></p>
+          </div>
+        </div>
+        <p style="font-weight:700;">سعادة المدير التنفيذي لـ${s.deptName ? `<mark>${escapeHtml(s.deptName)}</mark>` : ""} المحترم</p>
+        <p style="font-weight:600;">السلام عليكم ورحمة الله وبركاته،</p>
+        <p>نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة <mark>${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark> للقيام بعملية المراجعة الداخلية الشاملة وفق الخطة السنوية المعتمدة لعام <mark>${escapeHtml(s.year)}</mark>.</p>
+        <p>عليه نأمل التكرم بتوجيه من يلزم للعمل على التنسيق خلال مدة لا تتجاوز (7) أيام عمل من تاريخ استلام هذا الإشعار.</p>
+        ${s.procedure ? `<div class="procedure-box"><div class="head">المراد مناقشته في الاجتماع</div><p style="margin:0;">${escapeHtml(s.procedure)}</p></div>` : ""}
+        <p>كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة حتى يتسنى لنا البدء بعملية المراجعة.</p>
+        <p>إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة.</p>
+        <p>حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
+        <p>علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark>${escapeHtml(s.reviewer || "...............")}</mark></p>
+        <p style="margin-bottom:4px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
+        <p style="margin:0 0 4px;">البريد الإلكتروني: <span dir="ltr">${escapeHtml(s.email || "........................")}</span></p>
+        <p>رقم الجوال: <span dir="ltr">${escapeHtml(s.phone || "........................")}</span></p>
+        <p style="font-weight:600;margin-top:20px;">مدير إدارة المراجعة الداخلية</p>
+        ${s.director ? `<p style="font-weight:800;color:#196b7f;">${escapeHtml(s.director)}</p>` : ""}
+        <p style="font-weight:600;">وتقبلوا وافر التحية والتقدير،،.</p>
+        <div class="footer">تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}</div>
+        <script>
+          window.onload = () => {
+            window.print();
+            setTimeout(() => window.close(), 500);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
 function bindWizPage1() {
   const exportBtn = document.getElementById("wizP1ExportBtn");
-  if (exportBtn) exportBtn.addEventListener("click", () => window.print());
+  if (exportBtn) exportBtn.addEventListener("click", exportWizP1ToPDF);
   const $ = id => document.getElementById(id);
 
   $("p1Dept").addEventListener("change", e => {
@@ -543,9 +616,91 @@ function renderWizPage2() {
   `;
 }
 
+/* تصدير PDF لاتفاقية مستوى الخدمة (صفحة 2) بحالتها الحالية غير المحفوظة بعد --
+   نفس السبب والنمط المستخدم بـ exportWizP1ToPDF() أعلاه بالضبط */
+function exportWizP2ToPDF() {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
+
+  const s = wizP2;
+  const channels = [
+    { key: "email", label: "البريد الإلكتروني" },
+    { key: "memo", label: "المذكرات الداخلية" },
+    { key: "phone", label: "الهاتف الداخلي" },
+  ];
+  const activeChannels = channels.filter(c => s.ch[c.key]);
+
+  const rowsHTML = SLA_SECTIONS.map((sec, si) => `
+    <tr><td colspan="4" style="font-weight:700;color:#196b7f;padding:8px;border:1px solid #b3d4e5;background:#f0f7fa;">${si + 1}. ${escapeHtml(sec.title)}</td></tr>
+    ${sec.rows.map(row => `
+      <tr>
+        <td style="padding:8px;border:1px solid #d8e6eb;">${escapeHtml(row)}</td>
+        <td style="padding:8px;border:1px solid #d8e6eb;text-align:center;width:60px;">▢</td>
+        <td style="padding:8px;border:1px solid #d8e6eb;text-align:center;width:60px;">▢</td>
+        <td style="padding:8px;border:1px solid #d8e6eb;width:150px;"></td>
+      </tr>
+    `).join("")}
+  `).join("");
+
+  printWindow.document.write(`
+    <html dir="rtl">
+      <head>
+        <title>اتفاقية مستوى الخدمة</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
+          h1 { font-size: 18px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 15px; margin-bottom: 25px; }
+          .info-row { display:flex; gap:30px; margin-bottom:20px; }
+          .info-row .field { flex:1; }
+          .label { font-size:11px; color:#6b8c95; font-weight:bold; display:block; margin-bottom:4px; }
+          .value { font-size:13px; font-weight:600; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size:12px; }
+          th { background: #f0f7fa; color: #196b7f; padding: 8px; border: 1px solid #b3d4e5; text-align:right; }
+          .sig-grid { display:flex; gap:30px; margin-top:30px; }
+          .sig-box { flex:1; border:1px solid #d8e6eb; border-radius:8px; padding:16px; font-size:13px; }
+          .sig-box .t { font-weight:700; margin-bottom:10px; color:#196b7f; }
+          .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #9ca3af; border-top:1px solid #d8e6eb; padding-top:15px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <h1>اتفاقية مستوى الخدمة — Service Level Agreement</h1>
+        <div class="info-row">
+          <div class="field"><span class="label">الإدارة الخاضعة للمراجعة</span><span class="value">${escapeHtml(s.subjectDept || "—")}</span></div>
+          <div class="field"><span class="label">تاريخ الاتفاقية</span><span class="value">${escapeHtml(s.date || "—")}</span></div>
+        </div>
+        <p><strong>وصف الخدمة:</strong> ${escapeHtml(s.desc)}</p>
+        <p><strong>قنوات الاتصال المعتمدة:</strong> ${activeChannels.length ? activeChannels.map(c => escapeHtml(c.label)).join("، ") : "—"}</p>
+        <table>
+          <thead><tr><th>الموضوع</th><th style="width:60px;">موافق</th><th style="width:60px;">غير موافق</th><th style="width:150px;">ملاحظات</th></tr></thead>
+          <tbody>${rowsHTML}</tbody>
+        </table>
+        <div class="sig-grid">
+          <div class="sig-box">
+            <p class="t">المراجع الرئيسي</p>
+            <p>الاسم: ${escapeHtml(s.sigName || "—")}</p>
+            <p>التاريخ: ${escapeHtml(s.sigDate || "—")}</p>
+          </div>
+          <div class="sig-box">
+            <p class="t">ممثل الإدارة</p>
+            <p style="color:#9ca3af;">تُملأ من قِبل الإدارة المستهدفة</p>
+          </div>
+        </div>
+        <div class="footer">تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}</div>
+        <script>
+          window.onload = () => {
+            window.print();
+            setTimeout(() => window.close(), 500);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
 function bindWizPage2() {
   const exportBtn2 = document.getElementById("wizP2ExportBtn");
-  if (exportBtn2) exportBtn2.addEventListener("click", () => window.print());
+  if (exportBtn2) exportBtn2.addEventListener("click", exportWizP2ToPDF);
   const $ = id => document.getElementById(id);
   const s = wizP2;
 

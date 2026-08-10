@@ -208,9 +208,6 @@ async function renderContent() {
     if (obsSelectedTaskId) await obsLoadList(obsSelectedTaskId);
     el.innerHTML = renderObservationsPage();
     bindObservationsEvents();
-  } else if (activeContent === "taskDetail" && typeof selectedTaskDetail !== "undefined" && selectedTaskDetail) {
-    el.innerHTML = renderTaskDetailPage();
-    bindTaskDetailEvents();
   } else if (activeContent === "sentTasks") {
     await loadMissionsForSelector();
     el.innerHTML = renderSentTasksPage();
