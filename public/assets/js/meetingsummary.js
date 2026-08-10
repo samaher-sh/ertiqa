@@ -13,8 +13,9 @@ let msumSummaryPoints = [{ id: 1, text: "", opinion: "", reason: "" }];
 let msumApprovals = [{ id: 1, statement: "إعداد واعتماد", name: "", position: "رئيس المهمة", date: "", signature: "" }];
 let msumAttachments = [];
 
-const msumIsHrUser = () => isHrDept || isHrCoordinator;
-const msumAllReadOnly = () => isAuditHead;
+let msumForceReadOnly = false; // تجبر القراءة فقط الكاملة (بما فيها كشف بطاقة "إعداد واعتماد") -- تستخدمها جولة "عرض" بالمراسلات المشتركة
+const msumIsHrUser = () => !msumForceReadOnly && (isHrDept || isHrCoordinator);
+const msumAllReadOnly = () => msumForceReadOnly || isAuditHead;
 
 /* ---------- لوحة توقيع تفاعلية (Signature Pad) عبر canvas — تدعم الماوس واللمس ---------- */
 function msumInitSignaturePad(canvas, initialDataUrl, onChange) {
@@ -132,16 +133,15 @@ function msumVisibleMissions() {
   return missionsForSelector.filter(m => String(m.target_department_id) === String(deptId));
 }
 
-function renderMeetingSummaryPage() {
+/* الأربع بطاقات وحدها (بدون منتقي المهمة المرتبطة ولا صف الإرسال) -- قابلة
+   لإعادة الاستخدام لحالها (تستخدمها جولة "عرض" بالمراسلات المشتركة لعرض نفس
+   شكل ملخص الاجتماع بالضبط، قراءة فقط كاملة عبر msumForceReadOnly) */
+function renderMeetingSummaryCards() {
   const hrUser = msumIsHrUser();
   const allReadOnly = msumAllReadOnly();
   const locked = !msumSelectedTaskId;
-  const visibleTasks = msumVisibleMissions();
 
   return `
-  <div class="flex flex-col gap-5">
-    ${renderLinkedTaskSelector(msumSelectedTaskId, "msumTaskSelect", visibleTasks)}
-
     <div class="msum-locked-wrap ${locked ? "locked" : ""}">
 
       <!-- 1. بيانات الاجتماع -->
@@ -285,7 +285,18 @@ function renderMeetingSummaryPage() {
         </div>
       </div>` : ""}
 
-    </div>
+    </div>`;
+}
+
+function renderMeetingSummaryPage() {
+  const allReadOnly = msumAllReadOnly();
+  const locked = !msumSelectedTaskId;
+  const visibleTasks = msumVisibleMissions();
+
+  return `
+  <div class="flex flex-col gap-5">
+    ${renderLinkedTaskSelector(msumSelectedTaskId, "msumTaskSelect", visibleTasks)}
+    ${renderMeetingSummaryCards()}
 
     <div class="msum-bottom-row">
       ${!allReadOnly ? `

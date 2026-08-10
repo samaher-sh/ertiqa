@@ -216,6 +216,39 @@ function obsHasFilters() {
   return !!(obsSearchQuery || obsFilterDept || obsFilterRisk || obsFilterStatus || obsAdvDateFrom || obsAdvDateTo);
 }
 
+/* جدول ملاحظات مهمة واحدة للقراءة فقط -- بدون فلاتر/بحث/قائمة إجراءات، بنفس
+   أعمدة جدول الملاحظات الحقيقي بالضبط (موضوع/إدارة/تاريخ/تصنيف). تستخدمها
+   جولة "عرض" بالمراسلات المشتركة لعرض نفس شكل صفحة الملاحظات بالضبط */
+function renderObsReadOnlyTable() {
+  if (obsLoading) return `<div class="obs-empty"><p class="main">جارِ التحميل...</p></div>`;
+  if (obsList.length === 0) {
+    return `<div class="obs-empty"><i data-lucide="alert-circle"></i><p class="main">لا توجد ملاحظات مسجلة لهذه المهمة</p></div>`;
+  }
+  return `
+  <div class="obs-table-wrap">
+    <table class="obs-table">
+      <thead><tr>
+        <th>موضوع الملاحظة</th>
+        <th style="width:160px;">الإدارة المعنية</th>
+        <th style="width:110px;">التاريخ</th>
+        <th style="width:110px;">التصنيف</th>
+      </tr></thead>
+      <tbody>
+        ${obsList.map((obs, i) => {
+          const rc = OBS_RISK_COLORS[obs.risk] || { bg: "#f3f4f6", text: "#4b5563", border: "#e5e7eb", dot: "#9ca3af" };
+          return `
+          <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
+            <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
+            <td><span class="obs-dept-cell"><i data-lucide="building-2"></i>${escapeHtml(obs.dept || "—")}</span></td>
+            <td><span class="obs-date-cell">${escapeHtml(obs.date || "—")}</span></td>
+            <td><span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(obs.risk || "—")}</span></td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 function renderObsListMode() {
   const filteredObs = obsFullyFiltered();
   const readOnly = obsIsReadOnly();

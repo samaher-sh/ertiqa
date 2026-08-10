@@ -23,7 +23,9 @@ let stLogCollapsed = false;
 let stShowTour = false;
 let stTourIndex = 0;
 let stTourMrLoaded = false;
-let stTourSectionData = {};
+let stTourRmLoaded = false;
+let stTourMsumLoaded = false;
+let stTourObsLoaded = false;
 let stTourLoading = false;
 
 /* forRole يحدد مين عليه الدور الحالي فعليًا بهذي المرحلة: "target" = الإدارة الخاضعة
@@ -40,20 +42,24 @@ const ST_STAGE_TO_PAGE = {
 
 /* مراحل جولة "عرض" -- كل مرحلة تظهر بالجولة فقط لو فيها حدث حقيقي واحد على
    الأقل بسجل audit_logs (action يطابق أحد actions المذكورة)، بنفس ترتيبها هنا
-   دائمًا (تدريجيًا، مو كل السبع مرة وحدة). renderer يحدد مصدر المحتوى:
-   "mr1/mr2/mr3" = نفس renderMrPage1/2/3 الحقيقية من missionreview.js (نفس
-   شكل الخطاب/الاتفاقية/المستندات بالضبط، بإجبار القراءة فقط)؛ "preview" =
-   نفس بيانات معاينة "تقرير نهائي" الجاهزة (GET /dashboard/reports/api/preview)
-   لعدم وجود مكوّن قراءة-فقط منفصل جاهز لمصفوفة المخاطر/الاجتماع/الملاحظات
-   بعد؛ "log" = لا يوجد معاينة قسم مخصصة لـ"التقرير النهائي" نفسه فنكتفي
-   بتفصيل حدث اعتماده من السجل الزمني */
+   دائمًا (تدريجيًا، مو كل السبع مرة وحدة) -- ما عدا الخطاب الرسمي (always:
+   true): هذا موجود فعليًا فور إنشاء المهمة نفسها، مو نتيجة فعل منفصل يُسجَّل
+   بالسجل الزمني، وبعض المهام القديمة أصلًا ما فيها صف mission_created بجدول
+   audit_logs (أُضيف تسجيله بمرحلة لاحقة من المشروع) -- فربطه بحدث كان يخفيه
+   نهائيًا رغم وجود المهمة فعليًا. renderer يحدد مصدر المحتوى -- كل مرحلة
+   تستخدم نفس دالة العرض الحقيقية من صفحتها الأصلية بالضبط (مو ملخّص مختصر)،
+   بإجبار القراءة فقط: "mr1/mr2/mr3" = renderMrPage1/2/3 (missionreview.js)،
+   "rm" = renderRiskMatrixCard (riskmatrix.js)، "msum" = renderMeetingSummaryCards
+   (meetingsummary.js)، "obs" = renderObsReadOnlyTable (observations.js)؛
+   "log" = لا يوجد قسم "التقرير النهائي" بحد ذاته فنكتفي بتفصيل حدث اعتماده
+   من السجل الزمني */
 const ST_TOUR_STAGES = [
-  { label: "الخطاب الرسمي",           actions: ["mission_created"],                            renderer: "mr1" },
+  { label: "الخطاب الرسمي",           always: true,                                             renderer: "mr1" },
   { label: "اتفاقية مستوى الخدمة",     actions: ["sla_submitted"],                              renderer: "mr2" },
   { label: "قائمة المستندات المرسلة",  actions: ["documents_submitted"],                        renderer: "mr3" },
-  { label: "مصفوفة المخاطر",          actions: ["risk_matrix_saved"],                           renderer: "preview", section: 4 },
-  { label: "الاجتماع",                actions: ["meeting_confirmed", "meeting_summary_saved"],  renderer: "preview", section: 5 },
-  { label: "الملاحظات",               actions: ["observation_added"],                           renderer: "preview", section: 6 },
+  { label: "مصفوفة المخاطر",          actions: ["risk_matrix_saved"],                           renderer: "rm" },
+  { label: "الاجتماع",                actions: ["meeting_confirmed", "meeting_summary_saved"],  renderer: "msum" },
+  { label: "الملاحظات",               actions: ["observation_added"],                           renderer: "obs" },
   { label: "التقرير النهائي",         actions: ["report_finalized"],                            renderer: "log" },
 ];
 
@@ -118,7 +124,9 @@ function bindSentTasksListEvents() {
       stShowTour = false;
       stTourIndex = 0;
       stTourMrLoaded = false;
-      stTourSectionData = {};
+      stTourRmLoaded = false;
+      stTourMsumLoaded = false;
+      stTourObsLoaded = false;
       await stLoadTimeline(task.id);
       renderSidebar(); renderContent(); lucide.createIcons();
     });
@@ -162,39 +170,60 @@ function renderSentTaskTimeline() {
   </div>`;
 }
 
+/* rmForceReadOnly/msumForceReadOnly أعلام عامة بلا مالك ثاني غير الجولة --
+   لازم ترجع false فور الخروج من الجولة، وإلا تبقى القراءة فقط "متسربة"
+   للأبد على صفحتي مصفوفة المخاطر/ملخص الاجتماع الحقيقيتين حتى لصاحب الصلاحية
+   الفعلي، بما إنه ما فيه أي كود ثاني يعيدها false غير هذا */
+function stTourResetForceFlags() {
+  if (typeof rmForceReadOnly !== "undefined") rmForceReadOnly = false;
+  if (typeof msumForceReadOnly !== "undefined") msumForceReadOnly = false;
+}
+
 function stReachedTourStages() {
-  return ST_TOUR_STAGES.filter(g => stTimelineEvents.some(ev => g.actions.includes(ev.action)));
+  return ST_TOUR_STAGES.filter(g => g.always || stTimelineEvents.some(ev => g.actions.includes(ev.action)));
 }
 
 const ST_TOUR_MR_RENDERERS = ["mr1", "mr2", "mr3"];
 
-/* يجيب بيانات المرحلة المطلوبة (لو ما كانت محمّلة فعليًا مسبقًا) -- الخطاب/
-   الاتفاقية/المستندات الثلاثة يشتركون بنفس تحميلة missionreview.js الحقيقية
-   (loadMissionReviewData) مرة وحدة، والباقي يستخدم endpoint معاينة "تقرير
-   نهائي" الجاهزة (قراءة فقط بطبيعتها) بدل تكرار منطق جلب كل صفحة لحالها */
+/* يجيب بيانات المرحلة المطلوبة (لو ما كانت محمّلة فعليًا مسبقًا) -- كل مجموعة
+   مراحل تستخدم نفس تحميلة صفحتها الحقيقية بالضبط (مرة وحدة لكل فتح جولة)،
+   وتُجبر القراءة فقط دائمًا بغض النظر عن صلاحية التعديل الفعلية للمشاهِد */
 async function stGotoTourStage(i) {
   const stages = stReachedTourStages();
   if (i < 0 || i >= stages.length) return;
   stTourIndex = i;
   const stage = stages[i];
+  const missionId = sentTasksSelected.id;
 
-  if (ST_TOUR_MR_RENDERERS.includes(stage.renderer)) {
-    if (!stTourMrLoaded) {
-      stTourLoading = true;
-      renderSidebar(); renderContent(); lucide.createIcons();
-      await loadMissionReviewData(sentTasksSelected.id);
-      mrCanEdit = false; // الجولة قراءة فقط دائمًا، بغض النظر عن صلاحية التعديل الفعلية للمشاهِد
-      stTourMrLoaded = true;
-      stTourLoading = false;
-    }
-  } else if (stage.renderer === "preview" && !stTourSectionData[stage.section]) {
+  if (ST_TOUR_MR_RENDERERS.includes(stage.renderer) && !stTourMrLoaded) {
     stTourLoading = true;
     renderSidebar(); renderContent(); lucide.createIcons();
-    try {
-      stTourSectionData[stage.section] = await apiGet(base + "/dashboard/reports/api/preview?mission_id=" + sentTasksSelected.id + "&section=" + stage.section);
-    } catch (e) {
-      stTourSectionData[stage.section] = null;
-    }
+    await loadMissionReviewData(missionId);
+    mrCanEdit = false;
+    stTourMrLoaded = true;
+    stTourLoading = false;
+  } else if (stage.renderer === "rm" && !stTourRmLoaded) {
+    stTourLoading = true;
+    renderSidebar(); renderContent(); lucide.createIcons();
+    rmSelectedTaskId = String(missionId);
+    await rmLoadItems(missionId);
+    rmForceReadOnly = true;
+    stTourRmLoaded = true;
+    stTourLoading = false;
+  } else if (stage.renderer === "msum" && !stTourMsumLoaded) {
+    stTourLoading = true;
+    renderSidebar(); renderContent(); lucide.createIcons();
+    msumSelectedTaskId = String(missionId);
+    await msumLoadData(missionId);
+    msumForceReadOnly = true;
+    stTourMsumLoaded = true;
+    stTourLoading = false;
+  } else if (stage.renderer === "obs" && !stTourObsLoaded) {
+    stTourLoading = true;
+    renderSidebar(); renderContent(); lucide.createIcons();
+    obsSelectedTaskId = String(missionId);
+    await obsLoadList(missionId);
+    stTourObsLoaded = true;
     stTourLoading = false;
   }
   renderSidebar(); renderContent(); lucide.createIcons();
@@ -206,24 +235,27 @@ function stTourStageBody(stage) {
     return `<div class="fr-preview-grid"><div class="fr-preview-field span2"><span class="lbl">${escapeHtml(stage.label)}</span><span class="val">${escapeHtml((ev && ev.detail) || "تم الاعتماد")}${ev ? " — " + escapeHtml(ev.entered_at) : ""}</span></div></div>`;
   }
 
+  // نفس دوال العرض الحقيقية من كل صفحة تُعاد استخدامها مباشرة -- نفس الشكل
+  // بالضبط، بدل تكرار العرض أو الاكتفاء بملخّص مختصر
   if (ST_TOUR_MR_RENDERERS.includes(stage.renderer)) {
     if (stTourLoading && !stTourMrLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
-    // نفس دوال missionreview.js الحقيقية (renderMrPage1/2/3) تُعاد استخدامها
-    // مباشرة -- نفس شكل الخطاب/الاتفاقية/المستندات بالضبط، بدل تكرار العرض
     if (stage.renderer === "mr1") return renderMrPage1();
     if (stage.renderer === "mr2") return renderMrPage2();
     return renderMrPage3();
   }
-
-  // preview (مصفوفة المخاطر / الاجتماع / الملاحظات)
-  if (stTourLoading && !stTourSectionData[stage.section]) {
-    return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
+  if (stage.renderer === "rm") {
+    if (stTourLoading && !stTourRmLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
+    return renderRiskMatrixCard();
   }
-  // نفس دالة معاينة "تقرير نهائي" الجاهزة (القراءة فقط بطبيعتها) تُعيد استخدامها
-  // مباشرة عبر متغيّراتها العامة بدل تكرار منطق عرض كل قسم من الصفر
-  frPreviewSection = stage.section;
-  frPreviewData = stTourSectionData[stage.section] || null;
-  return frRenderPreviewBody();
+  if (stage.renderer === "msum") {
+    if (stTourLoading && !stTourMsumLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
+    return renderMeetingSummaryCards();
+  }
+  if (stage.renderer === "obs") {
+    if (stTourLoading && !stTourObsLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
+    return renderObsReadOnlyTable();
+  }
+  return "";
 }
 
 /* جولة "عرض": المراحل اللي فعليًا وصلتها المهمة بس (تدريجيًا)، بالتالي/السابق
@@ -330,7 +362,7 @@ function bindSentTaskDetailEvents() {
   document.getElementById("stBackBtn").addEventListener("click", () => {
     sentTasksSelected = null;
     stShowTour = false;
-    frPreviewSection = null; frPreviewData = null; // ما نسيب حالة معاينة "تقرير نهائي" متسربة من هنا
+    stTourResetForceFlags();
     renderSidebar(); renderContent(); lucide.createIcons();
   });
 
@@ -343,7 +375,7 @@ function bindSentTaskDetailEvents() {
   const progressBack = document.getElementById("stProgressBack");
   if (progressBack) progressBack.addEventListener("click", () => {
     stShowTour = false;
-    frPreviewSection = null; frPreviewData = null;
+    stTourResetForceFlags();
     renderSidebar(); renderContent(); lucide.createIcons();
   });
 
