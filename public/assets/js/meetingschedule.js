@@ -9,6 +9,10 @@ let mcMeeting = null;
 let mcMyUserId = null;
 let mcPollTimer = null;
 let mcShowProposeForm = false;
+/* تخزين مؤقت لآخر رسائل/اجتماع محمّلين لكل مهمة (بمفتاح mission_id) -- يمنع اختفاء
+   الرسائل لحظيًا ("لا توجد رسائل بعد") عند التنقل بين مهمة وأخرى ثم الرجوع لنفس
+   المهمة السابقة؛ تُحدَّث تلقائيًا بكل استجابة ناجحة من mcLoadMessages() */
+let mcMessagesCache = {};
 
 /* status !== "scheduled" (ألغي أو انعقد) يعني ما عاد اجتماعًا مؤكَّدًا فعليًا --
    نفس الشرط اللي يعتمد عليه مؤشر الصفحة الرئيسية (MeetingModel::confirmedUpcomingForMissions) */
@@ -149,6 +153,7 @@ async function mcLoadMessages(scrollToBottom, fullRender) {
       mcMessages = data.messages || [];
       mcMeeting = data.meeting || null;
       mcMyUserId = data.my_user_id || null;
+      mcMessagesCache[mcSelectedTaskId] = { messages: mcMessages, meeting: mcMeeting };
 
       if (fullRender) {
         rerenderMSContent();
@@ -239,10 +244,14 @@ function bindMeetingScheduleEvents() {
   const taskSelect = document.getElementById("mcTaskSelect");
   if (taskSelect) taskSelect.addEventListener("change", e => {
     mcSelectedTaskId = e.target.value;
-    mcMessages = [];
     mcShowProposeForm = false;
+    // لو المهمة الجديدة سبق تحميلها بنفس الجلسة، نعرض نسختها المخزّنة فورًا (بدون
+    // ما تختفي رسائلها للحظة) بينما التحديث الفعلي يجري بالخلفية بهدوء
+    const cached = mcSelectedTaskId ? mcMessagesCache[mcSelectedTaskId] : null;
+    mcMessages = cached ? cached.messages : [];
+    mcMeeting = cached ? cached.meeting : null;
     rerenderMSContent();
-    if (mcSelectedTaskId) { mcLoadMessages(true, true); mcStartPolling(); }
+    if (mcSelectedTaskId) { mcLoadMessages(true, !cached); mcStartPolling(); }
   });
 
   const sendBtn = document.getElementById("mcSendBtn");
