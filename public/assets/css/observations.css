@@ -113,26 +113,6 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 .obs-radio-label{ display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:#4a6b74; }
 .obs-radio-label input{ width:16px; height:16px; accent-color:var(--p); }
 
-/* ===== Sub-observations accordion ===== */
-.obs-sub-wrap{ display:flex; flex-direction:column; gap:12px; }
-.obs-sub-header{ display:flex; align-items:center; justify-content:space-between; }
-.obs-sub-header span.lbl{ font-size:12px; font-weight:700; color:#4a6b74; }
-.obs-sub-add-btn{ display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); }
-.obs-sub-add-btn i{ width:13px; height:13px; }
-.obs-sub-empty{ font-size:12px; color:#9ca3af; text-align:center; padding:12px 0; border-radius:12px; background:#f8fbfd; border:1px dashed var(--pb); margin:0; }
-.obs-sub-card{ border-radius:16px; overflow:hidden; background:#fff; border:1.5px solid #e5e7eb; }
-.obs-sub-card.open{ border-color:var(--pb); }
-.obs-sub-card-head{ display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; background:#f8fafc; }
-.obs-sub-card.open .obs-sub-card-head{ background:#f0f8fd; border-bottom:1px solid var(--pb); }
-.obs-sub-num{ width:24px; height:24px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; background:var(--pl); color:var(--p); flex-shrink:0; }
-.obs-sub-title{ flex:1; font-size:12px; font-weight:700; color:#374151; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.obs-sub-del{ padding:4px; border-radius:6px; background:none; border:none; color:#d1d5db; }
-.obs-sub-del:hover{ background:#fef2f2; color:#f87171; }
-.obs-sub-del i{ width:13px; height:13px; }
-.obs-sub-chevron{ width:14px; height:14px; color:#9ca3af; transition:transform .15s; }
-.obs-sub-chevron.open{ transform:rotate(-90deg); }
-.obs-sub-body{ padding:20px; display:flex; flex-direction:column; gap:16px; }
-
 /* ===== View mode (read-only) ===== */
 .obs-view-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
 @media (min-width:768px){ .obs-view-grid.cols-4{ grid-template-columns:repeat(4,1fr); } }
