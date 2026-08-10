@@ -66,6 +66,24 @@ class MeetingModel extends Model
     }
 
     /**
+     * الاجتماعات المجدولة (status='scheduled') لمجموعة مهام محددة — تُستخدم لمستخدمي
+     * الإدارة الخاضعة للمراجعة، اللي يرتبطون بالمهمة عبر target_department_id
+     * لا mission_head_id/audit_team_members (شرط scheduledMeetingsForUser أعلاه
+     * ما يشملهم إطلاقًا)
+     */
+    public function scheduledMeetingsForMissions(array $missionIds): array
+    {
+        if (empty($missionIds)) {
+            return [];
+        }
+
+        return $this->whereIn('mission_id', $missionIds)
+            ->where('status', 'scheduled')
+            ->orderBy('meeting_date', 'ASC')
+            ->findAll();
+    }
+
+    /**
      * أقرب اجتماع مؤكد (له تاريخ فعلي، اليوم أو مستقبلًا) من بين مجموعة مهام —
      * يُستخدم لتنبيه الصفحة الرئيسية بعد تأكيد موعد اجتماع عبر شات "جدولة اجتماع".
      * شرط meeting_date >= اليوم يستثني تلقائيًا اجتماعات findOrCreateForMission()
