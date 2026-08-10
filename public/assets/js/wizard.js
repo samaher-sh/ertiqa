@@ -42,6 +42,10 @@ function initWizardState() {
     ch: { email: true, memo: true, phone: true },
     chVals: { email: "", memo: "", phone: "" },
     sigName: "", sigDate: "",
+    // معاينة محلية فقط لبنود اتفاقية مستوى الخدمة (مفتاحها "رقم القسم-رقم البند") --
+    // الرد الفعلي المعتمد يُعبَّأ لاحقًا من ممثل الإدارة المستهدفة، ما يُرسل ضمن
+    // POST /dashboard/new-task (تصميم متعمَّد، مو نقص)
+    slaAnswers: {},
   };
   wizP3 = { rows: [], saved: false, touched: false };
   wizardPage = 1;
@@ -573,19 +577,23 @@ function renderWizPage2() {
         <tbody>
           ${SLA_SECTIONS.map((sec, si) => `
             <tr class="wiz-sla-section-row"><td colspan="4"><span class="num">${si + 1}</span>${sec.title}</td></tr>
-            ${sec.rows.map(row => `
+            ${sec.rows.map((row, ri) => {
+              const key = si + "-" + ri;
+              const val = s.slaAnswers[key];
+              return `
               <tr class="wiz-sla-row">
                 <td><div class="lbl"><span class="dot"></span><span>${row}</span></div></td>
-                <td><div class="wiz-checkbox-visual"></div></td>
-                <td><div class="wiz-checkbox-visual no"></div></td>
+                <td><button type="button" class="wiz-checkbox-visual wiz-sla-toggle ${val === "agree" ? "checked" : ""}" data-wiz-sla-agree="${key}" title="موافق">${val === "agree" ? '<i data-lucide="check"></i>' : ""}</button></td>
+                <td><button type="button" class="wiz-checkbox-visual no wiz-sla-toggle ${val === "disagree" ? "checked" : ""}" data-wiz-sla-disagree="${key}" title="غير موافق">${val === "disagree" ? '<i data-lucide="x"></i>' : ""}</button></td>
                 <td><div class="wiz-note-line"></div></td>
               </tr>
-            `).join("")}
+            `;
+            }).join("")}
           `).join("")}
         </tbody>
       </table>
     </div>
-    <div class="wiz-table-footnote">تُملأ خانتا "موافق / غير موافق" من قِبل ممثل الإدارة المستهدفة عند الاستلام</div>
+    <div class="wiz-table-footnote">هذي معاينة أولية فقط -- الرد الفعلي "موافق / غير موافق" يُعتمد من قِبل ممثل الإدارة المستهدفة عند استلام المهمة</div>
   </div>
 
   <div class="wiz-card">
@@ -712,6 +720,24 @@ function bindWizPage2() {
     el.addEventListener("click", () => {
       const k = el.dataset.chToggle;
       s.ch[k] = !s.ch[k];
+      rerenderWizardContent();
+    });
+  });
+
+  /* معاينة بنود الاتفاقية (موافق/غير موافق) -- ضغطة وحدة على نفس البند تلغي
+     اختياره (toggle)، والضغط على الخيار المقابل يبدّل الرد مباشرة بدل ما يحتاج
+     المستخدم يلغي القديم يدويًا أولًا */
+  document.querySelectorAll("[data-wiz-sla-agree]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.wizSlaAgree;
+      s.slaAnswers[key] = s.slaAnswers[key] === "agree" ? null : "agree";
+      rerenderWizardContent();
+    });
+  });
+  document.querySelectorAll("[data-wiz-sla-disagree]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.wizSlaDisagree;
+      s.slaAnswers[key] = s.slaAnswers[key] === "disagree" ? null : "disagree";
       rerenderWizardContent();
     });
   });
