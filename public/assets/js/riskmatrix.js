@@ -68,7 +68,7 @@ function renderRiskMatrixCard() {
   const readOnly = rmIsReadOnly();
   const locked = !rmSelectedTaskId;
   const COLS = [
-    { label: "م", w: "52px", c: true },
+    { label: "الرقم", w: "52px", c: true },
     { label: "المخاطر" },
     { label: "تقييم المخاطر", w: "180px" },
     { label: "وصف الضوابط", w: "180px" },
@@ -199,7 +199,10 @@ function bindRiskMatrixEvents() {
   const exportBtn = document.getElementById("rmExportBtn");
   if (exportBtn) exportBtn.addEventListener("click", () => {
     if (!rmSelectedTaskId) return;
-    window.open(base + "/dashboard/pdf/risk-matrix/" + rmSelectedTaskId, "_blank");
+    // لو المتصفح حظر النافذة المنبثقة، window.open() ترجّع null بصمت بدون أي خطأ --
+    // بدون هذا التحقق كان الزر "ما يشتغل" فعليًا بلا أي تنبيه للمستخدم
+    const w = window.open(base + "/dashboard/pdf/risk-matrix/" + rmSelectedTaskId, "_blank");
+    if (!w) showToast("يرجى السماح بالنوافذ المنبثقة لهذا الموقع لتصدير PDF", "error");
   });
 
   updateSaveBtnStateRM();

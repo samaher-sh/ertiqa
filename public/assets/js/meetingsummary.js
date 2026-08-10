@@ -421,7 +421,10 @@ function bindMeetingSummaryEvents() {
   const exportBtn = $("msumExportBtn");
   if (exportBtn) exportBtn.addEventListener("click", () => {
     if (!msumSelectedTaskId) return;
-    window.open(base + "/dashboard/pdf/meeting-summary/" + msumSelectedTaskId, "_blank");
+    // لو المتصفح حظر النافذة المنبثقة، window.open() ترجّع null بصمت بدون أي خطأ --
+    // بدون هذا التحقق كان الزر "ما يشتغل" فعليًا بلا أي تنبيه للمستخدم
+    const w = window.open(base + "/dashboard/pdf/meeting-summary/" + msumSelectedTaskId, "_blank");
+    if (!w) showToast("يرجى السماح بالنوافذ المنبثقة لهذا الموقع لتصدير PDF", "error");
   });
 
   const submitBtn = $("msumSubmitBtn");

@@ -125,7 +125,6 @@
 <script src="<?= base_url('assets/js/riskmatrix.js') ?>"></script>
 <script src="<?= base_url('assets/js/meetingsummary.js') ?>"></script>
 <script src="<?= base_url('assets/js/observations.js') ?>"></script>
-<script src="<?= base_url('assets/js/taskdetail.js') ?>"></script>
 <script src="<?= base_url('assets/js/senttasks.js') ?>"></script>
 <script src="<?= base_url('assets/js/finalreports.js') ?>"></script>
 <script src="<?= base_url('assets/js/meetingschedule.js') ?>"></script>
