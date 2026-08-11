@@ -38,10 +38,10 @@ function initWizardState() {
   };
   wizP2 = {
     subjectDept: "", date: "",
-    desc: "تهدف هذه الخدمة إلى عقد اجتماعات المراجعة الداخلية مع الإدارات الخاضعة للمراجعة وتنفيذ العمليات المتعلقة بأعمال المراجعة حسب خطة المراجعة.",
+    desc: "تهدف هذه الخدمة إلى عقد اجتماعات المراجعة الداخلية مع الإدارات الخاضعة للمراجعة وتنفيذ العمليات المتعلقة بأعمال المراجعة حسب خطة المراجعة خلال تنسيق على أن تتم تنفيذ الخدمة وفق الجودة المتوقعة.",
     ch: { email: true, memo: true, phone: true },
     chVals: { email: "", memo: "", phone: "" },
-    sigName: "", sigDate: "",
+    sigName: "", sigDate: "", sigSignature: "",
     // معاينة محلية فقط لبنود اتفاقية مستوى الخدمة (مفتاحها "رقم القسم-رقم البند") --
     // الرد الفعلي المعتمد يُعبَّأ لاحقًا من ممثل الإدارة المستهدفة، ما يُرسل ضمن
     // POST /dashboard/new-task (تصميم متعمَّد، مو نقص)
@@ -287,7 +287,7 @@ function renderWizPage1() {
             <div class="wiz-input-icon-wrap"><i data-lucide="mail"></i>
               <input id="p1Email" type="email" dir="ltr" style="text-align:left;" class="wiz-input plain ${err("email") ? "err" : ""}" placeholder="example@kamc.med.sa" value="${escapeHtml(s.email)}">
             </div>
-            ${err("email") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : ""}
+            ${err("email") ? '<p class="wiz-error-text">هذا الحقل مطلوب</p>' : '<p class="wiz-hint">يجب أن يحتوي على @، ويُكتب بأحرف وأرقام إنجليزية فقط</p>'}
           </div>
           <div class="wiz-field">
             <label class="wiz-label ${err("phone") ? "error" : ""}">رقم الجوال ${err("phone") ? '<span class="wiz-req">*</span>' : ""}</label>
@@ -321,7 +321,7 @@ function renderWizPage1() {
       </div>
       <div class="wiz-letter-scroll">
         <div class="wiz-paper">
-          <div class="wiz-paper-watermark"><i data-lucide="building-2"></i></div>
+          <div class="wiz-paper-watermark"><img src="${base}/assets/images/kamc.png" alt=""></div>
           <div class="wiz-paper-body">
             <div class="wiz-letterhead">
               <div>
@@ -337,19 +337,18 @@ function renderWizPage1() {
             <p class="wiz-p" style="font-weight:700;color:#1f2937;">
               سعادة المدير التنفيذي لـ${s.deptName ? `<mark class="wiz-mark">${escapeHtml(s.deptName)}</mark>` : ""} المحترم
             </p>
-            <p class="wiz-p" style="font-weight:600;color:#4b5563;">السلام عليكم ورحمة الله وبركاته،</p>
+            <p class="wiz-p" style="font-weight:600;color:#4b5563;">السلام عليكم ورحمة الله وبركاته،،،</p>
             <p class="wiz-p">نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة
-              <mark class="wiz-mark small">${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark>
-              للقيام بعملية المراجعة الداخلية الشاملة وفق الخطة السنوية المعتمدة لعام
-              <mark class="wiz-mark small">${escapeHtml(s.year)}</mark>.
+              <mark class="wiz-mark small">${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark>،
+              للقيام بعملية المراجعة الداخلية، وذلك وفق خطة المراجعة لعام
+              <mark class="wiz-mark small">${escapeHtml(s.year)}</mark>م المعتمدة من قبل المدير العام التنفيذي.
             </p>
-            <p class="wiz-p">عليه نأمل التكرم بتوجيه من يلزم للعمل على التنسيق خلال مدة لا تتجاوز <strong>(7) أيام عمل</strong> من تاريخ استلام هذا الإشعار.</p>
+            <p class="wiz-p">عليه نأمل تلطف سعادتكم بتوجيه من يلزم للعمل على التنسيق - خلال مدة لا تتجاوز <strong>(7) أيام عمل</strong> من تاريخه - لعقد اجتماع افتتاحي لفريق المراجعة مع سعادتكم أو من ترونه مناسباً:</p>
             <div class="wiz-procedure-box" id="procedureBox" ${s.procedure ? "" : "hidden"}>
               <div class="wiz-procedure-head"><i data-lucide="clipboard-list"></i><span>المراد مناقشته في الاجتماع</span></div>
               <p class="wiz-procedure-body" id="procedureText">${escapeHtml(s.procedure)}</p>
             </div>
-            <p class="wiz-p">كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة حتى يتسنى لنا البدء بعملية المراجعة.</p>
-            <p class="wiz-p">إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة.</p>
+            <p class="wiz-p">كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية (مرفق 1) والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة (مرفق 2) حتى يتسنى لنا البدء بعملية المراجعة. إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة، هذه القائمة مبدئية ومن المحتمل أن نقوم بطلب وثائق ومستندات أخرى خلال عملية المراجعة.</p>
             <p class="wiz-p">حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
             <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small" id="mReviewer">${escapeHtml(s.reviewer || "...............")}</mark></p>
             <p class="wiz-p" style="margin-bottom:2px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
@@ -357,9 +356,9 @@ function renderWizPage1() {
               <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" id="mEmail" dir="ltr" style="unicode-bidi:embed;">${escapeHtml(s.email || "........................")}</span></div>
               <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" id="mPhone" dir="ltr" style="unicode-bidi:embed;">${escapeHtml(s.phone || "........................")}</span></div>
             </div>
+            <p class="wiz-p" style="font-weight:600;margin-top:12px;">وتقبلوا وافر تحياتي وتقديري،،،</p>
             <p class="wiz-p" style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
             <p class="wiz-p" id="mDirector" style="font-weight:800;color:var(--pd);" ${s.director ? "" : "hidden"}>${escapeHtml(s.director)}</p>
-            <p class="wiz-p" style="font-weight:600;">وتقبلوا وافر التحية والتقدير،،.</p>
           </div>
           <div class="wiz-paper-footer-bar"></div>
         </div>
@@ -415,20 +414,19 @@ function exportWizP1ToPDF() {
           </div>
         </div>
         <p style="font-weight:700;">سعادة المدير التنفيذي لـ${s.deptName ? `<mark>${escapeHtml(s.deptName)}</mark>` : ""} المحترم</p>
-        <p style="font-weight:600;">السلام عليكم ورحمة الله وبركاته،</p>
-        <p>نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة <mark>${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark> للقيام بعملية المراجعة الداخلية الشاملة وفق الخطة السنوية المعتمدة لعام <mark>${escapeHtml(s.year)}</mark>.</p>
-        <p>عليه نأمل التكرم بتوجيه من يلزم للعمل على التنسيق خلال مدة لا تتجاوز (7) أيام عمل من تاريخ استلام هذا الإشعار.</p>
+        <p style="font-weight:600;">السلام عليكم ورحمة الله وبركاته،،،</p>
+        <p>نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة <mark>${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark>، للقيام بعملية المراجعة الداخلية، وذلك وفق خطة المراجعة لعام <mark>${escapeHtml(s.year)}</mark>م المعتمدة من قبل المدير العام التنفيذي.</p>
+        <p>عليه نأمل تلطف سعادتكم بتوجيه من يلزم للعمل على التنسيق - خلال مدة لا تتجاوز (7) أيام عمل من تاريخه - لعقد اجتماع افتتاحي لفريق المراجعة مع سعادتكم أو من ترونه مناسباً:</p>
         ${s.procedure ? `<div class="procedure-box"><div class="head">المراد مناقشته في الاجتماع</div><p style="margin:0;">${escapeHtml(s.procedure)}</p></div>` : ""}
-        <p>كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة حتى يتسنى لنا البدء بعملية المراجعة.</p>
-        <p>إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة.</p>
+        <p>كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية (مرفق 1) والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة (مرفق 2) حتى يتسنى لنا البدء بعملية المراجعة. إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة، هذه القائمة مبدئية ومن المحتمل أن نقوم بطلب وثائق ومستندات أخرى خلال عملية المراجعة.</p>
         <p>حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
         <p>علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark>${escapeHtml(s.reviewer || "...............")}</mark></p>
         <p style="margin-bottom:4px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
         <p style="margin:0 0 4px;">البريد الإلكتروني: <span dir="ltr">${escapeHtml(s.email || "........................")}</span></p>
         <p>رقم الجوال: <span dir="ltr">${escapeHtml(s.phone || "........................")}</span></p>
-        <p style="font-weight:600;margin-top:20px;">مدير إدارة المراجعة الداخلية</p>
+        <p style="font-weight:600;margin-top:20px;">وتقبلوا وافر تحياتي وتقديري،،،</p>
+        <p style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
         ${s.director ? `<p style="font-weight:800;color:#196b7f;">${escapeHtml(s.director)}</p>` : ""}
-        <p style="font-weight:600;">وتقبلوا وافر التحية والتقدير،،.</p>
         <div class="footer">تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}</div>
         <script>
           window.onload = () => {
@@ -471,14 +469,19 @@ function bindWizPage1() {
     if (box && txt) { box.hidden = !e.target.value.trim(); txt.textContent = e.target.value; }
   });
   $("p1Reviewer").addEventListener("input", e => {
-    wizP1.reviewer = e.target.value;
+    const lettersOnly = e.target.value.replace(/[0-9٠-٩]/g, "");
+    e.target.value = lettersOnly;
+    wizP1.reviewer = lettersOnly;
     const el = document.getElementById("mReviewer");
-    if (el) el.textContent = e.target.value || "...............";
+    if (el) el.textContent = lettersOnly || "...............";
   });
   $("p1Email").addEventListener("input", e => {
-    wizP1.email = e.target.value;
+    // ما يسمح إلا بأحرف/أرقام إنجليزية ورموز البريد الإلكتروني القياسية (بدون عربي)
+    const englishOnly = e.target.value.replace(/[^A-Za-z0-9@._+-]/g, "");
+    e.target.value = englishOnly;
+    wizP1.email = englishOnly;
     const el = document.getElementById("mEmail");
-    if (el) el.textContent = e.target.value || "........................";
+    if (el) el.textContent = englishOnly || "........................";
   });
   $("p1Phone").addEventListener("input", e => {
     const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
@@ -488,9 +491,11 @@ function bindWizPage1() {
     if (el) el.textContent = digitsOnly || "........................";
   });
   $("p1Director").addEventListener("input", e => {
-    wizP1.director = e.target.value;
+    const lettersOnly = e.target.value.replace(/[0-9٠-٩]/g, "");
+    e.target.value = lettersOnly;
+    wizP1.director = lettersOnly;
     const el = document.getElementById("mDirector");
-    if (el) { el.hidden = !e.target.value.trim(); el.textContent = e.target.value; }
+    if (el) { el.hidden = !lettersOnly.trim(); el.textContent = lettersOnly; }
   });
 }
 
@@ -516,7 +521,7 @@ function renderWizPage2() {
     <div class="wiz-sla-grid">
       <div class="wiz-field">
         <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
-        <div class="msum-auto-field plain"><span class="val">${escapeHtml(s.subjectDept) || "— يُحدَّد تلقائيًا من الخطوة السابقة —"}</span></div>
+        <div class="msum-auto-field plain"></div>
       </div>
       <div class="wiz-field">
         <label class="wiz-label">تاريخ الاتفاقية</label>
@@ -579,7 +584,6 @@ function renderWizPage2() {
         </tbody>
       </table>
     </div>
-    <div class="wiz-table-footnote">هذي معاينة أولية فقط -- الرد الفعلي "موافق / غير موافق" يُعتمد من قِبل ممثل الإدارة المستهدفة عند استلام المهمة</div>
   </div>
 
   <div class="wiz-card">
@@ -589,6 +593,13 @@ function renderWizPage2() {
         <p class="wiz-sig-title">المراجع الرئيسي</p>
         <div class="wiz-input-icon-wrap">
           <input id="p2SigName" type="text" class="wiz-input plain" placeholder="اسم المراجع الرئيسي" value="${escapeHtml(s.sigName)}">
+        </div>
+        <div>
+          <p class="wiz-sig-mini-label">التوقيع</p>
+          <div class="msum-sig-pad-wrap">
+            <canvas id="p2SigPad" class="msum-sig-canvas" width="220" height="80"></canvas>
+            <button type="button" class="msum-sig-clear" id="p2SigPadClear" title="مسح التوقيع">✕</button>
+          </div>
         </div>
         <div>
           <p class="wiz-sig-mini-label">التاريخ</p>
@@ -602,8 +613,13 @@ function renderWizPage2() {
           <span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span>
         </div>
         <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
+        <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-blank-box solid" style="height:80px;"></div></div>
         <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
       </div>
+    </div>
+    <div class="wiz-disclosure">
+      <p class="wiz-disclosure-title">المسؤولية والإفصاح</p>
+      <p class="wiz-disclosure-text">تؤكد إدارة المراجعة الداخلية، بأن جميع المعلومات المستلمة سوف تتعامل معها الإدارة بسرية عالية، وفقاً للمادة التاسعة عشرة من قرار مجلس الوزراء 129 بتاريخ 06/04/1428هـ اللائحة الموحدة لوحدات المراجعة الداخلية.</p>
     </div>
   </div>
 
@@ -642,7 +658,12 @@ function exportWizP2ToPDF() {
         <title>اتفاقية مستوى الخدمة</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          h1 { font-size: 18px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 15px; margin-bottom: 25px; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
+          .letterhead img { height:42px; }
+          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
+          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
+          .letterhead-meta p { margin:2px 0; }
           .info-row { display:flex; gap:30px; margin-bottom:20px; }
           .info-row .field { flex:1; }
           .label { font-size:11px; color:#6b8c95; font-weight:bold; display:block; margin-bottom:4px; }
@@ -652,12 +673,26 @@ function exportWizP2ToPDF() {
           .sig-grid { display:flex; gap:30px; margin-top:30px; }
           .sig-box { flex:1; border:1px solid #d8e6eb; border-radius:8px; padding:16px; font-size:13px; }
           .sig-box .t { font-weight:700; margin-bottom:10px; color:#196b7f; }
+          .disclosure { margin-top:24px; padding:14px 16px; border-radius:8px; background:#eaf4fa; border:1px solid #b3d4e5; }
+          .disclosure .t { font-weight:800; color:#196b7f; margin:0 0 8px; font-size:13px; }
+          .disclosure p { margin:0; font-size:12px; line-height:1.9; }
           .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #9ca3af; border-top:1px solid #d8e6eb; padding-top:15px; }
           @media print { body { padding: 0; } }
         </style>
       </head>
       <body>
-        <h1>اتفاقية مستوى الخدمة — Service Level Agreement</h1>
+        <div class="letterhead">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
+            <div>
+              <h1>إدارة المراجعة الداخلية</h1>
+              <p class="sub">اتفاقية مستوى الخدمة — Service Level Agreement</p>
+            </div>
+          </div>
+          <div class="letterhead-meta">
+            <p>التاريخ: ${escapeHtml(new Date().toLocaleDateString("en-GB"))}</p>
+          </div>
+        </div>
         <div class="info-row">
           <div class="field"><span class="label">الإدارة الخاضعة للمراجعة</span><span class="value">${escapeHtml(s.subjectDept || "—")}</span></div>
           <div class="field"><span class="label">تاريخ الاتفاقية</span><span class="value">${escapeHtml(s.date || "—")}</span></div>
@@ -672,12 +707,17 @@ function exportWizP2ToPDF() {
           <div class="sig-box">
             <p class="t">المراجع الرئيسي</p>
             <p>الاسم: ${escapeHtml(s.sigName || "—")}</p>
+            ${s.sigSignature ? `<img src="${s.sigSignature}" alt="التوقيع" style="max-width:180px;max-height:70px;display:block;margin:6px 0;">` : ""}
             <p>التاريخ: ${escapeHtml(s.sigDate || "—")}</p>
           </div>
           <div class="sig-box">
             <p class="t">ممثل الإدارة</p>
             <p style="color:#9ca3af;">تُملأ من قِبل الإدارة المستهدفة</p>
           </div>
+        </div>
+        <div class="disclosure">
+          <p class="t">المسؤولية والإفصاح</p>
+          <p>تؤكد إدارة المراجعة الداخلية، بأن جميع المعلومات المستلمة سوف تتعامل معها الإدارة بسرية عالية، وفقاً للمادة التاسعة عشرة من قرار مجلس الوزراء 129 بتاريخ 06/04/1428هـ اللائحة الموحدة لوحدات المراجعة الداخلية.</p>
         </div>
         <div class="footer">تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}</div>
         <script>
@@ -744,6 +784,15 @@ function bindWizPage2() {
   if (sigName) sigName.addEventListener("input", e => { s.sigName = e.target.value; });
   const sigDate = $("p2SigDate");
   if (sigDate) sigDate.addEventListener("change", e => { s.sigDate = e.target.value; rerenderWizardContent(); });
+
+  const sigPad = $("p2SigPad");
+  if (sigPad) msumInitSignaturePad(sigPad, s.sigSignature, dataUrl => { s.sigSignature = dataUrl; });
+  const sigPadClear = $("p2SigPadClear");
+  if (sigPadClear) sigPadClear.addEventListener("click", () => {
+    s.sigSignature = "";
+    const canvas = $("p2SigPad");
+    if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+  });
 }
 
 /* ═══ تمدد تلقائي للـ textarea بدل ظهور شريط تمرير داخلي ═══ */

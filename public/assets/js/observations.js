@@ -111,13 +111,18 @@ function exportObservationToPDF(obs) {
         <title>ملاحظة رقابية - ${escapeHtml(refLabel)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          h1 { color: #3185b3; border-bottom: 2px solid #3185b3; padding-bottom: 15px; margin-bottom: 30px; font-size: 24px;}
-          .header-info { display: flex; justify-content: space-between; margin-bottom: 40px; background: #f8fbfd; padding: 20px; border-radius: 8px; border: 1px solid #d8e6eb; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
+          .letterhead img { height:42px; }
+          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
+          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
+          .letterhead-meta p { margin:2px 0; }
+          .header-info { display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fbfd; padding: 20px; border-radius: 8px; border: 1px solid #d8e6eb; }
           .header-info div { display: flex; flex-direction: column; gap: 5px; }
           .label { font-size: 12px; color: #6b8c95; font-weight: bold; }
           .value { font-size: 16px; font-weight: bold; color: #152c33; }
           table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          .footer { margin-top: 60px; text-align: center; font-size: 12px; color: #6b8c95; border-top: 1px solid #d8e6eb; padding-top: 20px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #d8e6eb; padding-top: 15px; }
           @media print {
             body { padding: 0; }
             button { display: none; }
@@ -125,16 +130,17 @@ function exportObservationToPDF(obs) {
         </style>
       </head>
       <body>
-        <h1>ملاحظة رقابية</h1>
-
-        <div class="header-info">
-          <div>
-            <span class="label">المرجع</span>
-            <span class="value" dir="ltr">${escapeHtml(refLabel)}</span>
+        <div class="letterhead">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
+            <div>
+              <h1>إدارة المراجعة الداخلية</h1>
+              <p class="sub">ملاحظة رقابية</p>
+            </div>
           </div>
-          <div>
-            <span class="label">تاريخ التصدير</span>
-            <span class="value">${today}</span>
+          <div class="letterhead-meta">
+            <p>المرجع: <strong dir="ltr">${escapeHtml(refLabel)}</strong></p>
+            <p>تاريخ التصدير: ${today}</p>
           </div>
         </div>
 

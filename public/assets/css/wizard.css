@@ -108,7 +108,8 @@ select.wiz-select{
 .wiz-letter-scroll{ flex:1; overflow-y:auto; padding:20px; }
 .wiz-letter-scroll::-webkit-scrollbar{ display:none; }
 .wiz-paper{ position:relative; overflow:hidden; border-radius:12px; background:#fff; border:1px solid #d8e6eb; box-shadow:0 1px 8px rgba(0,0,0,.04); display:flex; flex-direction:column; min-height:100%; }
-.wiz-paper-watermark{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:.025; }.wiz-paper-watermark i, .wiz-paper-watermark svg{ width:220px; height:220px; color:var(--p); }
+.wiz-paper-watermark{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:.05; }
+.wiz-paper-watermark img{ width:260px; height:260px; object-fit:contain; }
 .wiz-paper-body{ padding:24px 28px; display:flex; flex-direction:column; gap:14px; position:relative; flex:1; }
 .wiz-letterhead{ display:flex; align-items:flex-start; justify-content:space-between; }
 .wiz-letterhead img{ height:52px; object-fit:contain; }
@@ -168,7 +169,6 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-checkbox-visual i, .wiz-checkbox-visual svg{ width:18px; height:18px; }
 .wiz-checkbox-visual.checked i, .wiz-checkbox-visual.checked svg{ color:#fff; }
 .wiz-note-line{ height:1px; width:100%; margin-top:16px; background:#d1d5db; }
-.wiz-table-footnote{ padding:12px 24px; font-size:11px; color:#9ca3af; text-align:right; background:#f0f8fd; border-top:1px solid var(--pb); }
 
 .wiz-sig-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:20px; }
 @media (max-width:700px){ .wiz-sig-grid{ grid-template-columns:1fr; } }
@@ -178,13 +178,15 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-sig-title{ font-size:12px; font-weight:800; color:var(--p); margin:0; }
 .wiz-sig-card.locked .wiz-sig-title{ color:#9ca3af; }
 .wiz-sig-locked-badge{ font-size:10px; padding:2px 8px; border-radius:9999px; color:#9ca3af; background:#eef3f5; border:1px solid #e2e8f0; }
-.wiz-sig-row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .wiz-sig-mini-label{ font-size:11px; color:#9ca3af; margin:0 0 6px; }
-.wiz-sig-pad-placeholder{ height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#d1d5db; border:1.5px dashed rgba(49,133,179,.4); background:#fff; }
 .wiz-sig-name-line{ height:40px; border-radius:12px; padding:0 12px; display:flex; align-items:flex-end; padding-bottom:6px; border:1px solid #e2e8f0; background:#fff; }
 .wiz-sig-name-line .bar{ height:1px; width:100%; background:#d1d5db; display:block; }
 .wiz-sig-blank-box{ height:48px; border-radius:12px; border:1.5px dashed #d1d5db; background:#fff; }
 .wiz-sig-blank-box.solid{ border-style:solid; border-color:#e2e8f0; }
+
+.wiz-disclosure{ margin:0 20px 20px; padding:16px 18px; border-radius:12px; background:var(--pl); border:1px solid var(--pb); }
+.wiz-disclosure-title{ font-size:13px; font-weight:800; color:var(--pd); margin:0 0 8px; }
+.wiz-disclosure-text{ font-size:12px; line-height:1.9; color:#374151; margin:0; }
 
 /* ===== Page 3 — documents ===== */
 .wiz-doc-toolbar{ padding:12px 20px; display:flex; align-items:center; justify-content:space-between; background:#f0f8fd; border-bottom:1.5px solid var(--pb); }

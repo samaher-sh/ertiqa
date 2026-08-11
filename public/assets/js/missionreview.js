@@ -80,7 +80,7 @@ function renderMrPage1() {
     </div>
     <div class="wiz-letter-scroll">
       <div class="wiz-paper">
-        <div class="wiz-paper-watermark"><i data-lucide="building-2"></i></div>
+        <div class="wiz-paper-watermark"><img src="${base}/assets/images/kamc.png" alt=""></div>
         <div class="wiz-paper-body">
           <div class="wiz-letterhead">
             <div>
@@ -96,27 +96,28 @@ function renderMrPage1() {
           <p class="wiz-p" style="font-weight:700;color:#1f2937;">
             سعادة المدير التنفيذي لـ<mark class="wiz-mark">${escapeHtml(m.target_department_name || "")}</mark> المحترم
           </p>
-          <p class="wiz-p" style="font-weight:600;color:#4b5563;">السلام عليكم ورحمة الله وبركاته،</p>
+          <p class="wiz-p" style="font-weight:600;color:#4b5563;">السلام عليكم ورحمة الله وبركاته،،،</p>
           <p class="wiz-p">نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة
-            <mark class="wiz-mark small">${escapeHtml(m.target_department_name || "")}</mark>
-            للقيام بعملية المراجعة الداخلية الشاملة وفق الخطة السنوية المعتمدة لعام
-            <mark class="wiz-mark small">${escapeHtml(String(m.year || ""))}</mark>.
+            <mark class="wiz-mark small">${escapeHtml(m.target_department_name || "")}</mark>،
+            للقيام بعملية المراجعة الداخلية، وذلك وفق خطة المراجعة لعام
+            <mark class="wiz-mark small">${escapeHtml(String(m.year || ""))}</mark>م المعتمدة من قبل المدير العام التنفيذي.
           </p>
-          <p class="wiz-p">عليه نأمل التكرم بتوجيه من يلزم للعمل على التنسيق خلال مدة لا تتجاوز <strong>(7) أيام عمل</strong> من تاريخ استلام هذا الإشعار.</p>
+          <p class="wiz-p">عليه نأمل تلطف سعادتكم بتوجيه من يلزم للعمل على التنسيق - خلال مدة لا تتجاوز <strong>(7) أيام عمل</strong> من تاريخه - لعقد اجتماع افتتاحي لفريق المراجعة مع سعادتكم أو من ترونه مناسباً:</p>
           <div class="wiz-procedure-box" ${m.procedure_note ? "" : "hidden"}>
             <div class="wiz-procedure-head"><i data-lucide="clipboard-list"></i><span>المراد مناقشته في الاجتماع</span></div>
             <p class="wiz-procedure-body">${escapeHtml(m.procedure_note || "")}</p>
           </div>
-          <p class="wiz-p">كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة حتى يتسنى لنا البدء بعملية المراجعة.</p>
+          <p class="wiz-p">كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية (مرفق 1) والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة (مرفق 2) حتى يتسنى لنا البدء بعملية المراجعة. إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة، هذه القائمة مبدئية ومن المحتمل أن نقوم بطلب وثائق ومستندات أخرى خلال عملية المراجعة.</p>
+          <p class="wiz-p">حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
           <p class="wiz-p">علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark class="wiz-mark small">${escapeHtml(m.reviewer_name || "")}</mark></p>
           <p class="wiz-p" style="margin-bottom:2px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div class="wiz-contact-row"><i data-lucide="mail"></i><span>البريد الإلكتروني:</span><span class="val" dir="ltr" style="unicode-bidi:embed;">${escapeHtml(m.reviewer_email || "")}</span></div>
             <div class="wiz-contact-row"><i data-lucide="phone"></i><span>رقم الجوال:</span><span class="val" dir="ltr" style="unicode-bidi:embed;">${escapeHtml(m.reviewer_phone || "")}</span></div>
           </div>
+          <p class="wiz-p" style="font-weight:600;margin-top:12px;">وتقبلوا وافر تحياتي وتقديري،،،</p>
           <p class="wiz-p" style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
           <p class="wiz-p" style="font-weight:800;color:var(--pd);" ${m.director_name ? "" : "hidden"}>${escapeHtml(m.director_name || "")}</p>
-          <p class="wiz-p" style="font-weight:600;">وتقبلوا وافر التحية والتقدير،،.</p>
         </div>
         <div class="wiz-paper-footer-bar"></div>
       </div>
