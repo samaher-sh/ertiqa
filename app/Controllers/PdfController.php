@@ -38,6 +38,63 @@ class PdfController extends BaseController
         exit;
     }
 
+    /**
+     * فوتر متكرر بكل صفحات المستند (ترقيم صفحات تلقائي + إشعار سرية) -- يُستخدم
+     * بكل مستندات PDF المصدَّرة من السيرفر عشان تكون كلها "مرتبة" بشكل موحّد
+     */
+    private function applyRunningFooter(Mpdf $mpdf, string $missionCode): void
+    {
+        // يخلي mPDF يوسّع الهامش السفلي تلقائيًا حسب الارتفاع الفعلي لمحتوى الفوتر
+        // (بدل تخمين قيمة ثابتة يدويًا) عشان ما يتصادم بصريًا مع متن المستند
+        $mpdf->setAutoBottomMargin = 'stretch';
+        $footer = '
+            <table dir="rtl" width="100%" style="border-top:1px solid #d8e6eb;padding-top:4px;font-size:8px;color:#9ca3af;font-family:dejavusans;table-layout:fixed;">
+                <tr>
+                    <td width="75%" style="text-align:right;">مستند صادر من نظام ارتقاء — إدارة المراجعة الداخلية، سرّي وخاص بالمهمة ' . esc($missionCode) . '</td>
+                    <td width="25%" style="text-align:left;">صفحة {PAGENO} من {nbpg}</td>
+                </tr>
+            </table>';
+        $mpdf->SetHTMLFooter($footer);
+    }
+
+    /**
+     * هيدر متكرر (شعار + اسم الإدارة + عنوان المستند + التاريخ/رقم المهمة) --
+     * تستخدمه مستندات مصفوفة المخاطر وملخص الاجتماع (ما كان فيها هيدر مرتب أصلاً)؛
+     * الخطاب الرسمي (missionLetter) عنده هيدر خاص مدموج بنص الخطاب نفسه فلا يُستخدم هنا معه
+     * لتفادي تكرار الشعار مرتين
+     */
+    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName): void
+    {
+        // نقصّ اسم الإدارة (بعضها طويل جدًا) عشان ما يتصادم بصريًا مع بقية سطر العنوان --
+        // الاسم الكامل يبقى ظاهر بمتن المستند نفسه على أي حال
+        if (mb_strlen($deptName) > 26) {
+            $deptName = mb_substr($deptName, 0, 25) . '…';
+        }
+
+        // نفس فكرة setAutoBottomMargin أعلاه بس للهامش العلوي، عشان ارتفاع الهيدر
+        // الفعلي (سطرين) ما يفيض على متن المستند
+        $mpdf->setAutoTopMargin = 'stretch';
+
+        // هيدر مكوَّن من سطرين فوق بعض (مو أعمدة جنب بعض) -- أعمدة الجداول داخل
+        // SetHTMLHeader() بمPDF ما تلتزم دائمًا بالعرض المحدَّد لها، فيصير تصادم
+        // بصري بين الأعمدة مع أي نص طويل؛ سطر واحد تحت الثاني يتفادى هذا كليًا
+        $logo = FCPATH . 'assets/images/kamc.png';
+        $header = '
+            <table dir="rtl" width="100%" style="border-bottom:2px solid #3185b3;padding-bottom:6px;">
+                <tr>
+                    <td width="34" style="vertical-align:middle;"><img src="' . $logo . '" width="30"></td>
+                    <td style="vertical-align:middle;text-align:right;font-family:dejavusans;">
+                        <span style="font-size:12px;font-weight:bold;color:#196b7f;">إدارة المراجعة الداخلية</span>
+                        <span style="font-size:9px;color:#6b7280;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
+                    </td>
+                </tr>
+            </table>
+            <div style="text-align:left;font-size:9px;color:#4b5563;font-family:dejavusans;margin-top:2px;">
+                التاريخ: ' . date('d/m/Y') . '&nbsp;&nbsp;|&nbsp;&nbsp;رقم المهمة: ' . esc($missionCode) . '
+            </div>';
+        $mpdf->SetHTMLHeader($header);
+    }
+
     private function assertMissionAccess(array $mission): void
     {
         $userId = (int) session()->get('user_id');
@@ -67,7 +124,9 @@ class PdfController extends BaseController
             'targetDept' => $targetDept,
         ]);
 
-        $this->streamPdf($this->makeMpdf(), $html, 'خطاب-' . $mission['mission_code'] . '.pdf');
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'خطاب-' . $mission['mission_code'] . '.pdf');
     }
 
     public function riskMatrix(int $missionId)
@@ -89,7 +148,10 @@ class PdfController extends BaseController
             'items'      => $items,
         ]);
 
-        $this->streamPdf($this->makeMpdf(), $html, 'مصفوفة-مخاطر-' . $mission['mission_code'] . '.pdf');
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'مصفوفة المخاطر', $mission['mission_code'], $targetDept['name_ar'] ?? '');
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'مصفوفة-مخاطر-' . $mission['mission_code'] . '.pdf');
     }
 
     public function meetingSummary(int $missionId)
@@ -124,6 +186,9 @@ class PdfController extends BaseController
             'approvals'  => $approvals,
         ]);
 
-        $this->streamPdf($this->makeMpdf(), $html, 'ملخص-اجتماع-' . $mission['mission_code'] . '.pdf');
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'ملخص الاجتماع', $mission['mission_code'], $targetDept['name_ar'] ?? '');
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'ملخص-اجتماع-' . $mission['mission_code'] . '.pdf');
     }
 }

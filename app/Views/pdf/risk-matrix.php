@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <style>
     body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; color: #152c33; direction: rtl; }
-    h1 { font-size: 16px; color: #196b7f; margin-bottom: 2px; }
     .sub { font-size: 11px; color: #6b7280; margin-bottom: 14px; }
     table.rm { width: 100%; border-collapse: collapse; }
     table.rm th { background: #f0f7fa; color: #196b7f; font-size: 11px; padding: 8px; border: 1px solid #b3d4e5; text-align: right; }
@@ -12,12 +11,10 @@
     .rating-high { background: #f0fdf6; }
     .rating-medium { background: #fffceb; }
     .rating-low { background: #fff8f8; }
-    .footer { margin-top: 16px; font-size: 10px; color: #9ca3af; text-align: left; }
 </style>
 </head>
 <body>
-    <h1>مصفوفة المخاطر</h1>
-    <p class="sub"><?= esc($mission['mission_code']) ?> — <?= esc($targetDept['name_ar'] ?? '') ?> — <?= esc($mission['year']) ?></p>
+    <p class="sub">مصفوفة المخاطر — <?= esc($mission['mission_code']) ?> — <?= esc($targetDept['name_ar'] ?? '') ?> — <?= esc($mission['year']) ?></p>
 
     <table class="rm">
         <thead>
@@ -48,7 +45,5 @@
             <?php endif; ?>
         </tbody>
     </table>
-
-    <p class="footer">تاريخ التصدير: <?= date('d/m/Y') ?></p>
 </body>
 </html>
