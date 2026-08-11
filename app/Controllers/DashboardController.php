@@ -9,6 +9,20 @@ use App\Models\ReportModel;
 class DashboardController extends BaseController
 {
     /**
+     * دور "target"/"audit" الحقيقي بكل مرحلة + رسالة بانر "لديك إخطارات جديدة"
+     * المناسبة لها — نفس ST_STAGE_TO_PAGE بـ senttasks.js بالضبط. المرحلة 2 هي
+     * الوحيدة اللي دورها "target" (الإدارة الخاضعة للمراجعة)؛ بقية المراحل دورها
+     * "audit" (فريق المراجعة)
+     */
+    private const STAGE_NOTIFICATIONS = [
+        2 => ['for' => 'target', 'title' => 'بانتظار الرد على مهمة مراجعة',   'suffix' => 'بانتظار استكمال اتفاقية مستوى الخدمة أو الرد على المستندات المطلوبة.'],
+        3 => ['for' => 'audit',  'title' => 'بانتظار تعبئة مصفوفة المخاطر',   'suffix' => 'بانتظار تعبئة مصفوفة المخاطر.'],
+        4 => ['for' => 'audit',  'title' => 'بانتظار ملخص الاجتماع',         'suffix' => 'بانتظار تعبئة ملخص الاجتماع.'],
+        5 => ['for' => 'audit',  'title' => 'بانتظار إضافة الملاحظات',       'suffix' => 'بانتظار إضافة الملاحظات.'],
+        7 => ['for' => 'audit',  'title' => 'بانتظار إعداد التقرير النهائي', 'suffix' => 'بانتظار إعداد واعتماد التقرير النهائي.'],
+    ];
+
+    /**
      * GET /dashboard — يعرض هيكل لوحة التحكم (SPA shell)
      * بيانات البروفايل والقائمة الجانبية تُجلب من /api/session و /api/nav-items
      */
@@ -58,13 +72,36 @@ class DashboardController extends BaseController
         // وحدة فقط عند إنشاء المهمة (كان السبب في ظهور البانر بشكل غير محدَّث: يبقى
         // كما هو حتى بعد ما تردّ الإدارة وتنتقل المهمة لدور المراجع، أو لا يظهر
         // إطلاقًا لو رجع الدور لهم لاحقًا -- زي إضافة طلب مستند جديد بعد ما خلصوا
-        // الردود الأولى). المرحلة 2 هي الوحيدة اللي دورها "target" (الإدارة الخاضعة
-        // للمراجعة)، نفس ST_STAGE_TO_PAGE بـ senttasks.js بالضبط
-        if ($isHrDept) {
-            $pendingMissions = array_values(array_filter(
-                $ownMissions,
-                fn($m) => $m['status'] === 'active' && $missionModel->computeRealNextStage((int) $m['id']) === 2
-            ));
+        // الردود الأولى). يظهر لطرفي المهمة: الإدارة الخاضعة للمراجعة (دورها
+        // "target"، مرحلة 2 فقط) وفريق المراجعة (دورهم "audit"، بقية المراحل) --
+        // عشان لما تردّ الإدارة وينتقل الدور فعليًا لفريق المراجعة (مصفوفة
+        // المخاطر...) يوصلهم إخطار حقيقي بدل ما يبقوا بدون أي تنبيه إطلاقًا
+        $isAuditMember = $roleCode === 'audit_member';
+        if ($isHrDept || $isAuditMember) {
+            $forRole = $isHrDept ? 'target' : 'audit';
+            $reportModel = null;
+
+            $pendingMissions = [];
+            foreach ($ownMissions as $m) {
+                if ($m['status'] !== 'active') continue;
+
+                $stage = $missionModel->computeRealNextStage((int) $m['id']);
+                $info = self::STAGE_NOTIFICATIONS[$stage] ?? null;
+                if (!$info || $info['for'] !== $forRole) continue;
+
+                // مرحلة "التقرير النهائي" (7) تبقى محسوبة "بانتظار فريق المراجعة"
+                // حتى لو التقرير نفسه اتُّخذ فيه إجراء فعلي (اعتماد مبدئي) -- بمجرد
+                // ما يصير التقرير pending_signatures/sent، الدور فعليًا انتقل لرئيس
+                // إدارة المراجعة/الرئاسة، فما عاد إخطار فريق المراجعة دقيقًا
+                if ($stage === 7) {
+                    $reportModel ??= new ReportModel();
+                    $report = $reportModel->where('mission_id', $m['id'])->first();
+                    if ($report && $report['status'] !== 'draft') continue;
+                }
+
+                $m['_notif'] = $info;
+                $pendingMissions[] = $m;
+            }
             usort($pendingMissions, fn($a, $b) => strcmp($b['updated_at'] ?? '', $a['updated_at'] ?? ''));
 
             $data['unread_notifications_count'] = count($pendingMissions);
@@ -73,8 +110,8 @@ class DashboardController extends BaseController
                 $m = $pendingMissions[0];
                 $data['latest_notification'] = [
                     'mission_id' => (int) $m['id'],
-                    'title'      => 'بانتظار الرد على مهمة مراجعة',
-                    'body'       => 'المهمة (' . $m['mission_code'] . ') بانتظار استكمال اتفاقية مستوى الخدمة أو الرد على المستندات المطلوبة.',
+                    'title'      => $m['_notif']['title'],
+                    'body'       => 'المهمة (' . $m['mission_code'] . ') ' . $m['_notif']['suffix'],
                 ];
             }
         }
