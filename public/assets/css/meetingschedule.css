@@ -35,11 +35,11 @@
 .mc-proposal-card i{ width:20px; height:20px; color:var(--pd); flex-shrink:0; }
 .mc-proposal-title{ font-size:12px; font-weight:700; color:var(--pd); margin:0; }
 .mc-proposal-detail{ font-size:13px; font-weight:600; color:#152c33; margin:3px 0 0; }
-.mc-proposal-actions{ display:flex; gap:10px; margin-top:8px; }
+.mc-proposal-actions{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
 .mc-confirm-btn, .mc-cancel-btn{
-  display:flex; align-items:center; justify-content:center; gap:6px; flex:1;
-  padding:10px; border-radius:12px; border:none;
-  font-size:13px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+  padding:10px; border-radius:10px; border:none;
+  font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
 }
 .mc-confirm-btn{ background:var(--p); color:#fff; }
 .mc-cancel-btn{ background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
