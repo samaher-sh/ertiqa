@@ -24,22 +24,18 @@ let activeStatCard  = null;
 let homeStats    = { active_count: 0, review_count: 0, meetings_count: 0 };
 let activeMissions = [];
 let scheduledMeetings = [];
-let confirmedMeetingAlert = null;
+/* قائمة إخطارات موحَّدة (نوعين: "task" بانتظار إجراء بمهمة، و"meeting" موعد اجتماع
+   مؤكد) -- ودجت "إخطارات" الثابت بالرئيسية يعرضها كقائمة منسدلة واحدة */
+let homeNotifications = [];
+let notificationsOpen = false;
 
-/* مفتاح آخر تنبيه تأكيد موعد تم إخفاؤه يدويًا (زر الإغلاق) أو بعد فتحه فعليًا
-   (الضغط على "عرض") -- محلي بالجلسة الحالية فقط، يرجع يظهر تلقائيًا لو صار تأكيد
-   جديد فعليًا (مفتاح مختلف: مهمة/تاريخ/وقت مختلف) */
-let dismissedMeetingAlertKey = null;
-function meetingAlertKey(a) {
-  return a ? [a.mission_id, a.meeting_date, a.meeting_time].join("|") : "";
-}
-
-/* نفس فكرة dismissedMeetingAlertKey، لكن لبانر "لديك إخطارات جديدة" -- مفتاحه
-   مهمة+عنوان الإخطار (العنوان يختلف حسب المرحلة الحقيقية بانتظارك)، فلو تقدّمت
-   المهمة لمرحلة/دور جديد فعليًا يرجع يظهر التنبيه من جديد رغم إغلاق السابق */
-let dismissedNotificationKey = null;
+/* مفاتيح الإخطارات المُخفاة يدويًا (زر X) أو بعد فتحها فعليًا (زر "فتح") -- محلي
+   بالجلسة الحالية فقط. المفتاح = نوع+مهمة+عنوان، فلو تغيّر أي منها فعليًا (مثلاً
+   المهمة تقدّمت لمرحلة/دور جديد، أو صار تأكيد موعد جديد) يرجع يظهر الإخطار من
+   جديد رغم إخفاء السابق */
+let dismissedNotificationKeys = new Set();
 function notificationKey(n) {
-  return n ? [n.mission_id, n.title].join("|") : "";
+  return n ? [n.type, n.mission_id, n.title].join("|") : "";
 }
 
 /* ============================================================
@@ -281,44 +277,57 @@ async function loadHomeData() {
     homeStats = stats;
     activeMissions = missionsData.missions || [];
     scheduledMeetings = meetingsData.meetings || [];
-    confirmedMeetingAlert = stats.confirmed_meeting_alert || null;
+    homeNotifications = stats.notifications || [];
   } catch (e) {
     homeStats = { active_count: 0, review_count: 0, meetings_count: 0 };
     activeMissions = [];
     scheduledMeetings = [];
-    confirmedMeetingAlert = null;
+    homeNotifications = [];
   }
 }
 
-/* تنبيه اجتماع مؤكد بالصفحة الرئيسية — يظهر لطرفي المهمة فور تأكيد أحدهما لموعد
-   عبر شات "جدولة اجتماع" (بيانات حقيقية ضمن /dashboard/api/home-stats).
-   نفس شكل بطاقة "لديك إخطارات جديدة" (renderHomeBanner) بالضبط -- بانرين
-   منفصلين ممكن يظهروا مع بعض لو فيه الاثنين، بس بنفس التصميم الموحَّد */
-function renderMeetingAlertBanner() {
-  if (!confirmedMeetingAlert) return "";
-  if (dismissedMeetingAlertKey === meetingAlertKey(confirmedMeetingAlert)) return "";
-  const a = confirmedMeetingAlert;
+/* ودجت "إخطارات" الثابت بالرئيسية -- عنصر واحد ثابت دائم الظهور (لا يختفي حسب
+   المحتوى) لمنسّق الإدارة الخاضعة للمراجعة وفريق المراجعة، ترويسته قابلة للضغط
+   لفتح/طي قائمة منسدلة تجمع كل الإخطارات الحقيقية (مواعيد مؤكدة + مهام بانتظار
+   إجراء) بنفس شكل بطاقة الإخطار المستخدم سابقًا، مع زر "فتح" وزر إغلاق (X)
+   مستقلين لكل إخطار */
+function renderNotificationsWidget() {
+  if (!(isHrDept || isHrCoordinator || isAuditMember)) return "";
+
+  const items = homeNotifications.filter(n => !dismissedNotificationKeys.has(notificationKey(n)));
   return `
   <div class="home-banner">
-    <div class="home-banner-head">
-      <i data-lucide="calendar-check" class="home-banner-head-icon"></i>
+    <button type="button" class="home-banner-head notif-trigger" id="notifTriggerBtn">
+      <i data-lucide="bell" class="home-banner-head-icon"></i>
       <div class="home-banner-head-text">
-        <p class="t1">تم تأكيد موعد اجتماع</p>
-        <p class="t2">${a.mission_code ? escapeHtml(a.mission_code) : ""}</p>
+        <p class="t1">إخطارات</p>
+        <p class="t2">${items.length === 0 ? "لا توجد إخطارات جديدة حاليًا" : `لديك ${items.length} ${items.length === 1 ? "إخطار جديد" : "إخطارات جديدة"}`}</p>
       </div>
-      <span class="home-banner-badge">موعد مؤكد</span>
-      <button type="button" class="home-banner-dismiss-btn" id="homeMeetingAlertDismissBtn" title="إخفاء"><i data-lucide="x"></i></button>
-    </div>
-    <div class="home-banner-body">
-      <div class="home-banner-icon-box"><i data-lucide="calendar-check"></i></div>
-      <div class="home-banner-content">
-        <div class="home-banner-title-row">
-          <span class="home-banner-item-title">اجتماع${a.mission_code ? " — " + escapeHtml(a.mission_code) : ""}</span>
-        </div>
-        <p class="home-banner-desc">${escapeHtml(a.meeting_date || "")}${a.meeting_time ? " — " + escapeHtml(a.meeting_time) : ""}${a.location ? " · " + escapeHtml(a.location) : ""}</p>
+      ${items.length > 0 ? `<span class="home-banner-badge">${items.length}</span>` : ""}
+      <i data-lucide="chevron-down" class="notif-trigger-chevron ${notificationsOpen ? "notif-trigger-chevron-open" : ""}"></i>
+    </button>
+    ${notificationsOpen ? (
+      items.length === 0
+        ? `<p class="notif-empty">لا توجد إخطارات حاليًا</p>`
+        : items.map(n => renderNotificationItem(n)).join("")
+    ) : ""}
+  </div>`;
+}
+
+function renderNotificationItem(n) {
+  const key = notificationKey(n);
+  const isMeeting = n.type === "meeting";
+  return `
+  <div class="home-banner-body notif-item">
+    <div class="home-banner-icon-box"><i data-lucide="${isMeeting ? "calendar-check" : "bell"}"></i></div>
+    <div class="home-banner-content">
+      <div class="home-banner-title-row">
+        <span class="home-banner-item-title">${escapeHtml(n.title)}</span>
       </div>
-      <button type="button" class="home-banner-open-btn" id="homeMeetingAlertBtn">عرض</button>
+      <p class="home-banner-desc">${escapeHtml(n.body || "")}</p>
     </div>
+    <button type="button" class="home-banner-open-btn" data-notif-open="${key}">فتح</button>
+    <button type="button" class="home-banner-dismiss-btn notif-item-dismiss" data-notif-dismiss="${key}" title="إخفاء"><i data-lucide="x"></i></button>
   </div>`;
 }
 
@@ -337,66 +346,36 @@ function homeStatsCards() {
   ];
 }
 
-/* بطاقة/شريط الإخطار العلوي بالرئيسية — يختلف حسب الدور، ويعتمد فقط على بيانات حقيقية
-   (لا يظهر شيء إن ما كان فيه محتوى حقيقي ليعرضه) */
+/* بانر رئيس إدارة المراجعة الداخلية فقط (تقارير تحتاج اعتماد) -- منفصل عن ودجت
+   الإخطارات الموحَّد (مفهوم مختلف: اعتماد تقارير، مو مواعيد/مهام بانتظار إجراء) */
 function renderHomeBanner() {
-  if (isAuditHead) {
-    const pending = homeStats.reports_pending_count || 0;
-    if (pending === 0) return "";
-    return `
-    <div class="home-banner">
-      <div class="home-banner-head">
-        <i data-lucide="clipboard-check" class="home-banner-head-icon"></i>
-        <div class="home-banner-head-text">
-          <p class="t1">التقارير التي تحتاج اعتماد</p>
-          <p class="t2">يوجد تقارير نهائية قيد الانتظار لاعتمادها</p>
-        </div>
-        <span class="home-banner-badge">تقارير جديدة</span>
-      </div>
-      <div class="home-banner-body">
-        <div class="home-banner-icon-box"><i data-lucide="file-text"></i></div>
-        <div class="home-banner-content">
-          <div class="home-banner-title-row">
-            <span class="home-banner-item-title">تقارير تحتاج اعتماد — المراجعة الداخلية</span>
-            <span class="home-banner-dot"></span>
-            <span class="home-banner-tag">بانتظار الاعتماد</span>
-          </div>
-          <p class="home-banner-desc">يوجد ${pending} ${pending === 1 ? "تقرير" : "تقارير"} جاهزة وتنتظر اعتمادك للبدء بتعميمها بشكل نهائي.</p>
-        </div>
-        <button class="home-banner-open-btn" id="homeBannerOpenBtn">عرض التقارير</button>
-      </div>
-    </div>`;
-  }
+  if (!isAuditHead) return "";
 
-  if (isHrDept || isHrCoordinator || isAuditMember) {
-    const n = homeStats.latest_notification;
-    if (!n) return "";
-    if (dismissedNotificationKey === notificationKey(n)) return "";
-    return `
-    <div class="home-banner">
-      <div class="home-banner-head">
-        <i data-lucide="bell" class="home-banner-head-icon"></i>
-        <div class="home-banner-head-text">
-          <p class="t1">لديك إخطارات جديدة</p>
-          <p class="t2">${escapeHtml(n.title)}</p>
-        </div>
-        <span class="home-banner-badge">${homeStats.unread_notifications_count || 1} غير مقروء</span>
-        <button type="button" class="home-banner-dismiss-btn" id="homeNotificationDismissBtn" title="إخفاء"><i data-lucide="x"></i></button>
+  const pending = homeStats.reports_pending_count || 0;
+  if (pending === 0) return "";
+  return `
+  <div class="home-banner">
+    <div class="home-banner-head">
+      <i data-lucide="clipboard-check" class="home-banner-head-icon"></i>
+      <div class="home-banner-head-text">
+        <p class="t1">التقارير التي تحتاج اعتماد</p>
+        <p class="t2">يوجد تقارير نهائية قيد الانتظار لاعتمادها</p>
       </div>
-      <div class="home-banner-body">
-        <div class="home-banner-icon-box"><i data-lucide="bell"></i></div>
-        <div class="home-banner-content">
-          <div class="home-banner-title-row">
-            <span class="home-banner-item-title">${escapeHtml(n.title)}</span>
-          </div>
-          <p class="home-banner-desc">${escapeHtml(n.body || "")}</p>
+      <span class="home-banner-badge">تقارير جديدة</span>
+    </div>
+    <div class="home-banner-body">
+      <div class="home-banner-icon-box"><i data-lucide="file-text"></i></div>
+      <div class="home-banner-content">
+        <div class="home-banner-title-row">
+          <span class="home-banner-item-title">تقارير تحتاج اعتماد — المراجعة الداخلية</span>
+          <span class="home-banner-dot"></span>
+          <span class="home-banner-tag">بانتظار الاعتماد</span>
         </div>
-        <button class="home-banner-open-btn" id="homeBannerOpenBtn">فتح</button>
+        <p class="home-banner-desc">يوجد ${pending} ${pending === 1 ? "تقرير" : "تقارير"} جاهزة وتنتظر اعتمادك للبدء بتعميمها بشكل نهائي.</p>
       </div>
-    </div>`;
-  }
-
-  return "";
+      <button class="home-banner-open-btn" id="homeBannerOpenBtn">عرض التقارير</button>
+    </div>
+  </div>`;
 }
 
 function renderHomeTab() {
@@ -434,7 +413,7 @@ function renderHomeTab() {
   });
   html += `</div>`;
 
-  html += renderMeetingAlertBanner() + renderHomeBanner();
+  html += renderNotificationsWidget() + renderHomeBanner();
 
   if (activeStatCard !== null) {
     html += renderStatDetailPanel(activeStatCard);
@@ -534,24 +513,46 @@ function openMeetingScheduleForMission(missionId) {
 }
 
 function bindHomeEvents() {
-  const meetingAlertBtn = document.getElementById("homeMeetingAlertBtn");
-  if (meetingAlertBtn) meetingAlertBtn.addEventListener("click", async () => {
-    // فتح صفحة جدولة اجتماع مباشرة على نفس المهمة المؤكَّدة (لا يحتاج يختارها يدويًا)،
-    // وإخفاء التنبيه فعليًا لو رجع للرئيسية بعدها (نفس مفتاح "ديسميس" اللي يستخدمه زر الإغلاق)
-    dismissedMeetingAlertKey = meetingAlertKey(confirmedMeetingAlert);
-    openMeetingScheduleForMission(confirmedMeetingAlert && confirmedMeetingAlert.mission_id);
-    activeContent = "meetingSchedule";
-    activeStatCard = null;
-    renderSidebar(); await renderContent(); lucide.createIcons();
-  });
-
-  const meetingAlertDismissBtn = document.getElementById("homeMeetingAlertDismissBtn");
-  if (meetingAlertDismissBtn) meetingAlertDismissBtn.addEventListener("click", () => {
-    dismissedMeetingAlertKey = meetingAlertKey(confirmedMeetingAlert);
+  const notifTriggerBtn = document.getElementById("notifTriggerBtn");
+  if (notifTriggerBtn) notifTriggerBtn.addEventListener("click", () => {
+    notificationsOpen = !notificationsOpen;
     const el = document.getElementById("contentArea");
     el.innerHTML = renderHomeTab();
     bindHomeEvents();
     lucide.createIcons();
+  });
+
+  document.querySelectorAll("[data-notif-open]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const key = btn.dataset.notifOpen;
+      const n = homeNotifications.find(x => notificationKey(x) === key);
+      if (!n) return;
+      // فتحه يخفيه ضمنيًا كمان (نفس فكرة زر الإغلاق) -- ما يرجع يظهر لو رجع للرئيسية
+      dismissedNotificationKeys.add(key);
+      if (n.type === "meeting") {
+        openMeetingScheduleForMission(n.mission_id);
+        activeContent = "meetingSchedule";
+      } else {
+        await loadMissionsForSelector();
+        const task = missionsForSelector.find(m => Number(m.id) === Number(n.mission_id));
+        if (task) await stOpenTaskDetail(task);
+        activeContent = "sentTasks";
+      }
+      activeStatCard = null;
+      renderSidebar(); await renderContent(); lucide.createIcons();
+    });
+  });
+
+  document.querySelectorAll("[data-notif-dismiss]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dismissedNotificationKeys.add(btn.dataset.notifDismiss);
+      const el = document.getElementById("contentArea");
+      el.innerHTML = renderHomeTab();
+      bindHomeEvents();
+      lucide.createIcons();
+    });
   });
 
   const newTaskCard = document.getElementById("homeNewTaskCard");
@@ -562,29 +563,8 @@ function bindHomeEvents() {
 
   const bannerOpenBtn = document.getElementById("homeBannerOpenBtn");
   if (bannerOpenBtn) bannerOpenBtn.addEventListener("click", async () => {
-    if (isAuditHead) {
-      activeContent = "finalReports";
-    } else {
-      // بانر "لديك إخطارات جديدة" مرتبط دائمًا بمهمة معيّنة (homeStats.confirmed_meeting_alert
-      // مختلف، هذا latest_notification) -- نوديه مباشرة لتفاصيلها بـ"المراسلات المشتركة"
-      // بدل صفحة إخطارات عامة، ونخفيه فعليًا لو رجع للرئيسية بعدها (نفس فكرة بانر الموعد)
-      dismissedNotificationKey = notificationKey(homeStats.latest_notification);
-      const missionId = homeStats.latest_notification && homeStats.latest_notification.mission_id;
-      await loadMissionsForSelector();
-      const task = missionId ? missionsForSelector.find(m => Number(m.id) === Number(missionId)) : null;
-      if (task) await stOpenTaskDetail(task);
-      activeContent = "sentTasks";
-    }
+    activeContent = "finalReports";
     renderSidebar(); await renderContent(); lucide.createIcons();
-  });
-
-  const notificationDismissBtn = document.getElementById("homeNotificationDismissBtn");
-  if (notificationDismissBtn) notificationDismissBtn.addEventListener("click", () => {
-    dismissedNotificationKey = notificationKey(homeStats.latest_notification);
-    const el = document.getElementById("contentArea");
-    el.innerHTML = renderHomeTab();
-    bindHomeEvents();
-    lucide.createIcons();
   });
 
   const statGoReportsBtn = document.getElementById("statGoReportsBtn");

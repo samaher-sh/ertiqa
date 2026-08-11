@@ -86,21 +86,23 @@ class MeetingModel extends Model
     }
 
     /**
-     * أقرب اجتماع مؤكد (له تاريخ فعلي، اليوم أو مستقبلًا) من بين مجموعة مهام —
-     * يُستخدم لتنبيه الصفحة الرئيسية بعد تأكيد موعد اجتماع عبر شات "جدولة اجتماع".
-     * شرط meeting_date >= اليوم يستثني تلقائيًا اجتماعات findOrCreateForMission()
-     * الفارغة (meeting_date = null) بدون الحاجة لشرط IS NOT NULL منفصل.
+     * كل الاجتماعات المؤكدة (لها تاريخ فعلي، اليوم أو مستقبلًا) من بين مجموعة مهام --
+     * تُستخدم لقائمة إخطارات الصفحة الرئيسية (كل مهمة معها موعد مؤكد تظهر كإخطار
+     * مستقل، مو أقرب واحد فقط). شرط meeting_date >= اليوم يستثني تلقائيًا اجتماعات
+     * findOrCreateForMission() الفارغة (meeting_date = null) بدون شرط IS NOT NULL منفصل.
      */
-    public function confirmedUpcomingForMissions(array $missionIds): ?array
+    public function confirmedUpcomingListForMissions(array $missionIds): array
     {
         if (empty($missionIds)) {
-            return null;
+            return [];
         }
 
-        return $this->whereIn('mission_id', $missionIds)
-            ->where('status', 'scheduled')
-            ->where('meeting_date >=', date('Y-m-d'))
-            ->orderBy('meeting_date', 'ASC')
-            ->first() ?: null;
+        return $this->select('meetings.*, missions.mission_code')
+            ->join('missions', 'missions.id = meetings.mission_id')
+            ->whereIn('meetings.mission_id', $missionIds)
+            ->where('meetings.status', 'scheduled')
+            ->where('meetings.meeting_date >=', date('Y-m-d'))
+            ->orderBy('meetings.meeting_date', 'ASC')
+            ->findAll();
     }
 }

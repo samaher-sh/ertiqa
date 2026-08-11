@@ -67,21 +67,20 @@ class DashboardController extends BaseController
             $data['reports_approved_count'] = $reportModel->countForDepartmentByStatus($departmentId, 'sent');
         }
 
-        // بانر "لديك إخطارات جديدة" بالصفحة الرئيسية — يُحسب حيًا من الحالة الفعلية
-        // لكل مهمة (computeRealNextStage) بدل الاعتماد على صف إخطار ثابت يُدرَج مرة
-        // وحدة فقط عند إنشاء المهمة (كان السبب في ظهور البانر بشكل غير محدَّث: يبقى
-        // كما هو حتى بعد ما تردّ الإدارة وتنتقل المهمة لدور المراجع، أو لا يظهر
-        // إطلاقًا لو رجع الدور لهم لاحقًا -- زي إضافة طلب مستند جديد بعد ما خلصوا
-        // الردود الأولى). يظهر لطرفي المهمة: الإدارة الخاضعة للمراجعة (دورها
+        // قائمة إخطارات الصفحة الرئيسية الموحَّدة (ودجت "إخطارات" الثابت) -- نوعين:
+        // "task" (بانتظار إجراءك بمهمة، محسوب حيًا من computeRealNextStage) و"meeting"
+        // (موعد اجتماع مؤكد). يظهر لطرفي المهمة: الإدارة الخاضعة للمراجعة (دورها
         // "target"، مرحلة 2 فقط) وفريق المراجعة (دورهم "audit"، بقية المراحل) --
         // عشان لما تردّ الإدارة وينتقل الدور فعليًا لفريق المراجعة (مصفوفة
-        // المخاطر...) يوصلهم إخطار حقيقي بدل ما يبقوا بدون أي تنبيه إطلاقًا
+        // المخاطر...) يوصلهم إخطار حقيقي بدل ما يبقوا بدون أي تنبيه إطلاقًا. محسوبة
+        // حيًا بالكامل (بدون أي صف "إخطار" ثابت يُدرَج مرة وحدة ويبقى كما هو) عشان
+        // تستحيل تصير غير محدَّثة.
+        $notifications = [];
         $isAuditMember = $roleCode === 'audit_member';
         if ($isHrDept || $isAuditMember) {
             $forRole = $isHrDept ? 'target' : 'audit';
             $reportModel = null;
 
-            $pendingMissions = [];
             foreach ($ownMissions as $m) {
                 if ($m['status'] !== 'active') continue;
 
@@ -99,44 +98,31 @@ class DashboardController extends BaseController
                     if ($report && $report['status'] !== 'draft') continue;
                 }
 
-                $m['_notif'] = $info;
-                $pendingMissions[] = $m;
-            }
-            usort($pendingMissions, fn($a, $b) => strcmp($b['updated_at'] ?? '', $a['updated_at'] ?? ''));
-
-            $data['unread_notifications_count'] = count($pendingMissions);
-            $data['latest_notification'] = null;
-            if (!empty($pendingMissions)) {
-                $m = $pendingMissions[0];
-                $data['latest_notification'] = [
+                $notifications[] = [
+                    'type'       => 'task',
                     'mission_id' => (int) $m['id'],
-                    'title'      => $m['_notif']['title'],
-                    'body'       => 'المهمة (' . $m['mission_code'] . ') ' . $m['_notif']['suffix'],
+                    'updated_at' => $m['updated_at'] ?? '',
+                    'title'      => $info['title'],
+                    'body'       => 'المهمة (' . $m['mission_code'] . ') ' . $info['suffix'],
+                ];
+            }
+
+            // كل الاجتماعات المؤكدة (لا أقرب واحد فقط) -- كل مهمة معها موعد مؤكد
+            // تظهر كإخطار مستقل بالقائمة، تظهر لطرفي المهمة معًا
+            foreach ($meetingModel->confirmedUpcomingListForMissions($missionIds) as $meeting) {
+                $notifications[] = [
+                    'type'       => 'meeting',
+                    'mission_id' => (int) $meeting['mission_id'],
+                    'updated_at' => $meeting['meeting_date'] . ' ' . ($meeting['meeting_time'] ?? '00:00:00'),
+                    'title'      => 'تم تأكيد موعد اجتماع',
+                    'body'       => 'المهمة (' . ($meeting['mission_code'] ?? '') . ') — ' . $meeting['meeting_date']
+                        . ($meeting['meeting_time'] ? ' — ' . $meeting['meeting_time'] : '')
+                        . ($meeting['location'] ? ' · ' . $meeting['location'] : ''),
                 ];
             }
         }
-
-        // تنبيه اجتماع مؤكد بالصفحة الرئيسية — يظهر لطرفي المهمة (عضو المراجعة ومنسّق
-        // الإدارة الخاضعة للمراجعة) فور تأكيد أحدهما لموعد عبر شات "جدولة اجتماع"
-        // ($ownMissions/$missionIds محسوبة أعلاه، نفس مصدر meetings_count)
-        $data['confirmed_meeting_alert'] = null;
-        if (!empty($missionIds)) {
-            $meeting = $meetingModel->confirmedUpcomingForMissions($missionIds);
-            if ($meeting) {
-                $mission = array_values(array_filter(
-                    $ownMissions,
-                    fn($m) => (int) $m['id'] === (int) $meeting['mission_id']
-                ))[0] ?? null;
-
-                $data['confirmed_meeting_alert'] = [
-                    'mission_id'   => (int) $meeting['mission_id'],
-                    'mission_code' => $mission['mission_code'] ?? '',
-                    'meeting_date' => $meeting['meeting_date'],
-                    'meeting_time' => $meeting['meeting_time'],
-                    'location'     => $meeting['location'],
-                ];
-            }
-        }
+        usort($notifications, fn($a, $b) => strcmp($b['updated_at'], $a['updated_at']));
+        $data['notifications'] = array_map(fn($n) => array_diff_key($n, ['updated_at' => '']), $notifications);
 
         return $this->response->setJSON($data);
     }

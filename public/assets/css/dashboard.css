@@ -360,6 +360,18 @@ img{ max-width:100%; }
 .home-banner-open-btn:hover{ opacity:.92; }
 @media (max-width:640px){ .home-banner-body{ flex-wrap:wrap; } .home-banner-open-btn{ order:3; width:100%; } }
 
+/* ودجت "إخطارات" الثابت -- ترويسة قابلة للضغط (زر) + قائمة منسدلة من صفوف
+   home-banner-body مكرَّرة، كل واحد إخطار مستقل بزر فتح/إغلاق خاص فيه */
+.notif-trigger{ width:100%; border:none; text-align:right; cursor:pointer; }
+.notif-trigger-chevron{ width:15px; height:15px; color:rgba(255,255,255,.75); flex-shrink:0; transition:transform .15s; }
+.notif-trigger-chevron-open{ transform:rotate(180deg); }
+.notif-empty{ padding:20px 24px; margin:0; font-size:13px; color:#9ca3af; text-align:center; background:#f0f8fd; }
+.notif-item{ border-top:1px solid #e2edf2; }
+/* زر الإغلاق داخل صف فاتح الخلفية (home-banner-body) يحتاج لون داكن، بعكس نسخته
+   الأصلية المصمَّمة فوق ترويسة داكنة (home-banner-head) */
+.home-banner-body .home-banner-dismiss-btn{ color:#9ca3af; }
+.home-banner-body .home-banner-dismiss-btn:hover{ background:#e2edf2; color:#374151; }
+
 /* Home "بدء مهمة" action card (3rd slot in stats-grid) */
 .stat-action-card{ border-radius:12px; padding:12px; text-align:center; background:var(--p); border:1px solid var(--p); box-shadow:0 4px 14px rgba(49,133,179,.3); display:flex; flex-direction:column; align-items:center; gap:6px; color:#fff; transition:all .15s; }
 .stat-action-card:active{ transform:scale(.97); }
