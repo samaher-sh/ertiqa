@@ -260,7 +260,12 @@ img{ max-width:100%; }
 .detail-close{ width:28px;height:28px; border-radius:8px; background:none; border:none; display:flex;align-items:center;justify-content:center; }
 .detail-close:hover{ background:rgba(0,0,0,.1); }
 .detail-close i{ width:14px;height:14px; }
-.detail-body{ padding:20px; display:flex; flex-direction:column; gap:12px; }
+.detail-body{
+  padding:20px; display:flex; flex-direction:column; gap:12px;
+  max-height:420px; overflow-y:auto;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.detail-body::-webkit-scrollbar{ display:none; }
 
 .task-row{
   display:flex; align-items:center; gap:16px; padding:14px 16px; border-radius:12px;
@@ -276,6 +281,26 @@ img{ max-width:100%; }
 .task-phase-badge{ font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:var(--pl); color:var(--p); }
 .task-last-action{ font-size:10px; color:#9ca3af; }
 .empty-hint{ font-size:14px; color:#9ca3af; text-align:center; padding:24px 0; }
+
+/* بطاقة اجتماع مجدولة بمؤشر "اجتماعات مجدولة" بالرئيسية -- شكل مربّع مدمج بدل صف أفقي */
+.ms-meeting-card{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:6px; padding:22px 20px; border-radius:16px;
+  background:#f8fbfd; border:1px solid #d8e6eb;
+  width:100%; max-width:280px; margin:0 auto;
+}
+.ms-meeting-title{ font-size:15px; font-weight:800; color:#152c33; margin:0; }
+.ms-meeting-code{ font-size:11px; font-weight:700; color:#9ca3af; margin:0 0 6px; }
+.ms-meeting-meta{ display:flex; flex-direction:column; align-items:center; gap:5px; font-size:12px; color:#4a6b74; }
+.ms-meeting-meta span{ display:flex; align-items:center; gap:6px; }
+.ms-meeting-meta i{ width:13px; height:13px; color:var(--p); flex-shrink:0; }
+.ms-meeting-postpone-btn{
+  margin-top:12px; display:flex; align-items:center; gap:6px;
+  padding:8px 18px; border-radius:9999px; border:none;
+  background:var(--p); color:#fff; font-size:12px; font-weight:700; cursor:pointer;
+}
+.ms-meeting-postpone-btn:hover{ opacity:.92; }
+.ms-meeting-postpone-btn i{ width:13px; height:13px; }
 
 /* Mini stepper */
 .mini-stepper{ display:flex; align-items:center; gap:2px; margin-top:8px; }
@@ -313,6 +338,12 @@ img{ max-width:100%; }
 .home-banner-head-text .t1{ color:#fff; font-weight:800; font-size:14px; margin:0; line-height:1.3; }
 .home-banner-head-text .t2{ color:rgba(255,255,255,.7); font-size:11px; margin:3px 0 0; }
 .home-banner-badge{ flex-shrink:0; font-size:11px; font-weight:700; padding:5px 14px; border-radius:9999px; background:rgba(255,255,255,.2); color:#fff; }
+.home-banner-dismiss-btn{
+  flex-shrink:0; width:24px; height:24px; border-radius:8px; border:none;
+  background:transparent; color:rgba(255,255,255,.75); display:flex; align-items:center; justify-content:center;
+}
+.home-banner-dismiss-btn:hover{ background:rgba(255,255,255,.15); color:#fff; }
+.home-banner-dismiss-btn i{ width:14px; height:14px; }
 .home-banner-body{ display:flex; align-items:flex-start; gap:16px; padding:18px 24px; background:#f0f8fd; }
 .home-banner-icon-box{ width:36px; height:36px; border-radius:9999px; background:var(--pl); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--p); }
 .home-banner-icon-box i{ width:15px; height:15px; }

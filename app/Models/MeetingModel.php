@@ -46,7 +46,7 @@ class MeetingModel extends Model
 
     public function scheduledMeetingsForUser(int $userId): array
     {
-        return $this->select('meetings.*')
+        return $this->select('meetings.*, missions.mission_code, missions.title as mission_title')
             ->join('missions', 'missions.id = meetings.mission_id')
             ->groupStart()
                 ->where('missions.mission_head_id', $userId)
@@ -77,9 +77,11 @@ class MeetingModel extends Model
             return [];
         }
 
-        return $this->whereIn('mission_id', $missionIds)
-            ->where('status', 'scheduled')
-            ->orderBy('meeting_date', 'ASC')
+        return $this->select('meetings.*, missions.mission_code, missions.title as mission_title')
+            ->join('missions', 'missions.id = meetings.mission_id')
+            ->whereIn('meetings.mission_id', $missionIds)
+            ->where('meetings.status', 'scheduled')
+            ->orderBy('meetings.meeting_date', 'ASC')
             ->findAll();
     }
 

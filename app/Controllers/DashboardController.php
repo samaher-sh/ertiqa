@@ -129,6 +129,7 @@ class DashboardController extends BaseController
                 ))[0] ?? null;
 
                 $data['confirmed_meeting_alert'] = [
+                    'mission_id'   => (int) $meeting['mission_id'],
                     'mission_code' => $mission['mission_code'] ?? '',
                     'meeting_date' => $meeting['meeting_date'],
                     'meeting_time' => $meeting['meeting_time'],
