@@ -8,8 +8,6 @@ use App\Models\DepartmentModel;
 use App\Models\ServiceAgreementModel;
 use App\Models\ServiceAgreementResponseModel;
 use App\Models\AuditLogModel;
-use App\Models\UserModel;
-use App\Models\NotificationModel;
 
 class MissionController extends BaseController
 {
@@ -66,14 +64,11 @@ class MissionController extends BaseController
         }
 
         $userId = (int) session()->get('user_id');
-        $now    = date('Y-m-d H:i:s');
 
         $missionModel      = new MissionModel();
         $stageHistoryModel = new MissionStageHistoryModel();
         $slaModel          = new ServiceAgreementModel();
         $slaResponseModel  = new ServiceAgreementResponseModel();
-        $userModel         = new UserModel();
-        $notificationModel = new NotificationModel();
 
         $missionCode = $missionModel->generateMissionCode($mainDept['name_ar']);
 
@@ -99,28 +94,6 @@ class MissionController extends BaseController
 
         $stageHistoryModel->openStage($missionId, 1, $userId);
         (new AuditLogModel())->log($missionId, $userId, 'mission_created', 'mission', $missionId, $missionCode . ' — ' . $targetDept['name_ar']);
-
-        // إشعار حقيقي لمنسّق الإدارة المستهدفة بمهمة مراجعة جديدة — يوصل لصفحة الإخطارات
-        // وبانر التنبيه بالصفحة الرئيسية (homeStats.latest_notification)
-        $coordinator = $userModel
-            ->join('roles', 'roles.id = users.role_id')
-            ->where('users.department_id', $targetDept['id'])
-            ->where('roles.code', 'dept_coordinator')
-            ->first();
-
-        if ($coordinator) {
-            $notificationModel->insert([
-                'user_id'    => $coordinator['id'],
-                'mission_id' => $missionId,
-                'type'       => 'mission_created',
-                'title'      => 'مهمة مراجعة جديدة',
-                'body'       => 'تم إنشاء مهمة مراجعة داخلية جديدة (' . $missionCode . ') لإدارتكم.',
-                'channel'    => 'system',
-                'is_read'    => 0,
-                'sent_at'    => $now,
-                'created_at' => $now,
-            ]);
-        }
 
         // اتفاقية مستوى الخدمة - رأس الاتفاقية + كل بنودها (Snapshot) بحالة فارغة
         // (تُملأ فعليًا لاحقًا من قِبل ممثل الإدارة المستهدفة)

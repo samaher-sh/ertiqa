@@ -5,7 +5,6 @@ namespace App\Controllers;
 use App\Models\MissionModel;
 use App\Models\MeetingModel;
 use App\Models\ReportModel;
-use App\Models\NotificationModel;
 
 class DashboardController extends BaseController
 {
@@ -54,11 +53,30 @@ class DashboardController extends BaseController
             $data['reports_approved_count'] = $reportModel->countForDepartmentByStatus($departmentId, 'sent');
         }
 
-        // مستخدمو الإدارة الخاضعة للمراجعة يحتاجون بيانات شريط الإخطارات بالرئيسية
+        // بانر "لديك إخطارات جديدة" بالصفحة الرئيسية — يُحسب حيًا من الحالة الفعلية
+        // لكل مهمة (computeRealNextStage) بدل الاعتماد على صف إخطار ثابت يُدرَج مرة
+        // وحدة فقط عند إنشاء المهمة (كان السبب في ظهور البانر بشكل غير محدَّث: يبقى
+        // كما هو حتى بعد ما تردّ الإدارة وتنتقل المهمة لدور المراجع، أو لا يظهر
+        // إطلاقًا لو رجع الدور لهم لاحقًا -- زي إضافة طلب مستند جديد بعد ما خلصوا
+        // الردود الأولى). المرحلة 2 هي الوحيدة اللي دورها "target" (الإدارة الخاضعة
+        // للمراجعة)، نفس ST_STAGE_TO_PAGE بـ senttasks.js بالضبط
         if ($isHrDept) {
-            $notifModel = new NotificationModel();
-            $data['unread_notifications_count'] = $notifModel->unreadCountForUser($userId);
-            $data['latest_notification']        = $notifModel->latestUnreadForUser($userId);
+            $pendingMissions = array_values(array_filter(
+                $ownMissions,
+                fn($m) => $m['status'] === 'active' && $missionModel->computeRealNextStage((int) $m['id']) === 2
+            ));
+            usort($pendingMissions, fn($a, $b) => strcmp($b['updated_at'] ?? '', $a['updated_at'] ?? ''));
+
+            $data['unread_notifications_count'] = count($pendingMissions);
+            $data['latest_notification'] = null;
+            if (!empty($pendingMissions)) {
+                $m = $pendingMissions[0];
+                $data['latest_notification'] = [
+                    'mission_id' => (int) $m['id'],
+                    'title'      => 'بانتظار الرد على مهمة مراجعة',
+                    'body'       => 'المهمة (' . $m['mission_code'] . ') بانتظار استكمال اتفاقية مستوى الخدمة أو الرد على المستندات المطلوبة.',
+                ];
+            }
         }
 
         // تنبيه اجتماع مؤكد بالصفحة الرئيسية — يظهر لطرفي المهمة (عضو المراجعة ومنسّق
