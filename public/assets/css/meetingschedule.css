@@ -8,9 +8,11 @@
 
 /* ══════ جسم المحادثة ══════ */
 .mc-chat-body{
-  flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:18px;
+  flex:1; min-height:0; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:18px;
   background:#f8fbfd;
+  scrollbar-width:none; -ms-overflow-style:none;
 }
+.mc-chat-body::-webkit-scrollbar{ display:none; }
 .mc-empty{ text-align:center; margin:auto; color:#9ca3af; font-size:13px; font-weight:600; }
 
 .mc-bubble-row{ display:flex; }
@@ -47,26 +49,24 @@
 
 .mc-bubble-confirmed{
   display:flex; align-items:center; gap:9px; background:#eaf4fa; color:var(--pd);
-  border:1px solid var(--pb); border-radius:999px; padding:11px 20px; font-size:13px; font-weight:700;
+  border:1px solid var(--pb); border-radius:999px; padding:11px 14px 11px 20px; font-size:13px; font-weight:700;
 }
-.mc-bubble-confirmed i{ width:17px; height:17px; }
+.mc-bubble-confirmed i, .mc-bubble-confirmed svg{ width:17px; height:17px; flex-shrink:0; }
 
 .mc-bubble-cancelled{
   display:flex; align-items:center; gap:9px; background:#fef2f2; color:#b91c1c;
   border:1px solid #fecaca; border-radius:999px; padding:11px 20px; font-size:13px; font-weight:700;
 }
-.mc-bubble-cancelled i{ width:17px; height:17px; }
+.mc-bubble-cancelled i, .mc-bubble-cancelled svg{ width:17px; height:17px; }
 
-.mc-confirmed-badge{
-  display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700;
-  padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.18); color:#fff;
-}
+/* زر إلغاء الموعد المؤكد -- داخل فقاعة "تم تأكيد الموعد" الفاتحة (مو داخل شارة داكنة بالهيدر) */
 .mc-cancel-confirmed-btn{
-  display:flex; align-items:center; justify-content:center; width:20px; height:20px;
-  margin-right:6px; border-radius:9999px; border:none; background:rgba(255,255,255,.18); color:#fff;
+  display:flex; align-items:center; justify-content:center; width:22px; height:22px; flex-shrink:0;
+  border-radius:9999px; border:none; background:rgba(13,132,181,.14); color:var(--pd);
   cursor:pointer;
 }
-.mc-cancel-confirmed-btn:hover{ background:rgba(255,255,255,.3); }
+.mc-cancel-confirmed-btn:hover{ background:rgba(13,132,181,.26); }
+.mc-cancel-confirmed-btn i, .mc-cancel-confirmed-btn svg{ width:12px; height:12px; }
 
 /* ══════ صندوق الكتابة ══════ */
 .mc-compose{ border-top:1px solid #e5e7eb; padding:14px 20px; background:#fff; }
