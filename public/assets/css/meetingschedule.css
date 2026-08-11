@@ -4,7 +4,7 @@
    ============================================================ */
 
 .mc-locked-wrap.locked{ opacity:.4; pointer-events:none; user-select:none; }
-.mc-card{ display:flex; flex-direction:column; height:600px; max-height:75vh; }
+.mc-card{ display:flex; flex-direction:column; height:760px; max-height:85vh; }
 
 /* ══════ جسم المحادثة ══════ */
 .mc-chat-body{

@@ -100,7 +100,7 @@ function renderChatBubble(m) {
         </div>
         ${!isMine ? `
           <div class="mc-proposal-actions">
-            <button type="button" class="mc-confirm-btn" data-confirm-msg="${m.id}"><i data-lucide="check"></i> تأكيد هذا الموعد</button>
+            <button type="button" class="mc-confirm-btn" data-confirm-msg="${m.id}"><i data-lucide="check"></i> تأكيد الموعد</button>
             <button type="button" class="mc-cancel-btn" data-cancel-msg="${m.id}"><i data-lucide="x"></i> إلغاء الموعد</button>
           </div>
         ` : `<span class="mc-waiting-hint">بانتظار تأكيد الطرف الآخر</span>`}
