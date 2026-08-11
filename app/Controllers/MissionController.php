@@ -7,7 +7,6 @@ use App\Models\MissionStageHistoryModel;
 use App\Models\DepartmentModel;
 use App\Models\ServiceAgreementModel;
 use App\Models\ServiceAgreementResponseModel;
-use App\Models\DocumentRequestModel;
 use App\Models\AuditLogModel;
 use App\Models\UserModel;
 use App\Models\NotificationModel;
@@ -37,15 +36,6 @@ class MissionController extends BaseController
             return $this->response->setStatusCode(422)->setJSON([
                 'success' => false,
                 'errors'  => $this->validator->getErrors(),
-            ]);
-        }
-
-        // قائمة المستندات - لازم مستند واحد على الأقل، وكل الأسماء غير فاضية (نفس page3Valid بالأصل)
-        $docNames = array_values(array_filter(array_map('trim', $data['doc_names'] ?? [])));
-        if (count($docNames) === 0) {
-            return $this->response->setStatusCode(422)->setJSON([
-                'success' => false,
-                'message' => 'يرجى إضافة مستند واحد على الأقل بقائمة المستندات.',
             ]);
         }
 
@@ -82,7 +72,6 @@ class MissionController extends BaseController
         $stageHistoryModel = new MissionStageHistoryModel();
         $slaModel          = new ServiceAgreementModel();
         $slaResponseModel  = new ServiceAgreementResponseModel();
-        $docRequestModel   = new DocumentRequestModel();
         $userModel         = new UserModel();
         $notificationModel = new NotificationModel();
 
@@ -155,18 +144,6 @@ class MissionController extends BaseController
             }
         }
         $slaResponseModel->insertBatch($responseRows);
-
-        // قائمة المستندات المطلوبة
-        $docRows = [];
-        foreach ($docNames as $i => $name) {
-            $docRows[] = [
-                'mission_id' => $missionId,
-                'doc_name'   => $name,
-                'sort_order' => $i + 1,
-                'created_at' => $now,
-            ];
-        }
-        $docRequestModel->insertBatch($docRows);
 
         $db->transComplete();
 

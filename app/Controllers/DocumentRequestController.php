@@ -63,6 +63,49 @@ class DocumentRequestController extends BaseController
     }
 
     /**
+     * POST /dashboard/document-requests/api/add — يضيف طلب مستند جديد لمهمة قائمة
+     * (فريق المراجعة فقط -- عضو أو رئيس المهمة، مو الإدارة الخاضعة للمراجعة). صفحة
+     * "قائمة المستندات" المستقلة بالسايدبار تستخدمها لطلب مستندات إضافية في أي وقت،
+     * وليس فقط أثناء إنشاء المهمة (بدل ما كان مقصورًا على خطوة واحدة بمعالج "بدء مهمة")
+     */
+    public function add()
+    {
+        $missionId = (int) $this->request->getPost('mission_id');
+        $docName   = trim((string) $this->request->getPost('doc_name'));
+
+        $missionModel = new MissionModel();
+        $mission = $missionId ? $missionModel->find($missionId) : null;
+        if (!$mission) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'المهمة غير موجودة.']);
+        }
+
+        $userId = (int) session()->get('user_id');
+        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
+        if (!in_array($missionId, $allowedIds, true)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'إضافة طلبات مستندات جديدة متاحة فقط لفريق المراجعة المسؤول عن المهمة.']);
+        }
+
+        if ($docName === '') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يرجى إدخال اسم المستند.']);
+        }
+
+        $requestModel = new DocumentRequestModel();
+        $maxRow = $requestModel->where('mission_id', $missionId)->selectMax('sort_order')->first();
+        $nextSort = ((int) ($maxRow['sort_order'] ?? 0)) + 1;
+
+        $id = $requestModel->insert([
+            'mission_id' => $missionId,
+            'doc_name'   => $docName,
+            'sort_order' => $nextSort,
+            'created_at' => date('Y-m-d H:i:s'),
+        ], true);
+
+        (new AuditLogModel())->log($missionId, $userId, 'document_request_added', 'document_request', $id, $docName);
+
+        return $this->response->setJSON(['success' => true, 'id' => $id]);
+    }
+
+    /**
      * POST /dashboard/document-requests/api/submit — إرسال كل ردود المستندات دفعة وحدة
      * (multipart/form-data: responses[i][document_request_id], responses[i][exists_flag],
      * responses[i][note], وملف اختياري باسم الحقل file_{document_request_id})
