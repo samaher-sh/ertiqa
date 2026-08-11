@@ -275,18 +275,32 @@ async function loadHomeData() {
 }
 
 /* تنبيه اجتماع مؤكد بالصفحة الرئيسية — يظهر لطرفي المهمة فور تأكيد أحدهما لموعد
-   عبر شات "جدولة اجتماع" (بيانات حقيقية ضمن /dashboard/api/home-stats) */
+   عبر شات "جدولة اجتماع" (بيانات حقيقية ضمن /dashboard/api/home-stats).
+   نفس شكل بطاقة "لديك إخطارات جديدة" (renderHomeBanner) بالضبط -- بانرين
+   منفصلين ممكن يظهروا مع بعض لو فيه الاثنين، بس بنفس التصميم الموحَّد */
 function renderMeetingAlertBanner() {
   if (!confirmedMeetingAlert) return "";
   const a = confirmedMeetingAlert;
   return `
-  <div class="home-meeting-alert">
-    <i data-lucide="calendar-check"></i>
-    <div class="home-meeting-alert-text">
-      <p class="t1">تم تأكيد موعد اجتماع${a.mission_code ? " — " + escapeHtml(a.mission_code) : ""}</p>
-      <p class="t2">${escapeHtml(a.meeting_date || "")}${a.meeting_time ? " — " + escapeHtml(a.meeting_time) : ""}${a.location ? " · " + escapeHtml(a.location) : ""}</p>
+  <div class="home-banner">
+    <div class="home-banner-head">
+      <i data-lucide="calendar-check" class="home-banner-head-icon"></i>
+      <div class="home-banner-head-text">
+        <p class="t1">تم تأكيد موعد اجتماع</p>
+        <p class="t2">${a.mission_code ? escapeHtml(a.mission_code) : ""}</p>
+      </div>
+      <span class="home-banner-badge">موعد مؤكد</span>
     </div>
-    <button type="button" class="home-meeting-alert-btn" id="homeMeetingAlertBtn">عرض</button>
+    <div class="home-banner-body">
+      <div class="home-banner-icon-box"><i data-lucide="calendar-check"></i></div>
+      <div class="home-banner-content">
+        <div class="home-banner-title-row">
+          <span class="home-banner-item-title">اجتماع${a.mission_code ? " — " + escapeHtml(a.mission_code) : ""}</span>
+        </div>
+        <p class="home-banner-desc">${escapeHtml(a.meeting_date || "")}${a.meeting_time ? " — " + escapeHtml(a.meeting_time) : ""}${a.location ? " · " + escapeHtml(a.location) : ""}</p>
+      </div>
+      <button type="button" class="home-banner-open-btn" id="homeMeetingAlertBtn">عرض</button>
+    </div>
   </div>`;
 }
 
@@ -336,7 +350,7 @@ function renderHomeBanner() {
     </div>`;
   }
 
-  if (isHrDept || isHrCoordinator) {
+  if (isHrDept || isHrCoordinator || isAuditMember) {
     const n = homeStats.latest_notification;
     if (!n) return "";
     return `
