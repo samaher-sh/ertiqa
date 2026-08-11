@@ -34,6 +34,14 @@ function meetingAlertKey(a) {
   return a ? [a.mission_id, a.meeting_date, a.meeting_time].join("|") : "";
 }
 
+/* نفس فكرة dismissedMeetingAlertKey، لكن لبانر "لديك إخطارات جديدة" -- مفتاحه
+   مهمة+عنوان الإخطار (العنوان يختلف حسب المرحلة الحقيقية بانتظارك)، فلو تقدّمت
+   المهمة لمرحلة/دور جديد فعليًا يرجع يظهر التنبيه من جديد رغم إغلاق السابق */
+let dismissedNotificationKey = null;
+function notificationKey(n) {
+  return n ? [n.mission_id, n.title].join("|") : "";
+}
+
 /* ============================================================
    تهيئة الصفحة
    ============================================================ */
@@ -363,6 +371,7 @@ function renderHomeBanner() {
   if (isHrDept || isHrCoordinator || isAuditMember) {
     const n = homeStats.latest_notification;
     if (!n) return "";
+    if (dismissedNotificationKey === notificationKey(n)) return "";
     return `
     <div class="home-banner">
       <div class="home-banner-head">
@@ -372,6 +381,7 @@ function renderHomeBanner() {
           <p class="t2">${escapeHtml(n.title)}</p>
         </div>
         <span class="home-banner-badge">${homeStats.unread_notifications_count || 1} غير مقروء</span>
+        <button type="button" class="home-banner-dismiss-btn" id="homeNotificationDismissBtn" title="إخفاء"><i data-lucide="x"></i></button>
       </div>
       <div class="home-banner-body">
         <div class="home-banner-icon-box"><i data-lucide="bell"></i></div>
@@ -478,7 +488,7 @@ function renderStatDetailPanel(idx) {
   } else {
     bodyHtml = scheduledMeetings.length === 0
       ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
-      : scheduledMeetings.map(m => `
+      : `<div class="ms-meeting-row">` + scheduledMeetings.map(m => `
         <div class="ms-meeting-card">
           <p class="ms-meeting-title">${escapeHtml(m.mission_title || m.title || m.meeting_code)}</p>
           <p class="ms-meeting-code">${escapeHtml(m.mission_code || "")}</p>
@@ -495,7 +505,7 @@ function renderStatDetailPanel(idx) {
             </button>
           ` : ""}
         </div>
-      `).join("");
+      `).join("") + `</div>`;
   }
 
   return `
@@ -557,7 +567,8 @@ function bindHomeEvents() {
     } else {
       // بانر "لديك إخطارات جديدة" مرتبط دائمًا بمهمة معيّنة (homeStats.confirmed_meeting_alert
       // مختلف، هذا latest_notification) -- نوديه مباشرة لتفاصيلها بـ"المراسلات المشتركة"
-      // بدل صفحة إخطارات عامة
+      // بدل صفحة إخطارات عامة، ونخفيه فعليًا لو رجع للرئيسية بعدها (نفس فكرة بانر الموعد)
+      dismissedNotificationKey = notificationKey(homeStats.latest_notification);
       const missionId = homeStats.latest_notification && homeStats.latest_notification.mission_id;
       await loadMissionsForSelector();
       const task = missionId ? missionsForSelector.find(m => Number(m.id) === Number(missionId)) : null;
@@ -565,6 +576,15 @@ function bindHomeEvents() {
       activeContent = "sentTasks";
     }
     renderSidebar(); await renderContent(); lucide.createIcons();
+  });
+
+  const notificationDismissBtn = document.getElementById("homeNotificationDismissBtn");
+  if (notificationDismissBtn) notificationDismissBtn.addEventListener("click", () => {
+    dismissedNotificationKey = notificationKey(homeStats.latest_notification);
+    const el = document.getElementById("contentArea");
+    el.innerHTML = renderHomeTab();
+    bindHomeEvents();
+    lucide.createIcons();
   });
 
   const statGoReportsBtn = document.getElementById("statGoReportsBtn");
