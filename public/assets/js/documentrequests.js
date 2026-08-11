@@ -1,24 +1,24 @@
 /* ============================================================
    قائمة المستندات المطلوبة — متصلة بالـ API الحقيقي
-   تظهر لطرفي المهمة: الإدارة الخاضعة للمراجعة تعبّئها وترفع الملفات،
-   وعضو/رئيس المراجعة يشوفها للمتابعة فقط (قراءة).
+   صفحة مستقلة بالسايدبار لفريق المراجعة (رئيس/عضو المهمة) فقط: يشوفون قائمة
+   المستندات المطلوبة وحالة رد الإدارة عليها (قراءة)، ويقدرون يضيفون طلبات
+   مستندات جديدة بأي وقت بعد إنشاء المهمة. رد الإدارة الخاضعة للمراجعة (تحديد
+   يوجد/لا يوجد ورفع الملف) يبقى حصرًا عبر المراسلات المشتركة → إكمال الحقول
+   (missionreview.js) -- ما تغيّر شي هناك.
    ============================================================ */
 let drSelectedTaskId = "";
 let drRequests = [];
-let drCanSubmit = false;
 let drLoading = false;
-let drSubmitting = false;
+let drAdding = false;
 
 async function loadDocumentRequests(missionId) {
-  if (!missionId) { drRequests = []; drCanSubmit = false; return; }
+  if (!missionId) { drRequests = []; return; }
   drLoading = true;
   try {
     const data = await apiGet(base + "/dashboard/document-requests/api/list?mission_id=" + encodeURIComponent(missionId));
     drRequests = data.requests || [];
-    drCanSubmit = !!data.can_submit;
   } catch (e) {
     drRequests = [];
-    drCanSubmit = false;
     showToast(e.message || "تعذّر تحميل قائمة المستندات", "error");
   }
   drLoading = false;
@@ -38,17 +38,16 @@ function renderDocumentRequestsPage() {
           <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents</p></div>
         </div>
 
+        <div class="dr-add-row">
+          <input type="text" id="drNewDocInput" class="wiz-input plain" placeholder="أدخل اسم المستند الجديد...">
+          <button type="button" class="wiz-btn wiz-btn-primary" id="drAddDocBtn" ${drAdding ? "disabled" : ""}>
+            <i data-lucide="plus"></i> ${drAdding ? "جارِ الإضافة..." : "إضافة مستند"}
+          </button>
+        </div>
+
         <div class="dr-body">
           ${renderDocumentRequestsBody()}
         </div>
-
-        ${drCanSubmit && !drLoading && drRequests.length > 0 ? `
-          <div class="dr-footer">
-            <button type="button" class="dr-submit-btn" id="drSubmitBtn" ${drSubmitting ? "disabled" : ""}>
-              <i data-lucide="upload"></i> ${drSubmitting ? "جارِ الإرسال..." : "إرسال المستندات"}
-            </button>
-          </div>
-        ` : ""}
       </div>
     </div>
   </div>`;
@@ -65,71 +64,39 @@ function renderDocumentRequestRow(r, idx) {
   const hasResponse = r.exists_flag !== null && r.exists_flag !== undefined;
   const existsVal = hasResponse ? Number(r.exists_flag) : null;
 
-  if (!drCanSubmit) {
-    // قراءة فقط (عضو/رئيس المراجعة) — يشوف حالة الرد بدون أي حقول تعديل
-    return `
-    <div class="dr-row" data-request-id="${r.id}">
-      <div class="dr-row-head">
-        <span class="dr-row-name">${escapeHtml(r.doc_name)}</span>
-        ${hasResponse
-          ? `<span class="dr-status-badge ${existsVal ? "yes" : "no"}">${existsVal ? "موجود" : "غير موجود"}</span>`
-          : `<span class="dr-status-badge pending">بانتظار الرد</span>`}
-      </div>
-      ${r.response_note ? `<p class="dr-row-note">${escapeHtml(r.response_note)}</p>` : ""}
-      ${r.file ? `<a class="dr-file-link" href="${base}/dashboard/documents/download/${r.file.id}" target="_blank"><i data-lucide="paperclip"></i> ${escapeHtml(r.file.file_name)}</a>` : ""}
-    </div>`;
-  }
-
   return `
-  <div class="dr-row editable" data-request-id="${r.id}">
+  <div class="dr-row" data-request-id="${r.id}">
     <div class="dr-row-head">
       <span class="dr-row-name">${escapeHtml(r.doc_name)}</span>
-      <div class="dr-exists-toggle">
-        <label class="dr-radio"><input type="radio" name="dr-exists-${r.id}" value="1" ${existsVal === 1 ? "checked" : ""}> موجود</label>
-        <label class="dr-radio"><input type="radio" name="dr-exists-${r.id}" value="0" ${existsVal === 0 ? "checked" : ""}> غير موجود</label>
-      </div>
+      ${hasResponse
+        ? `<span class="dr-status-badge ${existsVal ? "yes" : "no"}">${existsVal ? "موجود" : "غير موجود"}</span>`
+        : `<span class="dr-status-badge pending">بانتظار الرد</span>`}
     </div>
-    <textarea class="dr-note-input" placeholder="ملاحظة (اختياري)">${escapeHtml(r.response_note || "")}</textarea>
-    <div class="dr-file-row">
-      <input type="file" class="dr-file-input" id="dr-file-${r.id}">
-      ${r.file ? `<a class="dr-file-link" href="${base}/dashboard/documents/download/${r.file.id}" target="_blank"><i data-lucide="paperclip"></i> ${escapeHtml(r.file.file_name)}</a>` : ""}
-    </div>
+    ${r.response_note ? `<p class="dr-row-note">${escapeHtml(r.response_note)}</p>` : ""}
+    ${r.file ? `<a class="dr-file-link" href="${base}/dashboard/documents/download/${r.file.id}" target="_blank"><i data-lucide="paperclip"></i> ${escapeHtml(r.file.file_name)}</a>` : ""}
   </div>`;
 }
 
-async function drHandleSubmit() {
-  const btn = document.getElementById("drSubmitBtn");
-  if (!btn) return;
+async function drHandleAddDoc() {
+  const input = document.getElementById("drNewDocInput");
+  if (!input) return;
+  const docName = input.value.trim();
+  if (!docName) { showToast("يرجى إدخال اسم المستند", "error"); return; }
 
-  const formData = new FormData();
-  formData.append("mission_id", drSelectedTaskId);
-
-  let i = 0;
-  document.querySelectorAll(".dr-row.editable").forEach(row => {
-    const requestId = row.dataset.requestId;
-    const checked = row.querySelector(`input[name="dr-exists-${requestId}"]:checked`);
-    formData.append(`responses[${i}][document_request_id]`, requestId);
-    formData.append(`responses[${i}][exists_flag]`, checked ? checked.value : "");
-    formData.append(`responses[${i}][note]`, row.querySelector(".dr-note-input").value.trim());
-
-    const fileInput = document.getElementById("dr-file-" + requestId);
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-      formData.append("file_" + requestId, fileInput.files[0]);
-    }
-    i++;
-  });
-
-  drSubmitting = true;
+  drAdding = true;
   rerenderDRContent();
   try {
-    const res = await apiPostFile(base + "/dashboard/document-requests/api/submit", formData);
-    if (!res || !res.success) throw new Error(res && res.message || "تعذّر إرسال المستندات");
-    showToast("تم إرسال المستندات بنجاح", "success");
+    const res = await apiPost(base + "/dashboard/document-requests/api/add", {
+      mission_id: drSelectedTaskId,
+      doc_name: docName,
+    });
+    if (!res || !res.success) throw new Error(res && res.message || "تعذّر إضافة المستند");
+    showToast("تمت إضافة المستند بنجاح", "success");
     await loadDocumentRequests(drSelectedTaskId);
   } catch (e) {
-    showToast(e.message || "تعذّر إرسال المستندات", "error");
+    showToast(e.message || "تعذّر إضافة المستند", "error");
   }
-  drSubmitting = false;
+  drAdding = false;
   rerenderDRContent();
 }
 
@@ -141,8 +108,13 @@ function bindDocumentRequestsEvents() {
     rerenderDRContent();
   });
 
-  const submitBtn = document.getElementById("drSubmitBtn");
-  if (submitBtn) submitBtn.addEventListener("click", drHandleSubmit);
+  const addBtn = document.getElementById("drAddDocBtn");
+  if (addBtn) addBtn.addEventListener("click", drHandleAddDoc);
+
+  const newDocInput = document.getElementById("drNewDocInput");
+  if (newDocInput) newDocInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); drHandleAddDoc(); }
+  });
 
   if (taskSelect && taskSelect.options.length === 2 && !drSelectedTaskId) {
     taskSelect.selectedIndex = 1;

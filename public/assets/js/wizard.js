@@ -28,7 +28,7 @@ function wizSubDepts(mainDeptId) {
 
 /* ---------- الحالة العامة للويزارد ---------- */
 let wizardPage = 1;
-let wizP1, wizP2, wizP3;
+let wizP1, wizP2;
 
 function initWizardState() {
   const cy = new Date().getFullYear().toString();
@@ -47,7 +47,6 @@ function initWizardState() {
     // POST /dashboard/new-task (تصميم متعمَّد، مو نقص)
     slaAnswers: {},
   };
-  wizP3 = { rows: [], saved: false, touched: false };
   wizardPage = 1;
 }
 initWizardState();
@@ -55,9 +54,6 @@ initWizardState();
 function isPage1Valid() {
   const s = wizP1;
   return !!(s.deptId && s.targetId && s.procedure && s.reviewer && s.director && s.email && s.phone);
-}
-function isPage3Valid() {
-  return wizP3.rows.length > 0 && wizP3.rows.every(r => r.name.trim() !== "");
 }
 
 /* إعادة رسم منطقة المحتوى مع الحفاظ على التركيز/المؤشر داخل الحقل النشط
@@ -93,7 +89,7 @@ function renderWizardPage() {
   return `
     ${renderWizardSteps()}
     <div class="wiz-page-container">
-      ${wizardPage === 1 ? renderWizPage1() : wizardPage === 2 ? renderWizPage2() : renderWizPage3()}
+      ${wizardPage === 1 ? renderWizPage1() : renderWizPage2()}
     </div>
     ${renderWizardNav()}
   `;
@@ -101,7 +97,7 @@ function renderWizardPage() {
 
 function renderWizardSteps() {
   return `<div class="wiz-steps">
-    ${STEPS.map((st, i) => `
+    ${WIZ_STEPS.map((st, i) => `
       <div class="wiz-step">
         <button class="wiz-step-btn" data-goto-step="${st.n}">
           <span class="wiz-step-circle ${wizardPage === st.n ? "current" : wizardPage > st.n ? "done" : ""}">
@@ -109,21 +105,21 @@ function renderWizardSteps() {
           </span>
           <span class="wiz-step-label ${wizardPage === st.n ? "current" : wizardPage > st.n ? "done" : ""}">${st.label}</span>
         </button>
-        ${i < STEPS.length - 1 ? `<span class="wiz-step-line ${wizardPage > st.n ? "done" : ""}"></span>` : ""}
+        ${i < WIZ_STEPS.length - 1 ? `<span class="wiz-step-line ${wizardPage > st.n ? "done" : ""}"></span>` : ""}
       </div>
     `).join("")}
   </div>`;
 }
 
 function renderWizardNav() {
-  const isFirst = wizardPage === STEPS[0].n;
-  const isLast = wizardPage === STEPS[STEPS.length - 1].n;
+  const isFirst = wizardPage === WIZ_STEPS[0].n;
+  const isLast = wizardPage === WIZ_STEPS[WIZ_STEPS.length - 1].n;
   return `<div class="wiz-nav">
     <button class="wiz-btn wiz-btn-outline" id="wizPrevBtn" ${isFirst ? "disabled" : ""} style="min-width:150px;justify-content:center;">
       <i data-lucide="chevron-right"></i>السابق
     </button>
     <div class="wiz-dots">
-      ${STEPS.map(s => `<button class="wiz-dot ${wizardPage === s.n ? "current" : ""}" data-goto-step="${s.n}"></button>`).join("")}
+      ${WIZ_STEPS.map(s => `<button class="wiz-dot ${wizardPage === s.n ? "current" : ""}" data-goto-step="${s.n}"></button>`).join("")}
     </div>
     ${isLast
       ? `<button class="wiz-btn wiz-btn-success" id="wizSendBtn" style="min-width:150px;justify-content:center;"><i data-lucide="check"></i>إرسال المهمة</button>`
@@ -145,8 +141,8 @@ function bindWizardEvents() {
 
   const prevBtn = document.getElementById("wizPrevBtn");
   if (prevBtn) prevBtn.addEventListener("click", () => {
-    const idx = STEPS.findIndex(s => s.n === wizardPage);
-    wizardPage = STEPS[Math.max(0, idx - 1)].n;
+    const idx = WIZ_STEPS.findIndex(s => s.n === wizardPage);
+    wizardPage = WIZ_STEPS[Math.max(0, idx - 1)].n;
     rerenderWizardContent();
   });
 
@@ -158,8 +154,8 @@ function bindWizardEvents() {
       rerenderWizardContent();
       return;
     }
-    const idx = STEPS.findIndex(s => s.n === wizardPage);
-    wizardPage = STEPS[Math.min(STEPS.length - 1, idx + 1)].n;
+    const idx = WIZ_STEPS.findIndex(s => s.n === wizardPage);
+    wizardPage = WIZ_STEPS[Math.min(WIZ_STEPS.length - 1, idx + 1)].n;
     if (wizardPage === 2 && !wizP2.subjectDept) { wizP2.subjectDept = wizP1.targetName; }
     rerenderWizardContent();
   });
@@ -168,8 +164,7 @@ function bindWizardEvents() {
   if (sendBtn) sendBtn.addEventListener("click", handleSendTask);
 
   if (wizardPage === 1) bindWizPage1();
-  else if (wizardPage === 2) bindWizPage2();
-  else bindWizPage3();
+  else bindWizPage2();
 }
 
 async function handleSendTask() {
@@ -180,14 +175,6 @@ async function handleSendTask() {
     rerenderWizardContent();
     return;
   }
-  if (!isPage3Valid()) {
-    wizP3.touched = true;
-    wizardPage = 3;
-    showToast("يرجى إضافة مستند واحد على الأقل", "error");
-    rerenderWizardContent();
-    return;
-  }
-
   const sendBtn = document.getElementById("wizSendBtn");
   if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = "جارٍ الإرسال..."; }
 
@@ -201,7 +188,6 @@ async function handleSendTask() {
       reviewer_email: wizP1.email,
       reviewer_phone: wizP1.phone,
       director_name:  wizP1.director,
-      doc_names:      wizP3.rows.map(r => r.name),
     });
 
     if (data.success) {
@@ -758,108 +744,6 @@ function bindWizPage2() {
   if (sigName) sigName.addEventListener("input", e => { s.sigName = e.target.value; });
   const sigDate = $("p2SigDate");
   if (sigDate) sigDate.addEventListener("change", e => { s.sigDate = e.target.value; rerenderWizardContent(); });
-}
-
-/* ============================================================
-   PAGE 3 — قائمة المستندات المطلوبة
-   (منظور إدارة المراجعة الداخلية: إضافة/حذف أسماء المستندات فقط،
-   بينما "توجد/رفع/ملاحظات" مقفلة — تُملأ لاحقاً من الإدارة المستهدفة)
-   ============================================================ */
-function renderWizPage3() {
-  const s = wizP3;
-  return `
-  <div class="wiz-card">
-    <div class="wiz-card-head" style="justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <i data-lucide="file-text"></i>
-        <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents Checklist</p></div>
-      </div>
-      <button class="wiz-add-doc-btn" id="wizAddDocBtn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);"><i data-lucide="plus"></i> إضافة مستند</button>
-    </div>
-    <div class="wiz-table-wrap">
-      <table class="wiz-doc-table">
-        <thead><tr>
-          <th style="width:60px;text-align:center;">الرقم</th>
-          <th style="text-align:right;min-width:320px;">المستند</th>
-          <th class="locked" style="width:170px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;">يوجد / لا يوجد</span></th>
-          <th class="locked" style="width:180px;"><span style="display:flex;align-items:center;justify-content:center;gap:4px;">رفع الملف</span></th>
-          <th class="locked" style="width:240px;text-align:right;"><span style="display:flex;align-items:center;gap:4px;">الملاحظات</span></th>
-          <th style="width:44px;"></th>
-        </tr></thead>
-        <tbody>
-          ${s.rows.length === 0 ? `
-            <tr><td colspan="6">
-              <div class="wiz-doc-empty"><i data-lucide="file-text"></i><br>لا توجد مستندات — اضغط «إضافة مستند» لإضافة صف جديد</div>
-            </td></tr>
-          ` : s.rows.map((row, i) => `
-            <tr>
-              <td style="text-align:center;"><span class="wiz-doc-row-num">${i + 1}</span></td>
-              <td>
-                <input type="text" id="doc-${row.id}-name" class="wiz-doc-name-input ${s.touched && !row.name.trim() ? "err" : ""}"
-                  data-doc-name="${row.id}" placeholder="أدخل اسم المستند..." value="${escapeHtml(row.name)}">
-                ${s.touched && !row.name.trim() ? '<p class="wiz-error-text" style="padding:4px 4px 0;">اسم المستند مطلوب</p>' : ""}
-              </td>
-              <td style="text-align:center;background:#fafafa;">
-                <div class="wiz-locked-cell">
-                  <div class="inner" style="display:flex;justify-content:center;gap:8px;">
-                    <span class="wiz-pill">يوجد</span><span class="wiz-pill">لا يوجد</span>
-                  </div>
-                  <div class="overlay"></div>
-                </div>
-              </td>
-              <td style="text-align:center;background:#fafafa;">
-                <div class="wiz-locked-cell">
-                  <div class="inner"><span class="wiz-upload-pill"><i data-lucide="upload"></i> رفع</span></div>
-                  <div class="overlay"></div>
-                </div>
-              </td>
-              <td style="background:#fafafa;">
-                <div class="wiz-locked-cell">
-                  <div class="inner"><input type="text" class="wiz-doc-note-input" readonly placeholder="ملاحظة..."></div>
-                  <div class="overlay"></div>
-                </div>
-              </td>
-              <td style="text-align:center;"><button class="wiz-doc-del-btn" data-doc-del="${row.id}"><i data-lucide="trash-2"></i></button></td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-    <div class="wiz-doc-footer">
-      <span class="wiz-doc-footer-count">الإجمالي: <strong>${s.rows.length}</strong></span>
-    </div>
-  </div>
-  `;
-}
-
-function bindWizPage3() {
-  const s = wizP3;
-
-  document.getElementById("wizAddDocBtn").addEventListener("click", () => {
-    s.rows.push({ id: Date.now() + Math.random(), name: "", exists: null, fileName: "", note: "" });
-    s.saved = false;
-    rerenderWizardContent();
-  });
-
-  document.querySelectorAll("[data-doc-del]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.docDel;
-      s.rows = s.rows.filter(r => String(r.id) !== String(id));
-      rerenderWizardContent();
-    });
-  });
-
-  document.querySelectorAll("[data-doc-name]").forEach(inp => {
-    inp.addEventListener("input", () => {
-      const id = inp.dataset.docName;
-      const row = s.rows.find(r => String(r.id) === String(id));
-      if (row) {
-        row.name = inp.value;
-        rerenderWizardContent();
-      }
-    });
-  });
-
 }
 
 /* ═══ تمدد تلقائي للـ textarea بدل ظهور شريط تمرير داخلي ═══ */
