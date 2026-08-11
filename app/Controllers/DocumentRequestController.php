@@ -70,8 +70,9 @@ class DocumentRequestController extends BaseController
      */
     public function add()
     {
-        $missionId = (int) $this->request->getPost('mission_id');
-        $docName   = trim((string) $this->request->getPost('doc_name'));
+        $data      = $this->request->getJSON(true) ?? [];
+        $missionId = (int) ($data['mission_id'] ?? 0);
+        $docName   = trim((string) ($data['doc_name'] ?? ''));
 
         $missionModel = new MissionModel();
         $mission = $missionId ? $missionModel->find($missionId) : null;
