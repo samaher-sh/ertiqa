@@ -26,6 +26,14 @@ let activeMissions = [];
 let scheduledMeetings = [];
 let confirmedMeetingAlert = null;
 
+/* مفتاح آخر تنبيه تأكيد موعد تم إخفاؤه يدويًا (زر الإغلاق) أو بعد فتحه فعليًا
+   (الضغط على "عرض") -- محلي بالجلسة الحالية فقط، يرجع يظهر تلقائيًا لو صار تأكيد
+   جديد فعليًا (مفتاح مختلف: مهمة/تاريخ/وقت مختلف) */
+let dismissedMeetingAlertKey = null;
+function meetingAlertKey(a) {
+  return a ? [a.mission_id, a.meeting_date, a.meeting_time].join("|") : "";
+}
+
 /* ============================================================
    تهيئة الصفحة
    ============================================================ */
@@ -280,6 +288,7 @@ async function loadHomeData() {
    منفصلين ممكن يظهروا مع بعض لو فيه الاثنين، بس بنفس التصميم الموحَّد */
 function renderMeetingAlertBanner() {
   if (!confirmedMeetingAlert) return "";
+  if (dismissedMeetingAlertKey === meetingAlertKey(confirmedMeetingAlert)) return "";
   const a = confirmedMeetingAlert;
   return `
   <div class="home-banner">
@@ -290,6 +299,7 @@ function renderMeetingAlertBanner() {
         <p class="t2">${a.mission_code ? escapeHtml(a.mission_code) : ""}</p>
       </div>
       <span class="home-banner-badge">موعد مؤكد</span>
+      <button type="button" class="home-banner-dismiss-btn" id="homeMeetingAlertDismissBtn" title="إخفاء"><i data-lucide="x"></i></button>
     </div>
     <div class="home-banner-body">
       <div class="home-banner-icon-box"><i data-lucide="calendar-check"></i></div>
@@ -382,9 +392,9 @@ function renderHomeBanner() {
 function renderHomeTab() {
   const STATS = homeStatsCards();
 
-  let html = renderMeetingAlertBanner() + renderHomeBanner();
-
-  html += `<div class="stats-grid ${isAuditMember ? "" : "two-col"}">`;
+  // "بدء مهمة" ومؤشرات الأداء (المهام النشطة/اجتماعات مجدولة) أول شي بأعلى
+  // الصفحة، والإخطارات (بانر التنبيه العام + تأكيد الموعد) تحتها
+  let html = `<div class="stats-grid ${isAuditMember ? "" : "two-col"}">`;
   if (isAuditMember) {
     html += `
       <button class="stat-action-card" id="homeNewTaskCard">
@@ -413,6 +423,8 @@ function renderHomeTab() {
     `;
   });
   html += `</div>`;
+
+  html += renderMeetingAlertBanner() + renderHomeBanner();
 
   if (activeStatCard !== null) {
     html += renderStatDetailPanel(activeStatCard);
@@ -467,12 +479,21 @@ function renderStatDetailPanel(idx) {
     bodyHtml = scheduledMeetings.length === 0
       ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
       : scheduledMeetings.map(m => `
-        <div class="task-row">
-          <div class="task-row-icon"><i data-lucide="calendar"></i></div>
-          <div class="task-row-body">
-            <p class="task-row-title">${escapeHtml(m.title || m.meeting_code)}</p>
-            <p class="task-row-sub">${escapeHtml(m.meeting_date || "")} ${escapeHtml(m.meeting_time || "")}</p>
+        <div class="ms-meeting-card">
+          <p class="ms-meeting-title">${escapeHtml(m.mission_title || m.title || m.meeting_code)}</p>
+          <p class="ms-meeting-code">${escapeHtml(m.mission_code || "")}</p>
+          <div class="ms-meeting-meta">
+            <span><i data-lucide="map-pin"></i> ${escapeHtml(m.location || "لم يُحدَّد المكان بعد")}</span>
+            ${m.meeting_date ? `
+              <span><i data-lucide="calendar"></i> ${escapeHtml(m.meeting_date)}</span>
+              <span><i data-lucide="clock"></i> ${escapeHtml(m.meeting_time || "")}</span>
+            ` : `<span>بانتظار تحديد الموعد</span>`}
           </div>
+          ${m.meeting_date ? `
+            <button type="button" class="ms-meeting-postpone-btn" data-postpone-mission="${m.mission_id}">
+              <i data-lucide="calendar-clock"></i> تأجيل الموعد
+            </button>
+          ` : ""}
         </div>
       `).join("");
   }
@@ -489,11 +510,38 @@ function renderStatDetailPanel(idx) {
   `;
 }
 
+/* يفتح صفحة جدولة اجتماع مباشرة على مهمة معيّنة (بدل ما يحتاج يختارها يدويًا من
+   القائمة) -- نفس منطق تبديل المهمة الفعلي بصفحة meetingschedule.js (تحديد فوري من
+   النسخة المخزّنة مؤقتًا إن وُجدت، وتحديث حقيقي بالخلفية) */
+function openMeetingScheduleForMission(missionId) {
+  if (!missionId) return;
+  mcSelectedTaskId = String(missionId);
+  mcShowProposeForm = false;
+  const cached = mcMessagesCache[mcSelectedTaskId];
+  mcMessages = cached ? cached.messages : [];
+  mcMeeting = cached ? cached.meeting : null;
+  mcLoadMessages(true, false);
+}
+
 function bindHomeEvents() {
   const meetingAlertBtn = document.getElementById("homeMeetingAlertBtn");
   if (meetingAlertBtn) meetingAlertBtn.addEventListener("click", async () => {
+    // فتح صفحة جدولة اجتماع مباشرة على نفس المهمة المؤكَّدة (لا يحتاج يختارها يدويًا)،
+    // وإخفاء التنبيه فعليًا لو رجع للرئيسية بعدها (نفس مفتاح "ديسميس" اللي يستخدمه زر الإغلاق)
+    dismissedMeetingAlertKey = meetingAlertKey(confirmedMeetingAlert);
+    openMeetingScheduleForMission(confirmedMeetingAlert && confirmedMeetingAlert.mission_id);
     activeContent = "meetingSchedule";
+    activeStatCard = null;
     renderSidebar(); await renderContent(); lucide.createIcons();
+  });
+
+  const meetingAlertDismissBtn = document.getElementById("homeMeetingAlertDismissBtn");
+  if (meetingAlertDismissBtn) meetingAlertDismissBtn.addEventListener("click", () => {
+    dismissedMeetingAlertKey = meetingAlertKey(confirmedMeetingAlert);
+    const el = document.getElementById("contentArea");
+    el.innerHTML = renderHomeTab();
+    bindHomeEvents();
+    lucide.createIcons();
   });
 
   const newTaskCard = document.getElementById("homeNewTaskCard");
@@ -554,6 +602,20 @@ function bindHomeEvents() {
       const task = missionsForSelector.find(m => String(m.id) === String(missionId));
       if (task) await stOpenTaskDetail(task);
       activeContent = "sentTasks";
+      renderSidebar(); await renderContent(); lucide.createIcons();
+    });
+  });
+
+  document.querySelectorAll("[data-postpone-mission]").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      // "تأجيل الموعد" ببطاقة اجتماع مجدولة بالرئيسية -- يوديه مباشرة لنفس المهمة
+      // بصفحة جدولة اجتماع، وين يقدر يلغي الموعد المؤكد الحالي (زر × بجانب شارة
+      // الموعد المؤكد) ويكتب السبب بالمحادثة ويقترح موعد بديل، بنفس الأدوات
+      // الموجودة أصلًا بتلك الصفحة
+      openMeetingScheduleForMission(btn.dataset.postponeMission);
+      activeContent = "meetingSchedule";
+      activeStatCard = null;
       renderSidebar(); await renderContent(); lucide.createIcons();
     });
   });
