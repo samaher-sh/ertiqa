@@ -4,7 +4,7 @@
    ============================================================ */
 
 .mc-locked-wrap.locked{ opacity:.4; pointer-events:none; user-select:none; }
-.mc-card{ display:flex; flex-direction:column; height:760px; max-height:85vh; }
+.mc-card{ display:flex; flex-direction:column; height:850px; max-height:88vh; }
 
 /* ══════ جسم المحادثة ══════ */
 .mc-chat-body{
@@ -35,10 +35,13 @@
 .mc-proposal-card i{ width:20px; height:20px; color:var(--pd); flex-shrink:0; }
 .mc-proposal-title{ font-size:12px; font-weight:700; color:var(--pd); margin:0; }
 .mc-proposal-detail{ font-size:13px; font-weight:600; color:#152c33; margin:3px 0 0; }
-.mc-proposal-actions{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.mc-proposal-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+/* white-space:nowrap يمنع انكسار جملة الزر بمنتصفها؛ flex:1 مع min-width:auto (القيمة
+   الافتراضية) يخلي أقل عرض ممكن للزر يساوي عرض نصه كامل بسطر وحد (مو أصغر)، فلو ما
+   كفت المساحة يلف الزر كامل لسطر جديد (flex-wrap) بدل ما ينكسر النص جوّاه */
 .mc-confirm-btn, .mc-cancel-btn{
-  display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
-  padding:10px; border-radius:10px; border:none;
+  display:flex; align-items:center; justify-content:center; gap:6px; flex:1;
+  padding:10px 16px; border-radius:10px; border:none;
   font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
 }
 .mc-confirm-btn{ background:var(--p); color:#fff; }
