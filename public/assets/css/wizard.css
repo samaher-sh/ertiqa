@@ -161,9 +161,7 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
   display:flex; align-items:center; justify-content:center; transition:all .12s;
 }
 .wiz-checkbox-visual.no{ border-color:#fca5a5; background:#fff5f5; }
-.wiz-checkbox-visual.wiz-sla-toggle{ cursor:pointer; }
-.wiz-checkbox-visual.wiz-sla-toggle:hover{ box-shadow:0 0 0 4px rgba(49,133,179,.15); border-color:var(--p); }
-.wiz-checkbox-visual.no.wiz-sla-toggle:hover{ box-shadow:0 0 0 4px rgba(220,38,38,.12); border-color:#dc2626; }
+.wiz-checkbox-visual.readonly{ cursor:default; opacity:.55; }
 .wiz-checkbox-visual:not(.no).checked{ background:var(--p); border-color:var(--p); }
 .wiz-checkbox-visual.no.checked{ background:#dc2626; border-color:#dc2626; }
 .wiz-checkbox-visual i, .wiz-checkbox-visual svg{ width:18px; height:18px; }
@@ -173,6 +171,10 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-sig-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:20px; }
 @media (max-width:700px){ .wiz-sig-grid{ grid-template-columns:1fr; } }
 .wiz-sig-card{ border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.wiz-sig-inline-row{ display:flex; gap:12px; align-items:flex-start; }
+.wiz-sig-inline-row > .grow{ flex:1; min-width:0; }
+.wiz-sig-inline-row input[type="date"]{ width:140px; }
+@media (max-width:480px){ .wiz-sig-inline-row{ flex-direction:column; } .wiz-sig-inline-row input[type="date"]{ width:100%; } }
 .wiz-sig-card.active{ background:var(--pl); border:1px solid var(--pb); }
 .wiz-sig-card.locked{ background:#fafafa; border:1px solid #e2e8f0; }
 .wiz-sig-title{ font-size:12px; font-weight:800; color:var(--p); margin:0; }

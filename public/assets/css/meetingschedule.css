@@ -4,7 +4,10 @@
    ============================================================ */
 
 .mc-locked-wrap.locked{ opacity:.4; pointer-events:none; user-select:none; }
-.mc-card{ display:flex; flex-direction:column; height:850px; max-height:88vh; }
+/* الارتفاع مرتبط بمساحة الشاشة الفعلية المتبقية (بعد الشريط العلوي ومنتقي المهمة
+   وحشو الصفحة) بدل رقم ثابت بالبكسل، عشان الكومبوننت كامل (شامل صندوق الكتابة
+   بالأسفل) يبقى ضمن حدود الشاشة دائمًا بدون ما يحتاج المستخدم يمرّر لتحت ليشوفه */
+.mc-card{ display:flex; flex-direction:column; height:calc(100vh - 245px); max-height:calc(100vh - 245px); }
 
 /* ══════ جسم المحادثة ══════ */
 .mc-chat-body{

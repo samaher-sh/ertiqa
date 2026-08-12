@@ -75,23 +75,32 @@ class PdfController extends BaseController
         // الفعلي (سطرين) ما يفيض على متن المستند
         $mpdf->setAutoTopMargin = 'stretch';
 
-        // هيدر مكوَّن من سطرين فوق بعض (مو أعمدة جنب بعض) -- أعمدة الجداول داخل
-        // SetHTMLHeader() بمPDF ما تلتزم دائمًا بالعرض المحدَّد لها، فيصير تصادم
-        // بصري بين الأعمدة مع أي نص طويل؛ سطر واحد تحت الثاني يتفادى هذا كليًا
+        // شريط علوي ملوّن بنفس لون هوية المنصة (بدل هيدر أبيض بسيط) عشان يبين المستند
+        // إنه صادر من نظام ارتقاء بنفس طابعه؛ الشعار داخل دائرة بيضاء للتباين فوق
+        // اللون. برضو سطرين فوق بعض (مو أعمدة جنب بعض) -- نفس السبب السابق: أعمدة
+        // الجداول داخل SetHTMLHeader() بمPDF ما تلتزم دائمًا بالعرض المحدَّد لها
         $logo = FCPATH . 'assets/images/kamc.png';
         $header = '
-            <table dir="rtl" width="100%" style="border-bottom:2px solid #3185b3;padding-bottom:6px;">
-                <tr>
-                    <td width="34" style="vertical-align:middle;"><img src="' . $logo . '" width="30"></td>
-                    <td style="vertical-align:middle;text-align:right;font-family:dejavusans;">
-                        <span style="font-size:12px;font-weight:bold;color:#196b7f;">إدارة المراجعة الداخلية</span>
-                        <span style="font-size:9px;color:#6b7280;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
-                    </td>
-                </tr>
-            </table>
-            <div style="text-align:left;font-size:9px;color:#4b5563;font-family:dejavusans;margin-top:2px;">
-                التاريخ: ' . date('d/m/Y') . '&nbsp;&nbsp;|&nbsp;&nbsp;رقم المهمة: ' . esc($missionCode) . '
-            </div>';
+            <table dir="rtl" width="100%" style="background:#196b7f;border-radius:8px;">
+                <tr><td style="padding:8px 14px;">
+                    <table dir="rtl" width="100%">
+                        <tr>
+                            <td width="32" style="vertical-align:middle;">
+                                <table style="background:#fff;border-radius:50%;width:26px;height:26px;">
+                                    <tr><td style="text-align:center;vertical-align:middle;"><img src="' . $logo . '" width="18"></td></tr>
+                                </table>
+                            </td>
+                            <td style="vertical-align:middle;text-align:right;font-family:dejavusans;">
+                                <span style="font-size:12px;font-weight:bold;color:#fff;">إدارة المراجعة الداخلية</span>
+                                <span style="font-size:9px;color:#cfe8f0;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="text-align:left;font-size:9px;color:#cfe8f0;font-family:dejavusans;margin-top:2px;">
+                        التاريخ: ' . date('d/m/Y') . '&nbsp;&nbsp;|&nbsp;&nbsp;رقم المهمة: ' . esc($missionCode) . '
+                    </div>
+                </td></tr>
+            </table>';
         $mpdf->SetHTMLHeader($header);
     }
 

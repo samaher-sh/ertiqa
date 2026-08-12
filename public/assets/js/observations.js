@@ -111,11 +111,12 @@ function exportObservationToPDF(obs) {
         <title>ملاحظة رقابية - ${escapeHtml(refLabel)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
-          .letterhead img { height:42px; }
-          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
-          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; background:#196b7f; border-radius:10px; padding:16px 20px; margin-bottom:25px; }
+          .letterhead .logo-circle { width:40px; height:40px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .letterhead .logo-circle img { height:26px; }
+          .letterhead h1 { font-size: 15px; color: #fff; margin:0; }
+          .letterhead .sub { font-size:11px; color:#cfe8f0; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:11px; color:#cfe8f0; }
           .letterhead-meta p { margin:2px 0; }
           .header-info { display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fbfd; padding: 20px; border-radius: 8px; border: 1px solid #d8e6eb; }
           .header-info div { display: flex; flex-direction: column; gap: 5px; }
@@ -132,7 +133,7 @@ function exportObservationToPDF(obs) {
       <body>
         <div class="letterhead">
           <div style="display:flex;align-items:center;gap:12px;">
-            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
+            <div class="logo-circle"><img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية"></div>
             <div>
               <h1>إدارة المراجعة الداخلية</h1>
               <p class="sub">ملاحظة رقابية</p>
