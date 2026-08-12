@@ -226,6 +226,7 @@ async function renderContent() {
     bindSentTasksEvents();
   } else if (activeContent === "finalReports") {
     await loadMissionsForSelector();
+    await initWizardData();
     await initFinalReportsData();
     if (frView === "create" && frCreateSelectedTask) await frLoadChecklist(frCreateSelectedTask);
     el.innerHTML = renderFinalReportsPage();
