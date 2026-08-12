@@ -4,3 +4,14 @@
    observations.css (obs-list-card, obs-table, obs-menu-*, obs-form-*,
    obs-view-*) بدون أي أصناف خاصة به
    ============================================================ */
+
+/* لو عدد الأخطار كبير، الجدول يمرّر بحدوده هو فقط (بدل ما تحتاج تمرّر الصفحة
+   كلها لتحت) -- نفس فكرة صندوق شات جدولة الاجتماع (mc-chat-body): ارتفاع مرتبط
+   بمساحة الشاشة المتبقية، وسكرول داخلي بدون شريط تمرير ظاهر */
+.rm-table-scroll{
+  max-height: calc(100vh - 340px);
+  overflow-y: auto;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.rm-table-scroll::-webkit-scrollbar{ display: none; }
+.rm-table-scroll table.obs-table thead tr{ position: sticky; top: 0; z-index: 2; }

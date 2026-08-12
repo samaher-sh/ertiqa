@@ -28,6 +28,11 @@ function rerenderRMContent() {
   const selEnd = active && typeof active.selectionEnd === "number" ? active.selectionEnd : null;
   const ca = document.getElementById("contentArea");
   const scrollTop = ca ? ca.scrollTop : 0;
+  // منطقة تمرير الجدول الداخلية (rm-table-scroll) عنصر جديد كليًا بعد كل
+  // innerHTML، فسكرول التمرير فيها يرجع صفر تلقائيًا -- لازم نحفظه ونرجّعه يدويًا
+  // وإلا أي ضغطة (فتح قائمة ⋮ مثلًا) ترجّع الجدول لأعلى فجأة
+  const tableScrollEl = document.querySelector(".rm-table-scroll");
+  const tableScrollTop = tableScrollEl ? tableScrollEl.scrollTop : 0;
 
   ca.innerHTML = renderRiskMatrixPage();
   bindRiskMatrixEvents();
@@ -38,6 +43,8 @@ function rerenderRMContent() {
     if (el) { el.focus(); if (selStart !== null && el.setSelectionRange) { try { el.setSelectionRange(selStart, selEnd); } catch (e) {} } }
   }
   if (ca) ca.scrollTop = scrollTop;
+  const newTableScrollEl = document.querySelector(".rm-table-scroll");
+  if (newTableScrollEl) newTableScrollEl.scrollTop = tableScrollTop;
 }
 
 async function rmLoadItems(missionId) {
@@ -131,7 +138,7 @@ function renderRmListMode() {
             <p class="hint">ابدأ بإضافة خطر جديد</p>
           </div>
         ` : `
-          <div class="obs-table-wrap">
+          <div class="obs-table-wrap rm-table-scroll">
             <table class="obs-table">
               <thead><tr>
                 <th style="width:50px;">الرقم</th>
@@ -213,16 +220,48 @@ function bindRmListEvents() {
     btn.addEventListener("click", () => rmDelete(btn.dataset.deleteRm));
   });
 
-  /* إغلاق القائمة المنسدلة عند الضغط خارجها */
+  /* إغلاق القائمة المنسدلة عند الضغط خارجها أو عند تمرير الجدول (منطقة التمرير
+     الداخلية الجديدة) -- وإلا تفضل القائمة عالقة بموضعها القديم بعد التمرير */
   if (rmOpenMenuId !== null) {
+    rmPositionOpenMenu();
     setTimeout(() => {
       document.addEventListener("click", function closeRmMenu() {
         rmOpenMenuId = null;
         rerenderRMContent();
         document.removeEventListener("click", closeRmMenu);
       }, { once: true });
+      const scrollWrap = document.querySelector(".rm-table-scroll");
+      if (scrollWrap) scrollWrap.addEventListener("scroll", function closeRmMenuOnScroll() {
+        rmOpenMenuId = null;
+        rerenderRMContent();
+        scrollWrap.removeEventListener("scroll", closeRmMenuOnScroll);
+      }, { once: true });
     }, 0);
   }
+}
+
+/* القائمة المنسدلة (⋮) لازم تُموضَع بـ position:fixed محسوبة من الزر فعليًا (بدل
+   position:absolute الثابتة بالـ CSS) -- لأن الجدول صار له منطقة تمرير داخلية
+   (.rm-table-scroll) تقص أي محتوى يفيض عن حدودها، فلو صف قريب من أسفل منطقة
+   التمرير كانت القائمة تنقص/تختفي جزئيًا. برضو تنقلب لأعلى تلقائيًا لو ما فيه
+   مساحة كافية أسفل الشاشة */
+function rmPositionOpenMenu() {
+  requestAnimationFrame(() => {
+    const dropdown = document.querySelector(".obs-menu-dropdown");
+    const btn = document.querySelector(`[data-menu-toggle="${rmOpenMenuId}"]`);
+    if (!dropdown || !btn) return;
+    const btnRect = btn.getBoundingClientRect();
+    const ddRect = dropdown.getBoundingClientRect();
+    let top = btnRect.bottom + 4;
+    if (top + ddRect.height > window.innerHeight - 12) {
+      top = btnRect.top - ddRect.height - 4;
+    }
+    let left = btnRect.left;
+    if (left + ddRect.width > window.innerWidth - 12) left = btnRect.right - ddRect.width;
+    dropdown.style.position = "fixed";
+    dropdown.style.top = top + "px";
+    dropdown.style.left = left + "px";
+  });
 }
 
 /* ---------- إجراءات القائمة ---------- */
