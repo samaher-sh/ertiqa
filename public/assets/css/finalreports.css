@@ -201,7 +201,7 @@ table.fr-doc-table td:last-child, table.fr-risk-table td:last-child, table.fr-me
 /* ===== معاينة مرحلة (Bottom Sheet) — زر "عرض التفاصيل" بمدرّج مراحل الاعتماد ===== */
 .fr-sheet-overlay{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:flex; align-items:flex-end; justify-content:center; z-index:200; animation:frSheetFadeIn .2s ease; }
 @keyframes frSheetFadeIn{ from{ opacity:0; } to{ opacity:1; } }
-.fr-sheet-box{ background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:680px; max-height:86vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 -12px 40px rgba(0,0,0,.2); animation:frSheetSlideUp .25s ease; }
+.fr-sheet-box{ background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:960px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 -12px 40px rgba(0,0,0,.2); animation:frSheetSlideUp .25s ease; }
 @keyframes frSheetSlideUp{ from{ transform:translateY(100%); } to{ transform:translateY(0); } }
 .fr-sheet-handle{ width:40px; height:4px; border-radius:9999px; background:#e2e8f0; margin:10px auto 0; flex-shrink:0; }
 .fr-sheet-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 20px; font-weight:700; font-size:14px; color:#152c33; flex-shrink:0; }
@@ -216,17 +216,5 @@ table.fr-doc-table td:last-child, table.fr-risk-table td:last-child, table.fr-me
 .fr-preview-field .lbl{ font-size:10px; font-weight:700; color:#6b8c95; }
 .fr-preview-field .val{ font-size:13px; font-weight:600; color:#152c33; word-break:break-word; }
 
-.fr-preview-sub h4{ font-size:12px; font-weight:700; color:var(--pd); margin:0 0 8px; }
-.fr-preview-sub ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
-.fr-preview-sub ul li{ font-size:12px; color:#152c33; background:#f8fbfd; border:1px solid #e2ecf0; border-radius:8px; padding:8px 10px; }
-
-.fr-preview-sla-group h4{ font-size:12px; font-weight:700; color:var(--pd); margin:0 0 8px; }
-.fr-preview-sla-group ul{ list-style:none; margin:0 0 4px; padding:0; display:flex; flex-direction:column; gap:6px; }
-.fr-preview-sla-group li{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; background:#f8fbfd; border:1px solid #e2ecf0; border-radius:8px; padding:8px 10px; }
-.fr-preview-sla-group li .txt{ flex:1; min-width:200px; color:#152c33; }
-.fr-preview-sla-group li .note{ font-size:11px; color:#6b7280; }
-
-.fr-preview-table{ width:100%; font-size:12px; border-collapse:collapse; }
-.fr-preview-table thead tr{ background:#f0f8fd; }
-.fr-preview-table th{ padding:8px 10px; text-align:right; font-size:10px; font-weight:700; color:var(--pd); border-bottom:1.5px solid var(--pb); }
-.fr-preview-table td{ padding:10px; border-bottom:1px solid #eef3f5; color:#152c33; }
+/* fr-preview-empty / fr-preview-grid / fr-preview-field: تستخدمها أيضًا جولة
+   "عرض" بالمراسلات المشتركة (senttasks.js) لمرحلة "التقرير النهائي" -- لا تُحذف */

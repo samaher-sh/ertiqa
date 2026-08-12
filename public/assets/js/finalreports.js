@@ -4,10 +4,16 @@
    ملاحظة: زر اعتماد الرئيس التنفيذي معطّل حاليًا (مافيه endpoint لهذي
    الخطوة بالباك-إند بعد).
 
-   زر "عرض" بعمود "إجراء" بجدول مراحل الاعتماد يفتح معاينة القراءة-فقط
-   للبيانات الفعلية المرتبطة بنفس المهمة المختارة (frCreateSelectedTask) —
-   عبر GET /dashboard/reports/api/preview?mission_id=X&section=N، حيث N
-   رقم الصف (1-6) نفسه المستخدم بجدول report_checklist_items.
+   زر "عرض التفاصيل" بمدرّج مراحل الاعتماد يفتح معاينة القراءة-فقط لنفس
+   البيانات الفعلية المرتبطة بالمهمة المختارة (frCreateSelectedTask) —
+   لكن بنفس نموذج/شكل كل مرحلة الحقيقي بالضبط (مو ملخّص مختصر)، بإعادة
+   استخدام دوال العرض والتحميل الأصلية لكل صفحة مباشرة (نفس نمط جولة "عرض"
+   بالمراسلات المشتركة/senttasks.js): "1-3" = renderMrPage1/2/3 عبر
+   loadMissionReviewData (missionreview.js) بإجبار mrCanEdit=false، "4" =
+   renderRmReadOnlyTable عبر rmLoadItems بإجبار rmForceReadOnly=true
+   (riskmatrix.js)، "5" = renderMeetingSummaryCards عبر msumLoadData بإجبار
+   msumForceReadOnly=true (meetingsummary.js)، "6" = renderObsReadOnlyTable
+   عبر obsLoadList (observations.js، قراءة فقط دائمًا بلا حاجة لعلم إجبار).
    ============================================================ */
 
 let frReportsList = [];
@@ -30,7 +36,6 @@ let frExpandedStep = null; // رقم المرحلة المفتوحة حاليً�
 
 let frPreviewOpen = false;
 let frPreviewSection = null;
-let frPreviewData = null;
 let frPreviewLoading = false;
 
 const frIsHrUser = () => isHrDept || isHrCoordinator;
@@ -476,150 +481,62 @@ function frRenderPreviewModal() {
   </div>`;
 }
 
+/* نفس دوال العرض الحقيقية من كل صفحة تُعاد استخدامها مباشرة هنا -- نفس الشكل
+   بالضبط اللي يشوفه المستخدم بصفحتها الأصلية (نموذج الخطاب/الاتفاقية/قائمة
+   المستندات/مصفوفة المخاطر/ملخص الاجتماع/الملاحظات)، مو ملخّص مبسّط منفصل */
 function frRenderPreviewBody() {
-  const d = frPreviewData;
-  if (!d) return `<p class="fr-preview-empty">تعذّر تحميل البيانات</p>`;
-
-  if (frPreviewSection === 1) {
-    const m = d.mission || {};
-    const fields = [
-      ["رقم المهمة", m.mission_code],
-      ["الإدارة المستهدفة", m.target_department_name],
-      ["السنة", m.year],
-      ["اسم المراجع الرئيسي", m.reviewer_name],
-      ["البريد الإلكتروني", m.reviewer_email],
-      ["رقم الجوال", m.reviewer_phone],
-      ["مدير الإدارة", m.director_name],
-    ];
-    return `
-    <div class="fr-preview-grid">
-      ${fields.map(([lbl, val]) => `<div class="fr-preview-field"><span class="lbl">${escapeHtml(lbl)}</span><span class="val">${escapeHtml(val || "—")}</span></div>`).join("")}
-      <div class="fr-preview-field span2"><span class="lbl">المراد مناقشته بالمراجعة</span><span class="val">${escapeHtml(m.procedure_note || "—")}</span></div>
-    </div>`;
-  }
-
-  if (frPreviewSection === 2) {
-    const responses = d.responses || [];
-    if (responses.length === 0) return `<p class="fr-preview-empty">لا توجد ردود على اتفاقية مستوى الخدمة بعد</p>`;
-    const groups = {};
-    responses.forEach(r => { (groups[r.section_title] = groups[r.section_title] || []).push(r); });
-    return Object.keys(groups).map(sec => `
-      <div class="fr-preview-sla-group">
-        <h4>${escapeHtml(sec)}</h4>
-        <ul>
-          ${groups[sec].map(r => `
-            <li>
-              <span class="txt">${escapeHtml(r.row_text)}</span>
-              <span class="fr-mini-pill" style="background:${Number(r.agree) ? "#f0fdf4" : Number(r.disagree) ? "#fef2f2" : "#f3f4f6"};color:${Number(r.agree) ? "#166534" : Number(r.disagree) ? "#b91c1c" : "#6b7280"};">${Number(r.agree) ? "موافق" : Number(r.disagree) ? "غير موافق" : "لم يُرد بعد"}</span>
-              ${r.note ? `<span class="note">${escapeHtml(r.note)}</span>` : ""}
-            </li>
-          `).join("")}
-        </ul>
-      </div>
-    `).join("");
-  }
-
-  if (frPreviewSection === 3) {
-    const docs = d.documents || [];
-    if (docs.length === 0) return `<p class="fr-preview-empty">لا توجد مستندات مطلوبة مسجّلة</p>`;
-    return `
-    <table class="fr-preview-table">
-      <thead><tr><th>المستند</th><th>الحالة</th><th>ملاحظة</th></tr></thead>
-      <tbody>
-        ${docs.map(doc => `
-          <tr>
-            <td>${escapeHtml(doc.doc_name)}</td>
-            <td>${doc.exists_flag === null ? "لم يُرد بعد" : Number(doc.exists_flag) ? "متوفر" : "غير متوفر"}</td>
-            <td>${escapeHtml(doc.response_note || "—")}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>`;
-  }
-
-  if (frPreviewSection === 4) {
-    const items = d.items || [];
-    if (items.length === 0) return `<p class="fr-preview-empty">لا توجد صفوف بمصفوفة المخاطر بعد</p>`;
-    return `
-    <table class="fr-preview-table">
-      <thead><tr><th>المخاطر</th><th>التقييم</th><th>الضوابط</th><th>نوع النشاط</th></tr></thead>
-      <tbody>
-        ${items.map(r => `
-          <tr>
-            <td>${escapeHtml(r.risk)}</td>
-            <td>${escapeHtml(r.risk_rating || "—")}</td>
-            <td>${escapeHtml(r.controls)}</td>
-            <td>${escapeHtml(r.activity_type)}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>`;
-  }
-
-  if (frPreviewSection === 5) {
-    const m = d.meeting;
-    if (!m) return `<p class="fr-preview-empty">لم يُحدَّد اجتماع لهذه المهمة بعد</p>`;
-    const attendees = d.attendees || [];
-    const points = d.points || [];
-    return `
-    <div class="fr-preview-grid">
-      <div class="fr-preview-field"><span class="lbl">العنوان</span><span class="val">${escapeHtml(m.title || "—")}</span></div>
-      <div class="fr-preview-field"><span class="lbl">التاريخ</span><span class="val" dir="ltr">${escapeHtml(m.meeting_date || "—")}</span></div>
-      <div class="fr-preview-field"><span class="lbl">الوقت</span><span class="val" dir="ltr">${escapeHtml(m.meeting_time || "—")}</span></div>
-      <div class="fr-preview-field"><span class="lbl">المكان</span><span class="val">${escapeHtml(m.location || "—")}</span></div>
-      <div class="fr-preview-field span2"><span class="lbl">الهدف</span><span class="val">${escapeHtml(m.objective || "—")}</span></div>
-    </div>
-    <div class="fr-preview-sub">
-      <h4>الحضور (${attendees.length})</h4>
-      ${attendees.length === 0 ? `<p class="fr-preview-empty">لا يوجد</p>` : `<ul>${attendees.map(a => `<li>${escapeHtml(a.external_name || "—")}${a.attendee_dept ? " — " + escapeHtml(a.attendee_dept) : ""}${a.attendee_position ? " — " + escapeHtml(a.attendee_position) : ""}</li>`).join("")}</ul>`}
-    </div>
-    <div class="fr-preview-sub">
-      <h4>نقاط ملخص الاجتماع (${points.length})</h4>
-      ${points.length === 0 ? `<p class="fr-preview-empty">لا يوجد</p>` : `<ul>${points.map(p => `<li>${escapeHtml(p.point_text || "—")}</li>`).join("")}</ul>`}
-    </div>`;
-  }
-
-  if (frPreviewSection === 6) {
-    const obs = d.observations || [];
-    if (obs.length === 0) return `<p class="fr-preview-empty">لا توجد ملاحظات مسجّلة لهذه المهمة بعد</p>`;
-    return `
-    <table class="fr-preview-table">
-      <thead><tr><th>العنوان</th><th>الإدارة</th><th>الخطورة</th><th>الحالة</th></tr></thead>
-      <tbody>
-        ${obs.map(o => `
-          <tr>
-            <td>${escapeHtml(o.title || "—")}</td>
-            <td>${escapeHtml(o.department_name || "—")}</td>
-            <td>${escapeHtml(o.risk_severity || "—")}</td>
-            <td>${escapeHtml(o.status || "—")}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>`;
-  }
-
+  if (frPreviewSection === 1) return renderMrPage1();
+  if (frPreviewSection === 2) return renderMrPage2();
+  if (frPreviewSection === 3) return renderMrPage3();
+  if (frPreviewSection === 4) return renderRmReadOnlyTable();
+  if (frPreviewSection === 5) return renderMeetingSummaryCards();
+  if (frPreviewSection === 6) return renderObsReadOnlyTable();
   return "";
 }
 
 async function frOpenPreview(section) {
   frPreviewOpen = true;
   frPreviewSection = section;
-  frPreviewData = null;
   frPreviewLoading = true;
   rerenderFRContent();
+
+  const missionId = frCreateSelectedTask;
   try {
-    frPreviewData = await apiGet(base + "/dashboard/reports/api/preview?mission_id=" + frCreateSelectedTask + "&section=" + section);
+    if (section === 1 || section === 2 || section === 3) {
+      await loadMissionReviewData(missionId);
+      mrCanEdit = false; // معاينة قراءة فقط دائمًا هنا، بغض النظر عن صلاحية التعبئة الفعلية
+    } else if (section === 4) {
+      rmForceReadOnly = true;
+      rmSelectedTaskId = String(missionId);
+      await rmLoadItems(missionId);
+    } else if (section === 5) {
+      msumForceReadOnly = true;
+      msumSelectedTaskId = String(missionId);
+      await msumLoadData(missionId);
+    } else if (section === 6) {
+      obsSelectedTaskId = String(missionId);
+      await obsLoadList(missionId);
+    }
   } catch (e) {
-    frPreviewData = null;
+    showToast("تعذّر تحميل بيانات المرحلة", "error");
   }
   frPreviewLoading = false;
   rerenderFRContent();
 }
 
+/* rmForceReadOnly/msumForceReadOnly أعلام عامة بلا مالك ثاني غير المعاينة هنا --
+   لازم ترجع false فور الإغلاق، وإلا تبقى القراءة فقط "متسربة" على صفحتي مصفوفة
+   المخاطر/ملخص الاجتماع الحقيقيتين حتى لصاحب الصلاحية الفعلي (نفس نمط
+   stTourResetForceFlags في senttasks.js) */
+function frResetPreviewForceFlags() {
+  if (typeof rmForceReadOnly !== "undefined") rmForceReadOnly = false;
+  if (typeof msumForceReadOnly !== "undefined") msumForceReadOnly = false;
+}
+
 function frClosePreview() {
   frPreviewOpen = false;
   frPreviewSection = null;
-  frPreviewData = null;
+  frResetPreviewForceFlags();
   rerenderFRContent();
 }
 
@@ -627,14 +544,16 @@ function bindCreateReportEvents() {
   const backBtn = document.getElementById("frBackToListBtn");
   if (backBtn) backBtn.addEventListener("click", () => {
     frView = "list"; frCreateSelectedTask = ""; frCurrentReport = null;
-    frPreviewOpen = false; frPreviewSection = null; frPreviewData = null; frExpandedStep = null;
+    frPreviewOpen = false; frPreviewSection = null; frExpandedStep = null;
+    frResetPreviewForceFlags();
     rerenderFRContent();
   });
 
   const taskSelect = document.getElementById("frCreateTaskSelect");
   if (taskSelect) taskSelect.addEventListener("change", async e => {
     frCreateSelectedTask = e.target.value;
-    frPreviewOpen = false; frPreviewSection = null; frPreviewData = null; frExpandedStep = null;
+    frPreviewOpen = false; frPreviewSection = null; frExpandedStep = null;
+    frResetPreviewForceFlags();
     if (frCreateSelectedTask) await frLoadChecklist(frCreateSelectedTask);
     rerenderFRContent();
   });
