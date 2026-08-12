@@ -221,15 +221,17 @@ function bindRmListEvents() {
   });
 
   /* إغلاق القائمة المنسدلة عند الضغط خارجها أو عند تمرير الجدول (منطقة التمرير
-     الداخلية الجديدة) -- وإلا تفضل القائمة عالقة بموضعها القديم بعد التمرير */
+     الداخلية الجديدة) -- وإلا تفضل القائمة عالقة بموضعها القديم بعد التمرير.
+     capture:true عشان الإغلاق يشتغل حتى لو ضغط المستخدم على عنصر عنده
+     stopPropagation خاص فيه (زر الملف الشخصي بالأعلى مثلًا) */
   if (rmOpenMenuId !== null) {
     rmPositionOpenMenu();
     setTimeout(() => {
       document.addEventListener("click", function closeRmMenu() {
         rmOpenMenuId = null;
         rerenderRMContent();
-        document.removeEventListener("click", closeRmMenu);
-      }, { once: true });
+        document.removeEventListener("click", closeRmMenu, true);
+      }, { once: true, capture: true });
       const scrollWrap = document.querySelector(".rm-table-scroll");
       if (scrollWrap) scrollWrap.addEventListener("scroll", function closeRmMenuOnScroll() {
         rmOpenMenuId = null;

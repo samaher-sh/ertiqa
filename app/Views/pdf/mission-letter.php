@@ -24,7 +24,10 @@
 <body>
     <table class="header-table">
         <tr>
-            <td width="34"><img src="<?= FCPATH ?>assets/images/kamc.png" width="26"></td>
+            <!-- kamc-pdf-logo.png مقصوص لحجمه الفعلي بالضبط (32×30) بدون سمة width --
+                 mPDF يفشل بصمت بتصغير شعار kamc.png الأصلي (1005×944) داخل جدول مهما
+                 كانت نسبة التصغير، حتى 1.5x؛ العرض الطبيعي 1:1 فقط يشتغل بثبات -->
+            <td width="34"><img src="<?= FCPATH ?>assets/images/kamc-pdf-logo.png"></td>
             <td class="header-right">إدارة المراجعة الداخلية</td>
             <td class="header-left">
                 التاريخ: <?= date('d/m/Y') ?><br>

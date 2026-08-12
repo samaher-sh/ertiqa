@@ -8,9 +8,12 @@
     table.rm { width: 100%; border-collapse: collapse; }
     table.rm th { background: #f0f7fa; color: #196b7f; font-size: 11px; padding: 8px; border: 1px solid #b3d4e5; text-align: right; }
     table.rm td { padding: 8px; border: 1px solid #d8e6eb; font-size: 11px; text-align: right; vertical-align: top; }
-    .rating-high { background: #f0fdf6; }
+    .rating-high { background: #fef2f2; }
+    .rating-high .badge { color: #b91c1c; font-weight: bold; }
     .rating-medium { background: #fffceb; }
-    .rating-low { background: #fff8f8; }
+    .rating-medium .badge { color: #a16207; font-weight: bold; }
+    .rating-low { background: #f0fdf4; }
+    .rating-low .badge { color: #15803d; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -37,7 +40,7 @@
                     <tr class="<?= $cls ?>">
                         <td><?= $i + 1 ?></td>
                         <td><?= nl2br(esc($it['risk'])) ?></td>
-                        <td><?= esc($it['risk_rating'] ?: '—') ?></td>
+                        <td><span class="badge"><?= esc($it['risk_rating'] ?: '—') ?></span></td>
                         <td><?= nl2br(esc($it['controls'])) ?></td>
                         <td><?= esc($it['activity_type']) ?></td>
                     </tr>
