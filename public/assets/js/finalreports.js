@@ -382,49 +382,52 @@ function renderApprovalStepper() {
   const total = items.length;
   const pct = total ? Math.round((checkedCount / total) * 100) : 0;
   const expandedNum = frEffectiveExpandedStep(items);
+  const expandedItem = items.find(it => it.section_number === expandedNum);
+  const expandedState = expandedItem ? frStepState(expandedItem, items, readOnlyViewer) : "";
+  const expandedIsDone = expandedItem ? !!frCurrentCompletion[expandedItem.section_number] : false;
+  const expandedCheckDisabled = !expandedIsDone || readOnlyViewer;
 
   return `
-  <div class="fr-vstep-card">
-    <div class="fr-vstep-head">
-      <div class="fr-vstep-head-top">
+  <div class="fr-stepper-card">
+    <div class="fr-stepper-head">
+      <div class="fr-stepper-head-top">
         <i data-lucide="clipboard-list"></i><span class="t">مراحل الاعتماد</span>
         <span class="fr-phases-count" dir="ltr">${checkedCount} / ${total}</span>
       </div>
-      <div class="fr-vstep-progress"><div class="fr-vstep-progress-fill" style="width:${pct}%;"></div></div>
+      <div class="fr-stepper-progress"><div class="fr-stepper-progress-fill" style="width:${pct}%;"></div></div>
     </div>
-    <div class="fr-vstep-list">
+
+    <div class="fr-hstep-track">
       ${items.map((item, idx) => {
         const state = frStepState(item, items, readOnlyViewer);
         const isExpanded = expandedNum === item.section_number;
-        const isDone = !!frCurrentCompletion[item.section_number];
         const isLast = idx === items.length - 1;
-        const checkDisabled = !isDone || readOnlyViewer;
         return `
-        <div class="fr-vstep ${state} ${isExpanded ? "expanded" : ""}">
-          <div class="fr-vstep-rail">
-            <div class="fr-vstep-circle">${state === "done" ? '<i data-lucide="check"></i>' : item.section_number}</div>
-            ${!isLast ? `<div class="fr-vstep-line"></div>` : ""}
-          </div>
-          <div class="fr-vstep-body">
-            <button type="button" class="fr-vstep-header" data-fr-step-toggle="${item.section_number}" ${state === "locked" ? "disabled" : ""}>
-              <span class="fr-vstep-title">${escapeHtml(item.section_title)}</span>
-              <span class="fr-vstep-status ${state}">${state === "done" ? "معتمدة" : state === "active" ? "الحالية" : "قادمة"}</span>
-              <i data-lucide="chevron-down" class="fr-vstep-chev"></i>
-            </button>
-            ${isExpanded ? `
-            <div class="fr-vstep-detail">
-              <button type="button" class="fr-vstep-view-btn" data-fr-preview="${item.section_number}"><i data-lucide="eye"></i> عرض التفاصيل</button>
-              <label class="fr-round-check-wrap ${checkDisabled ? "disabled" : ""}">
-                <input type="checkbox" data-fr-check="${item.section_number}" ${state === "done" ? "checked" : ""} ${checkDisabled ? "disabled" : ""}>
-                <span class="fr-round-check"><i data-lucide="check"></i></span>
-                <span class="fr-round-check-label">${state === "done" ? "تم اعتماد هذه المرحلة" : "تأشير باعتماد هذه المرحلة"}</span>
-              </label>
-              ${!isDone ? `<p class="fr-vstep-hint">لم تكتمل بيانات هذه المرحلة بعد</p>` : ""}
-            </div>` : ""}
-          </div>
-        </div>`;
+        <div class="fr-hstep-node ${state} ${isExpanded ? "expanded" : ""}">
+          <button type="button" class="fr-hstep-circle-btn" data-fr-step-toggle="${item.section_number}" ${state === "locked" ? "disabled" : ""} title="${escapeHtml(item.section_title)}">
+            <span class="fr-hstep-circle">${state === "done" ? '<i data-lucide="check"></i>' : item.section_number}</span>
+          </button>
+          <span class="fr-hstep-label">${escapeHtml(item.section_title)}</span>
+        </div>
+        ${!isLast ? `<div class="fr-hstep-line ${state === "done" ? "done" : ""}"></div>` : ""}`;
       }).join("")}
     </div>
+
+    ${expandedItem ? `
+    <div class="fr-step-detail">
+      <div class="fr-step-detail-head">
+        <span class="fr-step-detail-title">${escapeHtml(expandedItem.section_title)}</span>
+        <span class="fr-step-status ${expandedState}">${expandedState === "done" ? "معتمدة" : expandedState === "active" ? "الحالية" : "قادمة"}</span>
+      </div>
+      <button type="button" class="fr-step-view-btn" data-fr-preview="${expandedItem.section_number}"><i data-lucide="eye"></i> عرض التفاصيل</button>
+      <label class="fr-round-check-wrap ${expandedCheckDisabled ? "disabled" : ""}">
+        <input type="checkbox" data-fr-check="${expandedItem.section_number}" ${expandedState === "done" ? "checked" : ""} ${expandedCheckDisabled ? "disabled" : ""}>
+        <span class="fr-round-check"><i data-lucide="check"></i></span>
+        <span class="fr-round-check-label">${expandedState === "done" ? "تم اعتماد هذه المرحلة" : "تأشير باعتماد هذه المرحلة"}</span>
+      </label>
+      ${!expandedIsDone ? `<p class="fr-step-hint">لم تكتمل بيانات هذه المرحلة بعد</p>` : ""}
+    </div>` : ""}
+
     <div class="fr-phases-footer">
       ${readOnlyViewer ? `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(frCurrentReport ? frCurrentReport.status : "draft")}</span>` : frRenderStepperActionBtn(items, expandedNum)}
     </div>

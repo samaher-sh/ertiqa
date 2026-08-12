@@ -20,7 +20,11 @@
 .fr-readonly-badge{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.2); }
 
 /* ===== Filters accordion ===== */
-.fr-filters-acc{ border-radius:16px; overflow:hidden; transition:all .2s; }
+/* overflow:hidden بس وهي مقفولة (ما فيه محتوى ظاهر أصلًا وقتها) -- لو انحطت
+   بغض النظر عن الحالة كانت تقص قوائم الفلاتر المنسدلة (.fr-dd-panel) نفسها لأنها
+   عنصر position:absolute جوّا هذا الحاوي، فتظهر القائمة مقصوصة/غير قابلة للاختيار */
+.fr-filters-acc{ border-radius:16px; transition:all .2s; }
+.fr-filters-acc.closed{ overflow:hidden; }
 .fr-filters-acc.open{ border:1.5px solid var(--pb); box-shadow:0 4px 16px rgba(13,132,181,.12); background:var(--pl); }
 .fr-filters-acc.closed{ border:1.5px solid #e2ecf0; box-shadow:0 1px 4px rgba(0,0,0,.05); background:#fff; }
 .fr-filters-toggle{ width:100%; padding:14px 20px; display:flex; align-items:center; gap:12px; background:transparent; border:none; }.fr-filters-toggle i.icon, .fr-filters-toggle svg.icon{ width:14px; height:14px; color:#9ca3af; flex-shrink:0; }.fr-filters-acc.open .fr-filters-toggle i.icon, .fr-filters-acc.open .fr-filters-toggle svg.icon{ color:var(--pd); }
@@ -80,41 +84,43 @@ table.fr-table tbody tr{ border-bottom:1px solid #eef3f5; }
 .fr-submit-btn:not(:disabled), .fr-next-btn:not(:disabled){ box-shadow:0 4px 14px rgba(49,133,179,.4); }
 .fr-next-btn i{ width:14px; height:14px; }
 
-/* ===== مراحل الاعتماد -- Vertical Stepper/Timeline ===== */
-.fr-vstep-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.06); }
-.fr-vstep-head{ padding:16px 20px; background:var(--p); }
-.fr-vstep-head-top{ display:flex; align-items:center; gap:12px; }.fr-vstep-head-top i, .fr-vstep-head-top svg{ width:15px; height:15px; color:rgba(255,255,255,.8); }
-.fr-vstep-head-top span.t{ font-size:13px; font-weight:700; color:#fff; }
-.fr-vstep-progress{ margin-top:10px; height:6px; border-radius:9999px; background:rgba(255,255,255,.22); overflow:hidden; }
-.fr-vstep-progress-fill{ height:100%; border-radius:9999px; background:#fff; transition:width .3s; }
+/* ===== مراحل الاعتماد -- Horizontal Stepper (بالعرض مو بالطول) ===== */
+.fr-stepper-card{ background:#fff; border-radius:16px; overflow:hidden; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.06); }
+.fr-stepper-head{ padding:16px 20px; background:var(--p); }
+.fr-stepper-head-top{ display:flex; align-items:center; gap:12px; }.fr-stepper-head-top i, .fr-stepper-head-top svg{ width:15px; height:15px; color:rgba(255,255,255,.8); }
+.fr-stepper-head-top span.t{ font-size:13px; font-weight:700; color:#fff; }
+.fr-stepper-progress{ margin-top:10px; height:6px; border-radius:9999px; background:rgba(255,255,255,.22); overflow:hidden; }
+.fr-stepper-progress-fill{ height:100%; border-radius:9999px; background:#fff; transition:width .3s; }
 
-.fr-vstep-list{ padding:20px 20px 8px; display:flex; flex-direction:column; }
-.fr-vstep{ display:flex; gap:14px; }
-.fr-vstep-rail{ display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
-.fr-vstep-circle{ width:34px; height:34px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; background:#f1f5f9; color:#94a3b8; border:2px solid #e2e8f0; transition:all .2s; }
-.fr-vstep-circle i{ width:15px; height:15px; }
-.fr-vstep.active .fr-vstep-circle{ background:var(--p); color:#fff; border-color:var(--p); box-shadow:0 0 0 4px rgba(49,133,179,.16); }
-.fr-vstep.done .fr-vstep-circle{ background:#1f9d6e; color:#fff; border-color:#1f9d6e; }
-.fr-vstep-line{ width:2px; flex:1; min-height:24px; background:#e2e8f0; margin:4px 0; border-radius:9999px; }
-.fr-vstep.done .fr-vstep-line{ background:#a7e3c8; }
+/* صف أفقي: دوائر المراحل متصلة بخط أفقي، يمرّر جانبيًا لو ضاقت الشاشة بدل ما
+   يلتف لصفوف متعددة */
+.fr-hstep-track{ padding:22px 24px 10px; display:flex; align-items:flex-start; overflow-x:auto; }
+.fr-hstep-node{ display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; width:96px; }
+.fr-hstep-circle-btn{ background:none; border:none; padding:0; cursor:pointer; }
+.fr-hstep-node.locked .fr-hstep-circle-btn{ cursor:not-allowed; }
+.fr-hstep-circle{ width:36px; height:36px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; background:#f1f5f9; color:#94a3b8; border:2px solid #e2e8f0; transition:all .2s; }
+.fr-hstep-circle i{ width:15px; height:15px; }
+.fr-hstep-node.active .fr-hstep-circle{ background:var(--p); color:#fff; border-color:var(--p); box-shadow:0 0 0 4px rgba(49,133,179,.16); }
+.fr-hstep-node.done .fr-hstep-circle{ background:#1f9d6e; color:#fff; border-color:#1f9d6e; }
+.fr-hstep-node.expanded .fr-hstep-circle{ transform:scale(1.1); }
+.fr-hstep-label{ font-size:10px; font-weight:700; color:#94a3b8; text-align:center; line-height:1.4; }
+.fr-hstep-node.active .fr-hstep-label, .fr-hstep-node.done .fr-hstep-label{ color:var(--pd); }
+.fr-hstep-line{ flex:1; min-width:16px; height:2px; border-radius:9999px; background:#e2e8f0; margin-top:18px; }
+.fr-hstep-line.done{ background:#a7e3c8; }
 
-.fr-vstep-body{ flex:1; min-width:0; padding-bottom:20px; }
-.fr-vstep-header{ width:100%; display:flex; align-items:center; gap:10px; background:none; border:none; padding:6px 0; text-align:right; cursor:pointer; }
-.fr-vstep.locked .fr-vstep-header{ cursor:not-allowed; }
-.fr-vstep-title{ font-size:13px; font-weight:700; color:#152c33; }
-.fr-vstep.locked .fr-vstep-title{ color:#9ca3af; }
-.fr-vstep-status{ font-size:10px; font-weight:700; padding:3px 10px; border-radius:9999px; }
-.fr-vstep-status.done{ background:#f0fdf6; color:#1f9d6e; }
-.fr-vstep-status.active{ background:var(--pl); color:var(--pd); }
-.fr-vstep-status.locked{ background:#f1f5f9; color:#9ca3af; }
-.fr-vstep-chev{ width:14px; height:14px; margin-right:auto; color:#9ca3af; transition:transform .2s; }
-.fr-vstep.expanded .fr-vstep-chev{ transform:rotate(180deg); }
-
-.fr-vstep-detail{ margin-top:10px; padding:14px 16px; border-radius:12px; background:#f8fbfd; border:1px solid #e2ecf0; display:flex; flex-direction:column; gap:12px; }
-.fr-vstep-view-btn{ align-self:flex-start; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--pd); background:#fff; border:1px solid var(--pb); padding:7px 14px; border-radius:9999px; }
-.fr-vstep-view-btn:hover{ background:var(--pl); }
-.fr-vstep-view-btn i{ width:13px; height:13px; }
-.fr-vstep-hint{ font-size:11px; color:#b45309; margin:0; }
+/* منطقة تفاصيل مرحلة وحدة (اللي مفتوحة حاليًا) أسفل الصف الأفقي -- بدل ما تتمدد
+   كل مرحلة عموديًا داخل الصف نفسه */
+.fr-step-detail{ margin:0 20px 16px; padding:14px 16px; border-radius:12px; background:#f8fbfd; border:1px solid #e2ecf0; display:flex; flex-direction:column; gap:12px; }
+.fr-step-detail-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.fr-step-detail-title{ font-size:13px; font-weight:700; color:#152c33; }
+.fr-step-status{ font-size:10px; font-weight:700; padding:3px 10px; border-radius:9999px; flex-shrink:0; }
+.fr-step-status.done{ background:#f0fdf6; color:#1f9d6e; }
+.fr-step-status.active{ background:var(--pl); color:var(--pd); }
+.fr-step-status.locked{ background:#f1f5f9; color:#9ca3af; }
+.fr-step-view-btn{ align-self:flex-start; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--pd); background:#fff; border:1px solid var(--pb); padding:7px 14px; border-radius:9999px; }
+.fr-step-view-btn:hover{ background:var(--pl); }
+.fr-step-view-btn i{ width:13px; height:13px; }
+.fr-step-hint{ font-size:11px; color:#b45309; margin:0; }
 
 /* Checkbox دائري الشكل مو مربع لاعتماد المرحلة */
 .fr-round-check-wrap{ display:flex; align-items:center; gap:10px; cursor:pointer; }
