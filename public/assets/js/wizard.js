@@ -385,9 +385,11 @@ function exportWizP1ToPDF() {
         <title>الخطاب الرسمي - ${escapeHtml(missionCode)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.8; }
-          .letterhead { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
-          .letterhead h1 { font-size: 18px; color: #196b7f; margin:0; }
-          .letterhead .sub { font-size:12px; color:#6b8c95; margin:4px 0 0; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
+          .letterhead-brand { display:flex; align-items:center; gap:12px; }
+          .letterhead-brand img { height:40px; }
+          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
+          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
           .letterhead-meta { text-align:left; font-size:12px; color:#4b5563; }
           .letterhead-meta p { margin:2px 0; }
           p { margin: 0 0 14px; font-size: 13px; }
@@ -400,9 +402,12 @@ function exportWizP1ToPDF() {
       </head>
       <body>
         <div class="letterhead">
-          <div>
-            <h1>إدارة المراجعة الداخلية</h1>
-            <p class="sub">Internal Audit Department</p>
+          <div class="letterhead-brand">
+            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
+            <div>
+              <h1>إدارة المراجعة الداخلية</h1>
+              <p class="sub">مدينة الملك عبدالله الطبية — نظام ارتقاء</p>
+            </div>
           </div>
           <div class="letterhead-meta">
             <p>التاريخ: ${escapeHtml(todayD.toLocaleDateString("en-GB"))}</p>
@@ -501,7 +506,7 @@ function bindWizPage1() {
 function renderWizPage2() {
   const s = wizP2;
   const channels = [
-    { key: "email", icon: "mail", label: "البريد الإلكتروني", ph: "أدخل عنوان البريد الإلكتروني", type: "text" },
+    { key: "email", icon: "mail", label: "البريد الإلكتروني", ph: "أدخل عنوان البريد الإلكتروني", type: "email" },
     { key: "memo", icon: "message-square", label: "المذكرات الداخلية", ph: "أدخل تفاصيل المذكرات الداخلية", type: "textarea" },
     { key: "phone", icon: "phone", label: "الهاتف الداخلي", ph: "أدخل رقم الهاتف الداخلي", type: "tel" },
   ];
@@ -586,18 +591,17 @@ function renderWizPage2() {
         <div class="wiz-input-icon-wrap">
           <input id="p2SigName" type="text" class="wiz-input plain" placeholder="اسم المراجع الرئيسي" value="${escapeHtml(s.sigName)}">
         </div>
-        <div class="wiz-sig-inline-row">
-          <div class="grow">
-            <p class="wiz-sig-mini-label">التوقيع</p>
-            <div class="msum-sig-pad-wrap">
-              <canvas id="p2SigPad" class="msum-sig-canvas" width="220" height="80"></canvas>
-              <button type="button" class="msum-sig-clear" id="p2SigPadClear" title="مسح التوقيع">✕</button>
-            </div>
-          </div>
-          <div>
-            <p class="wiz-sig-mini-label">التاريخ</p>
-            <input id="p2SigDate" type="date" class="wiz-input plain" value="${s.sigDate}"
-              onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+        <div>
+          <p class="wiz-sig-mini-label">التاريخ</p>
+          <input id="p2SigDate" type="date" class="wiz-input plain" value="${s.sigDate}"
+            onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+        </div>
+        <div>
+          <p class="wiz-sig-mini-label">التوقيع</p>
+          <div class="wiz-sig-pad-card">
+            <canvas id="p2SigPad" class="wiz-sig-pad-canvas" width="440" height="130"></canvas>
+            ${!s.sigSignature ? `<span class="wiz-sig-pad-hint" id="p2SigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>` : ""}
+            <button type="button" class="wiz-sig-pad-clear" id="p2SigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
           </div>
         </div>
       </div>
@@ -607,10 +611,8 @@ function renderWizPage2() {
           <span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span>
         </div>
         <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
-        <div class="wiz-sig-inline-row">
-          <div class="grow"><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-blank-box solid" style="height:80px;"></div></div>
-          <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
-        </div>
+        <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
+        <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-pad-card locked-pad"></div></div>
       </div>
     </div>
     <div class="wiz-disclosure">
@@ -654,12 +656,12 @@ function exportWizP2ToPDF() {
         <title>اتفاقية مستوى الخدمة</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; background:#196b7f; border-radius:10px; padding:16px 20px; margin-bottom:25px; }
-          .letterhead .logo-circle { width:40px; height:40px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-          .letterhead .logo-circle img { height:26px; }
-          .letterhead h1 { font-size: 15px; color: #fff; margin:0; }
-          .letterhead .sub { font-size:11px; color:#cfe8f0; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:11px; color:#cfe8f0; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
+          .letterhead-brand { display:flex; align-items:center; gap:12px; }
+          .letterhead-brand img { height:40px; }
+          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
+          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
           .letterhead-meta p { margin:2px 0; }
           .info-row { display:flex; gap:30px; margin-bottom:20px; }
           .info-row .field { flex:1; }
@@ -679,8 +681,8 @@ function exportWizP2ToPDF() {
       </head>
       <body>
         <div class="letterhead">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="logo-circle"><img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية"></div>
+          <div class="letterhead-brand">
+            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
             <div>
               <h1>إدارة المراجعة الداخلية</h1>
               <p class="sub">اتفاقية مستوى الخدمة — Service Level Agreement</p>
@@ -754,6 +756,10 @@ function bindWizPage2() {
       if (el.dataset.chVal === "phone") {
         v = v.replace(/[^0-9]/g, "").slice(0, 10);
         el.value = v;
+      } else if (el.dataset.chVal === "email") {
+        // ما يسمح إلا بأحرف/أرقام إنجليزية ورموز البريد الإلكتروني القياسية (بدون عربي)
+        v = v.replace(/[^A-Za-z0-9@._+-]/g, "");
+        el.value = v;
       }
       s.chVals[el.dataset.chVal] = v;
       if (el.tagName === "TEXTAREA") autoGrowTextarea(el);
@@ -766,12 +772,18 @@ function bindWizPage2() {
   if (sigDate) sigDate.addEventListener("change", e => { s.sigDate = e.target.value; rerenderWizardContent(); });
 
   const sigPad = $("p2SigPad");
-  if (sigPad) msumInitSignaturePad(sigPad, s.sigSignature, dataUrl => { s.sigSignature = dataUrl; });
+  if (sigPad) msumInitSignaturePad(sigPad, s.sigSignature, dataUrl => {
+    s.sigSignature = dataUrl;
+    const hint = $("p2SigPadHint");
+    if (hint) hint.style.display = "none";
+  });
   const sigPadClear = $("p2SigPadClear");
   if (sigPadClear) sigPadClear.addEventListener("click", () => {
     s.sigSignature = "";
     const canvas = $("p2SigPad");
     if (canvas) canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    const hint = $("p2SigPadHint");
+    if (hint) hint.style.display = "";
   });
 }
 

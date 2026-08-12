@@ -49,7 +49,7 @@ const ST_STAGE_TO_PAGE = {
    نهائيًا رغم وجود المهمة فعليًا. renderer يحدد مصدر المحتوى -- كل مرحلة
    تستخدم نفس دالة العرض الحقيقية من صفحتها الأصلية بالضبط (مو ملخّص مختصر)،
    بإجبار القراءة فقط: "mr1/mr2/mr3" = renderMrPage1/2/3 (missionreview.js)،
-   "rm" = renderRiskMatrixCard (riskmatrix.js)، "msum" = renderMeetingSummaryCards
+   "rm" = renderRmReadOnlyTable (riskmatrix.js)، "msum" = renderMeetingSummaryCards
    (meetingsummary.js)، "obs" = renderObsReadOnlyTable (observations.js)؛
    "log" = لا يوجد قسم "التقرير النهائي" بحد ذاته فنكتفي بتفصيل حدث اعتماده
    من السجل الزمني */
@@ -252,7 +252,7 @@ function stTourStageBody(stage) {
   }
   if (stage.renderer === "rm") {
     if (stTourLoading && !stTourRmLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
-    return renderRiskMatrixCard();
+    return renderRmReadOnlyTable();
   }
   if (stage.renderer === "msum") {
     if (stTourLoading && !stTourMsumLoaded) return `<p class="fr-preview-empty">جارِ التحميل...</p>`;
