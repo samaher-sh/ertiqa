@@ -435,15 +435,17 @@ function bindObsListEvents() {
     btn.addEventListener("click", () => obsDelete(parseInt(btn.dataset.deleteObs, 10)));
   });
 
-  /* إغلاق القائمة المنسدلة عند الضغط خارجها */
+  /* إغلاق القائمة المنسدلة عند الضغط خارجها -- capture:true عشان الإغلاق يشتغل
+     حتى لو ضغط المستخدم على عنصر بره القائمة عنده stopPropagation خاص فيه (زر
+     الملف الشخصي بالأعلى مثلًا)، لأن مرحلة capture تسبق وصول الحدث للهدف نفسه */
   if (obsOpenMenuId !== null) {
     obsPositionOpenMenu();
     setTimeout(() => {
       document.addEventListener("click", function closeObsMenu() {
         obsOpenMenuId = null;
         rerenderObsContent();
-        document.removeEventListener("click", closeObsMenu);
-      }, { once: true });
+        document.removeEventListener("click", closeObsMenu, true);
+      }, { once: true, capture: true });
     }, 0);
   }
 }
