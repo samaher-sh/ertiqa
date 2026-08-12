@@ -75,9 +75,9 @@ function renderRiskMatrixCard() {
   const COLS = [
     { label: "الرقم", w: "6%", c: true },
     { label: "المخاطر", w: "22%" },
-    { label: "تقييم المخاطر", w: "22%" },
+    { label: "تقييم المخاطر", w: "12%" },
     { label: "وصف الضوابط", w: "22%" },
-    { label: "نوع النشاط", w: "22%" },
+    { label: "نوع النشاط", w: "32%" },
     { label: "", w: "6%", c: true },
   ];
 

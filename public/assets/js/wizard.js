@@ -42,10 +42,6 @@ function initWizardState() {
     ch: { email: true, memo: true, phone: true },
     chVals: { email: "", memo: "", phone: "" },
     sigName: "", sigDate: "", sigSignature: "",
-    // معاينة محلية فقط لبنود اتفاقية مستوى الخدمة (مفتاحها "رقم القسم-رقم البند") --
-    // الرد الفعلي المعتمد يُعبَّأ لاحقًا من ممثل الإدارة المستهدفة، ما يُرسل ضمن
-    // POST /dashboard/new-task (تصميم متعمَّد، مو نقص)
-    slaAnswers: {},
   };
   wizardPage = 1;
 }
@@ -505,7 +501,7 @@ function bindWizPage1() {
 function renderWizPage2() {
   const s = wizP2;
   const channels = [
-    { key: "email", icon: "mail", label: "البريد الإلكتروني", ph: "أدخل عنوان البريد الإلكتروني", type: "email" },
+    { key: "email", icon: "mail", label: "البريد الإلكتروني", ph: "أدخل عنوان البريد الإلكتروني", type: "text" },
     { key: "memo", icon: "message-square", label: "المذكرات الداخلية", ph: "أدخل تفاصيل المذكرات الداخلية", type: "textarea" },
     { key: "phone", icon: "phone", label: "الهاتف الداخلي", ph: "أدخل رقم الهاتف الداخلي", type: "tel" },
   ];
@@ -568,18 +564,14 @@ function renderWizPage2() {
         <tbody>
           ${SLA_SECTIONS.map((sec, si) => `
             <tr class="wiz-sla-section-row"><td colspan="4"><span class="num">${si + 1}</span>${sec.title}</td></tr>
-            ${sec.rows.map((row, ri) => {
-              const key = si + "-" + ri;
-              const val = s.slaAnswers[key];
-              return `
+            ${sec.rows.map(row => `
               <tr class="wiz-sla-row">
                 <td><div class="lbl"><span class="dot"></span><span>${row}</span></div></td>
-                <td><button type="button" class="wiz-checkbox-visual wiz-sla-toggle ${val === "agree" ? "checked" : ""}" data-wiz-sla-agree="${key}" title="موافق">${val === "agree" ? '<i data-lucide="check"></i>' : ""}</button></td>
-                <td><button type="button" class="wiz-checkbox-visual no wiz-sla-toggle ${val === "disagree" ? "checked" : ""}" data-wiz-sla-disagree="${key}" title="غير موافق">${val === "disagree" ? '<i data-lucide="x"></i>' : ""}</button></td>
+                <td><div class="wiz-checkbox-visual readonly" title="يُعتمد لاحقًا من قِبل ممثل الإدارة المستهدفة"></div></td>
+                <td><div class="wiz-checkbox-visual readonly" title="يُعتمد لاحقًا من قِبل ممثل الإدارة المستهدفة"></div></td>
                 <td><div class="wiz-note-line"></div></td>
               </tr>
-            `;
-            }).join("")}
+            `).join("")}
           `).join("")}
         </tbody>
       </table>
@@ -594,17 +586,19 @@ function renderWizPage2() {
         <div class="wiz-input-icon-wrap">
           <input id="p2SigName" type="text" class="wiz-input plain" placeholder="اسم المراجع الرئيسي" value="${escapeHtml(s.sigName)}">
         </div>
-        <div>
-          <p class="wiz-sig-mini-label">التوقيع</p>
-          <div class="msum-sig-pad-wrap">
-            <canvas id="p2SigPad" class="msum-sig-canvas" width="220" height="80"></canvas>
-            <button type="button" class="msum-sig-clear" id="p2SigPadClear" title="مسح التوقيع">✕</button>
+        <div class="wiz-sig-inline-row">
+          <div class="grow">
+            <p class="wiz-sig-mini-label">التوقيع</p>
+            <div class="msum-sig-pad-wrap">
+              <canvas id="p2SigPad" class="msum-sig-canvas" width="220" height="80"></canvas>
+              <button type="button" class="msum-sig-clear" id="p2SigPadClear" title="مسح التوقيع">✕</button>
+            </div>
           </div>
-        </div>
-        <div>
-          <p class="wiz-sig-mini-label">التاريخ</p>
-          <input id="p2SigDate" type="date" class="wiz-input plain" value="${s.sigDate}"
-            onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+          <div>
+            <p class="wiz-sig-mini-label">التاريخ</p>
+            <input id="p2SigDate" type="date" class="wiz-input plain" value="${s.sigDate}"
+              onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+          </div>
         </div>
       </div>
       <div class="wiz-sig-card locked">
@@ -613,8 +607,10 @@ function renderWizPage2() {
           <span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span>
         </div>
         <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
-        <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-blank-box solid" style="height:80px;"></div></div>
-        <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
+        <div class="wiz-sig-inline-row">
+          <div class="grow"><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-blank-box solid" style="height:80px;"></div></div>
+          <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
+        </div>
       </div>
     </div>
     <div class="wiz-disclosure">
@@ -658,11 +654,12 @@ function exportWizP2ToPDF() {
         <title>اتفاقية مستوى الخدمة</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
-          .letterhead img { height:42px; }
-          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
-          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; background:#196b7f; border-radius:10px; padding:16px 20px; margin-bottom:25px; }
+          .letterhead .logo-circle { width:40px; height:40px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .letterhead .logo-circle img { height:26px; }
+          .letterhead h1 { font-size: 15px; color: #fff; margin:0; }
+          .letterhead .sub { font-size:11px; color:#cfe8f0; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:11px; color:#cfe8f0; }
           .letterhead-meta p { margin:2px 0; }
           .info-row { display:flex; gap:30px; margin-bottom:20px; }
           .info-row .field { flex:1; }
@@ -683,7 +680,7 @@ function exportWizP2ToPDF() {
       <body>
         <div class="letterhead">
           <div style="display:flex;align-items:center;gap:12px;">
-            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
+            <div class="logo-circle"><img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية"></div>
             <div>
               <h1>إدارة المراجعة الداخلية</h1>
               <p class="sub">اتفاقية مستوى الخدمة — Service Level Agreement</p>
@@ -750,23 +747,6 @@ function bindWizPage2() {
     });
   });
 
-  /* معاينة بنود الاتفاقية (موافق/غير موافق) -- ضغطة وحدة على نفس البند تلغي
-     اختياره (toggle)، والضغط على الخيار المقابل يبدّل الرد مباشرة بدل ما يحتاج
-     المستخدم يلغي القديم يدويًا أولًا */
-  document.querySelectorAll("[data-wiz-sla-agree]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.wizSlaAgree;
-      s.slaAnswers[key] = s.slaAnswers[key] === "agree" ? null : "agree";
-      rerenderWizardContent();
-    });
-  });
-  document.querySelectorAll("[data-wiz-sla-disagree]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.wizSlaDisagree;
-      s.slaAnswers[key] = s.slaAnswers[key] === "disagree" ? null : "disagree";
-      rerenderWizardContent();
-    });
-  });
   document.querySelectorAll("[data-ch-val]").forEach(el => {
     if (el.tagName === "TEXTAREA") autoGrowTextarea(el);
     el.addEventListener("input", () => {
