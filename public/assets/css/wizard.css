@@ -171,10 +171,6 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-sig-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:20px; }
 @media (max-width:700px){ .wiz-sig-grid{ grid-template-columns:1fr; } }
 .wiz-sig-card{ border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; }
-.wiz-sig-inline-row{ display:flex; gap:12px; align-items:flex-start; }
-.wiz-sig-inline-row > .grow{ flex:1; min-width:0; }
-.wiz-sig-inline-row input[type="date"]{ width:140px; }
-@media (max-width:480px){ .wiz-sig-inline-row{ flex-direction:column; } .wiz-sig-inline-row input[type="date"]{ width:100%; } }
 .wiz-sig-card.active{ background:var(--pl); border:1px solid var(--pb); }
 .wiz-sig-card.locked{ background:#fafafa; border:1px solid #e2e8f0; }
 .wiz-sig-title{ font-size:12px; font-weight:800; color:var(--p); margin:0; }
@@ -185,6 +181,17 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-sig-name-line .bar{ height:1px; width:100%; background:#d1d5db; display:block; }
 .wiz-sig-blank-box{ height:48px; border-radius:12px; border:1.5px dashed #d1d5db; background:#fff; }
 .wiz-sig-blank-box.solid{ border-style:solid; border-color:#e2e8f0; }
+
+/* صندوق التوقيع -- أكبر وأوضح من لوحة توقيع ملخص الاجتماع الصغيرة (msum-sig-*)،
+   مع تلميح "وقّع هنا" يختفي أول ما يبدأ المستخدم يرسم، وزر مسح دائري بالزاوية */
+.wiz-sig-pad-card{ position:relative; border-radius:14px; border:1.5px dashed var(--pb); background:linear-gradient(180deg,#fff,#f8fbfd); overflow:hidden; }
+.wiz-sig-pad-card.locked-pad{ height:130px; border-style:solid; border-color:#e2e8f0; background:#fafafa; }
+.wiz-sig-pad-canvas{ display:block; width:100%; height:130px; cursor:crosshair; touch-action:none; }
+.wiz-sig-pad-hint{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; font-weight:600; color:#b3d4e5; pointer-events:none; }
+.wiz-sig-pad-hint i, .wiz-sig-pad-hint svg{ width:15px; height:15px; }
+.wiz-sig-pad-clear{ position:absolute; top:8px; left:8px; width:26px; height:26px; border-radius:50%; background:#fff; color:#ef4444; border:1px solid #fecaca; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+.wiz-sig-pad-clear:hover{ background:#fef2f2; }
+.wiz-sig-pad-clear i, .wiz-sig-pad-clear svg{ width:13px; height:13px; }
 
 .wiz-disclosure{ margin:0 20px 20px; padding:16px 18px; border-radius:12px; background:var(--pl); border:1px solid var(--pb); }
 .wiz-disclosure-title{ font-size:13px; font-weight:800; color:var(--pd); margin:0 0 8px; }

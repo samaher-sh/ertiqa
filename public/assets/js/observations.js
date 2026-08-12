@@ -111,12 +111,12 @@ function exportObservationToPDF(obs) {
         <title>ملاحظة رقابية - ${escapeHtml(refLabel)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; background:#196b7f; border-radius:10px; padding:16px 20px; margin-bottom:25px; }
-          .letterhead .logo-circle { width:40px; height:40px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-          .letterhead .logo-circle img { height:26px; }
-          .letterhead h1 { font-size: 15px; color: #fff; margin:0; }
-          .letterhead .sub { font-size:11px; color:#cfe8f0; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:11px; color:#cfe8f0; }
+          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
+          .letterhead-brand { display:flex; align-items:center; gap:12px; }
+          .letterhead-brand img { height:40px; }
+          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
+          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
+          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
           .letterhead-meta p { margin:2px 0; }
           .header-info { display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fbfd; padding: 20px; border-radius: 8px; border: 1px solid #d8e6eb; }
           .header-info div { display: flex; flex-direction: column; gap: 5px; }
@@ -132,8 +132,8 @@ function exportObservationToPDF(obs) {
       </head>
       <body>
         <div class="letterhead">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="logo-circle"><img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية"></div>
+          <div class="letterhead-brand">
+            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
             <div>
               <h1>إدارة المراجعة الداخلية</h1>
               <p class="sub">ملاحظة رقابية</p>
@@ -235,19 +235,14 @@ function renderObsReadOnlyTable() {
         <th>موضوع الملاحظة</th>
         <th style="width:160px;">الإدارة المعنية</th>
         <th style="width:110px;">التاريخ</th>
-        <th style="width:110px;">التصنيف</th>
       </tr></thead>
       <tbody>
-        ${obsList.map((obs, i) => {
-          const rc = OBS_RISK_COLORS[obs.risk] || { bg: "#f3f4f6", text: "#4b5563", border: "#e5e7eb", dot: "#9ca3af" };
-          return `
+        ${obsList.map((obs, i) => `
           <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
             <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
-            <td><span class="obs-dept-cell"><i data-lucide="building-2"></i>${escapeHtml(obs.dept || "—")}</span></td>
+            <td><span class="obs-dept-cell">${escapeHtml(obs.dept || "—")}</span></td>
             <td><span class="obs-date-cell">${escapeHtml(obs.date || "—")}</span></td>
-            <td><span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(obs.risk || "—")}</span></td>
-          </tr>`;
-        }).join("")}
+          </tr>`).join("")}
       </tbody>
     </table>
   </div>`;
@@ -340,28 +335,24 @@ function renderObsListMode() {
                 <th>موضوع الملاحظة</th>
                 <th style="width:160px;">الإدارة المعنية</th>
                 <th style="width:110px;">التاريخ</th>
-                <th style="width:110px;">التصنيف</th>
-                ${!isAuditHead ? '<th style="width:60px;">الإجراء</th>' : ""}
+                ${!isAuditHead ? '<th style="width:60px;">الإجراءات</th>' : ""}
               </tr></thead>
               <tbody>
                 ${filteredObs.map((obs, i) => {
-                  const rc = OBS_RISK_COLORS[obs.risk] || { bg: "#f3f4f6", text: "#4b5563", border: "#e5e7eb", dot: "#9ca3af" };
-                  const rcLabel = obs.risk || "—";
                   const menuOpen = obsOpenMenuId === obs.id;
                   return `
                   <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
                     <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
-                    <td><span class="obs-dept-cell"><i data-lucide="building-2"></i>${escapeHtml(obs.dept || "—")}</span></td>
+                    <td><span class="obs-dept-cell">${escapeHtml(obs.dept || "—")}</span></td>
                     <td><span class="obs-date-cell">${obs.date}</span></td>
-                    <td><span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(rcLabel)}</span></td>
                     ${!isAuditHead ? `
                     <td class="obs-menu-cell">
                       <button class="obs-menu-btn" data-menu-toggle="${obs.id}"><i data-lucide="more-vertical"></i></button>
                       ${menuOpen ? `
                         <div class="obs-menu-dropdown">
                           <button class="obs-menu-item" data-view-obs="${obs.id}"><i data-lucide="eye"></i> عرض</button>
+                          <button class="obs-menu-item" data-export-obs="${obs.id}"><i data-lucide="file-text"></i> تصدير</button>
                           ${!readOnly ? `
-                            <button class="obs-menu-item" data-edit-obs="${obs.id}"><i data-lucide="pencil"></i> تعديل</button>
                             <div class="obs-menu-sep"></div>
                             <button class="obs-menu-item danger" data-delete-obs="${obs.id}"><i data-lucide="trash-2"></i> حذف</button>
                           ` : ""}
@@ -437,8 +428,13 @@ function bindObsListEvents() {
   document.querySelectorAll("[data-view-obs]").forEach(btn => {
     btn.addEventListener("click", () => obsOpenView(parseInt(btn.dataset.viewObs, 10)));
   });
-  document.querySelectorAll("[data-edit-obs]").forEach(btn => {
-    btn.addEventListener("click", () => obsOpenEdit(parseInt(btn.dataset.editObs, 10)));
+  document.querySelectorAll("[data-export-obs]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const obs = obsList.find(o => o.id === parseInt(btn.dataset.exportObs, 10));
+      if (obs) exportObservationToPDF(obs);
+      obsOpenMenuId = null;
+      rerenderObsContent();
+    });
   });
   document.querySelectorAll("[data-delete-obs]").forEach(btn => {
     btn.addEventListener("click", () => obsDelete(parseInt(btn.dataset.deleteObs, 10)));
@@ -466,15 +462,6 @@ function obsOpenNew() {
     recommendations: "", addToReport: null, attachments: [],
   };
   obsView = "new";
-  rerenderObsContent();
-}
-function obsOpenEdit(id) {
-  const obs = obsList.find(o => o.id === id);
-  if (!obs) return;
-  const md = obsMissionDept();
-  obsDraft = { ...obs, deptId: md.deptId, dept: md.dept, attachments: [] };
-  obsOpenMenuId = null;
-  obsView = "edit";
   rerenderObsContent();
 }
 function obsOpenView(id) {

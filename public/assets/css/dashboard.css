@@ -402,10 +402,10 @@ img{ max-width:100%; }
 
 /* ══════ تنسيق الطباعة/تصدير PDF — يخفي كل شي إلا محتوى الصفحة نفسها ══════ */
 @media print{
-  .sidebar, .topbar, .obs-btn-pdf, .obs-btn-add, .rm-add-btn, .msum-attach-btn,
+  .sidebar, .topbar, .obs-btn-pdf, .obs-btn-add, .msum-attach-btn,
   .wiz-nav, .wiz-btn, .fr-header-actions button, .obs-attach-btn, button, .nav-tooltip,
   input[type="file"], .toast-container{ display:none !important; }
   .app-shell, .main-col, .content-area{ display:block !important; height:auto !important; overflow:visible !important; }
   body{ background:#fff !important; }
-  .wiz-card, .rm-card, .obs-card, .fr-header-card, .fr-table-card, .st-card{ box-shadow:none !important; break-inside:avoid; }
+  .wiz-card, .obs-list-card, .obs-form-card, .fr-header-card, .fr-table-card, .st-card{ box-shadow:none !important; break-inside:avoid; }
 }

@@ -5,8 +5,8 @@
 <style>
     body { font-family: 'DejaVu Sans', sans-serif; font-size: 13px; color: #152c33; direction: rtl; }
     .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-    .header-table td { vertical-align: top; }
-    .header-right { text-align: right; font-size: 11px; color: #6b7280; }
+    .header-table td { vertical-align: middle; }
+    .header-right { text-align: right; font-size: 12px; font-weight: bold; color: #196b7f; }
     .header-left { text-align: left; font-size: 11px; color: #6b7280; }
     .divider { border-top: 2px solid #3185b3; margin: 10px 0 16px; }
     .addr { font-weight: bold; font-size: 14px; margin-bottom: 8px; }
@@ -24,6 +24,7 @@
 <body>
     <table class="header-table">
         <tr>
+            <td width="34"><img src="<?= FCPATH ?>assets/images/kamc.png" width="26"></td>
             <td class="header-right">إدارة المراجعة الداخلية</td>
             <td class="header-left">
                 التاريخ: <?= date('d/m/Y') ?><br>
