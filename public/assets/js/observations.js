@@ -351,8 +351,8 @@ function renderObsListMode() {
                       ${menuOpen ? `
                         <div class="obs-menu-dropdown">
                           <button class="obs-menu-item" data-view-obs="${obs.id}"><i data-lucide="eye"></i> عرض</button>
-                          <button class="obs-menu-item" data-export-obs="${obs.id}"><i data-lucide="file-text"></i> تصدير</button>
                           ${!readOnly ? `
+                            <button class="obs-menu-item" data-edit-obs="${obs.id}"><i data-lucide="pencil"></i> تعديل</button>
                             <div class="obs-menu-sep"></div>
                             <button class="obs-menu-item danger" data-delete-obs="${obs.id}"><i data-lucide="trash-2"></i> حذف</button>
                           ` : ""}
@@ -428,13 +428,8 @@ function bindObsListEvents() {
   document.querySelectorAll("[data-view-obs]").forEach(btn => {
     btn.addEventListener("click", () => obsOpenView(parseInt(btn.dataset.viewObs, 10)));
   });
-  document.querySelectorAll("[data-export-obs]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const obs = obsList.find(o => o.id === parseInt(btn.dataset.exportObs, 10));
-      if (obs) exportObservationToPDF(obs);
-      obsOpenMenuId = null;
-      rerenderObsContent();
-    });
+  document.querySelectorAll("[data-edit-obs]").forEach(btn => {
+    btn.addEventListener("click", () => obsOpenEdit(parseInt(btn.dataset.editObs, 10)));
   });
   document.querySelectorAll("[data-delete-obs]").forEach(btn => {
     btn.addEventListener("click", () => obsDelete(parseInt(btn.dataset.deleteObs, 10)));
@@ -442,6 +437,7 @@ function bindObsListEvents() {
 
   /* إغلاق القائمة المنسدلة عند الضغط خارجها */
   if (obsOpenMenuId !== null) {
+    obsPositionOpenMenu();
     setTimeout(() => {
       document.addEventListener("click", function closeObsMenu() {
         obsOpenMenuId = null;
@@ -450,6 +446,31 @@ function bindObsListEvents() {
       }, { once: true });
     }, 0);
   }
+}
+
+/* القائمة المنسدلة (⋮) لازم تُموضَع بـ position:fixed محسوبة من الزر فعليًا (بدل
+   position:absolute الثابتة بالـ CSS) -- لأن .obs-table-wrap فيها overflow-x:auto
+   بدون overflow-y صريح، وهذا يخلي المتصفح يحسب overflow-y ضمنيًا كـ auto أيضًا
+   (قاعدة CSS معروفة)، فتنقص/تختفي القائمة كليًا لأي صف قريب من أسفل الجدول (وأكيد
+   لآخر صف، لأن الغلاف ما فيه مساحة فاضية تحته أصلًا) -- وهذا سبب شكوى "زر
+   الإجراءات ما يشتغل" الفعلي، مو مجرد عطل بصري بسيط */
+function obsPositionOpenMenu() {
+  requestAnimationFrame(() => {
+    const dropdown = document.querySelector(".obs-menu-dropdown");
+    const btn = document.querySelector(`[data-menu-toggle="${obsOpenMenuId}"]`);
+    if (!dropdown || !btn) return;
+    const btnRect = btn.getBoundingClientRect();
+    const ddRect = dropdown.getBoundingClientRect();
+    let top = btnRect.bottom + 4;
+    if (top + ddRect.height > window.innerHeight - 12) {
+      top = btnRect.top - ddRect.height - 4;
+    }
+    let left = btnRect.left;
+    if (left + ddRect.width > window.innerWidth - 12) left = btnRect.right - ddRect.width;
+    dropdown.style.position = "fixed";
+    dropdown.style.top = top + "px";
+    dropdown.style.left = left + "px";
+  });
 }
 
 /* ---------- إجراءات القائمة ---------- */
@@ -470,6 +491,14 @@ function obsOpenView(id) {
   obsViewTarget = obs;
   obsOpenMenuId = null;
   obsView = "view";
+  rerenderObsContent();
+}
+function obsOpenEdit(id) {
+  const obs = obsList.find(o => o.id === id);
+  if (!obs) return;
+  obsDraft = { ...obs, attachments: [] };
+  obsOpenMenuId = null;
+  obsView = "edit";
   rerenderObsContent();
 }
 async function obsDelete(id) {
