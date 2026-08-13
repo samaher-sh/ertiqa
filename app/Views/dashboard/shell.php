@@ -1,3 +1,18 @@
+<?php
+/* نسخة كل ملف أصل (asset) مبنية على وقت آخر تعديل فعلي على القرص (filemtime) --
+   بدون هذا، المتصفح يخزّن نسخة قديمة من JS/CSS مؤقتًا (Cache) ويستمر بعرضها
+   حتى بعد نشر تحديث فعلي بالخادم، فيبدو للمستخدم إن الميزة الجديدة "ما اشتغلت"
+   رغم وصول الكود الصحيح فعليًا -- تغيّر وقت التعديل تلقائيًا يغيّر الرابط
+   فيجبر المتصفح يجيب النسخة الجديدة بدون أي تحديث يدوي إضافي (hard refresh) */
+if (!function_exists('av')) {
+    function av(string $path): string
+    {
+        $full = FCPATH . $path;
+        $v = is_file($full) ? filemtime($full) : time();
+        return base_url($path) . '?v=' . $v;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,17 +24,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/wizard.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/riskmatrix.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/meetingsummary.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/observations.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/taskdetail.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/senttasks.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/finalreports.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/meetingschedule.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/documentrequests.css') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/missionreview.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/dashboard.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/wizard.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/riskmatrix.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/meetingsummary.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/observations.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/taskdetail.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/senttasks.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/finalreports.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/meetingschedule.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/documentrequests.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/missionreview.css') ?>">
 </head>
 <body>
 
@@ -119,17 +134,17 @@
   // بدون إعادة تعريفها (const بنفس الاسم بأكثر من <script> بنفس الصفحة تطلع SyntaxError)
   const base = window.APP.baseUrl;
 </script>
-<script src="<?= base_url('assets/js/utils.js') ?>"></script>
-<script src="<?= base_url('assets/js/dashboard-data.js') ?>"></script>
-<script src="<?= base_url('assets/js/wizard.js') ?>"></script>
-<script src="<?= base_url('assets/js/riskmatrix.js') ?>"></script>
-<script src="<?= base_url('assets/js/meetingsummary.js') ?>"></script>
-<script src="<?= base_url('assets/js/observations.js') ?>"></script>
-<script src="<?= base_url('assets/js/senttasks.js') ?>"></script>
-<script src="<?= base_url('assets/js/finalreports.js') ?>"></script>
-<script src="<?= base_url('assets/js/meetingschedule.js') ?>"></script>
-<script src="<?= base_url('assets/js/documentrequests.js') ?>"></script>
-<script src="<?= base_url('assets/js/missionreview.js') ?>"></script>
-<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
+<script src="<?= av('assets/js/utils.js') ?>"></script>
+<script src="<?= av('assets/js/dashboard-data.js') ?>"></script>
+<script src="<?= av('assets/js/wizard.js') ?>"></script>
+<script src="<?= av('assets/js/riskmatrix.js') ?>"></script>
+<script src="<?= av('assets/js/meetingsummary.js') ?>"></script>
+<script src="<?= av('assets/js/observations.js') ?>"></script>
+<script src="<?= av('assets/js/senttasks.js') ?>"></script>
+<script src="<?= av('assets/js/finalreports.js') ?>"></script>
+<script src="<?= av('assets/js/meetingschedule.js') ?>"></script>
+<script src="<?= av('assets/js/documentrequests.js') ?>"></script>
+<script src="<?= av('assets/js/missionreview.js') ?>"></script>
+<script src="<?= av('assets/js/dashboard.js') ?>"></script>
 </body>
 </html>
