@@ -228,7 +228,10 @@ async function renderContent() {
     await loadMissionsForSelector();
     await initWizardData();
     await initFinalReportsData();
-    if (frView === "create" && frCreateSelectedTask) await frLoadChecklist(frCreateSelectedTask);
+    if (frView === "create" && frCreateSelectedTask) {
+      await frLoadChecklist(frCreateSelectedTask);
+      if (frCurrentItems.length) await frEnsureStepLoaded(frEffectiveExpandedStep(frCurrentItems));
+    }
     el.innerHTML = renderFinalReportsPage();
     bindFinalReportsEvents();
   } else if (activeContent === "meetingSchedule") {

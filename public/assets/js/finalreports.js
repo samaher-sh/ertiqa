@@ -4,16 +4,18 @@
    ملاحظة: زر اعتماد الرئيس التنفيذي معطّل حاليًا (مافيه endpoint لهذي
    الخطوة بالباك-إند بعد).
 
-   زر "عرض التفاصيل" بمدرّج مراحل الاعتماد يفتح معاينة القراءة-فقط لنفس
-   البيانات الفعلية المرتبطة بالمهمة المختارة (frCreateSelectedTask) —
-   لكن بنفس نموذج/شكل كل مرحلة الحقيقي بالضبط (مو ملخّص مختصر)، بإعادة
-   استخدام دوال العرض والتحميل الأصلية لكل صفحة مباشرة (نفس نمط جولة "عرض"
-   بالمراسلات المشتركة/senttasks.js): "1-3" = renderMrPage1/2/3 عبر
-   loadMissionReviewData (missionreview.js) بإجبار mrCanEdit=false، "4" =
-   renderRmReadOnlyTable عبر rmLoadItems بإجبار rmForceReadOnly=true
-   (riskmatrix.js)، "5" = renderMeetingSummaryCards عبر msumLoadData بإجبار
-   msumForceReadOnly=true (meetingsummary.js)، "6" = renderObsReadOnlyTable
-   عبر obsLoadList (observations.js، قراءة فقط دائمًا بلا حاجة لعلم إجبار).
+   منطقة تفاصيل المرحلة المفتوحة بمدرّج مراحل الاعتماد تعرض دائمًا (بدون أي
+   ضغطة زر/نافذة منبثقة منفصلة) نفس محتوى مرحلتها الحقيقي بالضبط -- نفس
+   نموذج/شكل الصفحة الأصلية، بإعادة استخدام دوال العرض والتحميل الأصلية لكل
+   صفحة مباشرة (نفس نمط جولة "عرض" بالمراسلات المشتركة/senttasks.js):
+   "1-3" = renderMrPage1/2/3 عبر loadMissionReviewData (missionreview.js)
+   بإجبار mrCanEdit=false، "4" = renderRmReadOnlyTable عبر rmLoadItems
+   بإجبار rmForceReadOnly=true (riskmatrix.js)، "5" = renderMeetingSummaryCards
+   عبر msumLoadData بإجبار msumForceReadOnly=true (meetingsummary.js)، "6" =
+   renderObsReadOnlyTable عبر obsLoadList (observations.js، قراءة فقط دائمًا
+   بلا حاجة لعلم إجبار). كل مجموعة تُحمَّل مرة وحدة فقط لكل مهمة مختارة
+   (frMrLoaded/frRmLoaded/frMsumLoaded/frObsLoaded)، فالتنقل بين مراحل نفس
+   المجموعة (1↔2↔3 مثلًا) ما يعيد الطلب من الخادم.
    ============================================================ */
 
 let frReportsList = [];
@@ -34,9 +36,8 @@ let frCurrentItems = [];
 let frCurrentCompletion = {};
 let frExpandedStep = null; // رقم المرحلة المفتوحة حاليًا بمدرّج "مراحل الاعتماد" (null = افتراضيًا أول مرحلة غير معتمدة)
 
-let frPreviewOpen = false;
-let frPreviewSection = null;
-let frPreviewLoading = false;
+let frStepDataLoading = false;
+let frMrLoaded = false, frRmLoaded = false, frMsumLoaded = false, frObsLoaded = false;
 
 const frIsHrUser = () => isHrDept || isHrCoordinator;
 
@@ -250,7 +251,11 @@ function renderFRTable(reports) {
 
 function bindFRTableEvents() {
   const createBtn = document.getElementById("frCreateBtn");
-  if (createBtn) createBtn.addEventListener("click", () => { frView = "create"; frCreateSelectedTask = ""; frCurrentReport = null; rerenderFRContent(); });
+  if (createBtn) createBtn.addEventListener("click", () => {
+    frView = "create"; frCreateSelectedTask = ""; frCurrentReport = null; frExpandedStep = null;
+    frResetStepLoadState();
+    rerenderFRContent();
+  });
 
   const filtersToggle = document.getElementById("frFiltersToggle");
   if (filtersToggle) filtersToggle.addEventListener("click", () => { frFiltersOpen = !frFiltersOpen; rerenderFRContent(); });
@@ -321,7 +326,10 @@ function bindFRTableEvents() {
     btn.addEventListener("click", async () => {
       frView = "create";
       frCreateSelectedTask = btn.dataset.frView;
+      frExpandedStep = null;
+      frResetStepLoadState();
       await frLoadChecklist(frCreateSelectedTask);
+      if (frCurrentItems.length) await frEnsureStepLoaded(frEffectiveExpandedStep(frCurrentItems));
       rerenderFRContent();
     });
   });
@@ -355,7 +363,6 @@ function renderCreateReportView() {
     ${renderLinkedTaskSelector(frCreateSelectedTask, "frCreateTaskSelect")}
 
     ${frCreateSelectedTask ? renderApprovalStepper() : ""}
-    ${frRenderPreviewModal()}
   </div>`;
 }
 
@@ -424,7 +431,9 @@ function renderApprovalStepper() {
         <span class="fr-step-detail-title">${escapeHtml(expandedItem.section_title)}</span>
         <span class="fr-step-status ${expandedState}">${expandedState === "done" ? "معتمدة" : expandedState === "active" ? "الحالية" : "قادمة"}</span>
       </div>
-      <button type="button" class="fr-step-view-btn" data-fr-preview="${expandedItem.section_number}"><i data-lucide="eye"></i> عرض التفاصيل</button>
+      <div class="fr-step-detail-body">
+        ${frStepDataLoading ? `<p class="fr-preview-empty">جارِ التحميل...</p>` : frRenderStepBody(expandedNum)}
+      </div>
       <label class="fr-round-check-wrap ${expandedCheckDisabled ? "disabled" : ""}">
         <input type="checkbox" data-fr-check="${expandedItem.section_number}" ${expandedState === "done" ? "checked" : ""} ${expandedCheckDisabled ? "disabled" : ""}>
         <span class="fr-round-check"><i data-lucide="check"></i></span>
@@ -459,102 +468,112 @@ function frRenderStepperActionBtn(items, expandedNum) {
 }
 
 /* ============================================================
-   معاينة مرحلة (Modal) — بيانات حقيقية حسب رقم الصف المختار
+   محتوى مرحلة مفتوحة — بيانات حقيقية حسب رقم الصف المختار، تُعرض دائمًا
+   inline أسفل المدرّج الأفقي مباشرة (بدون أي نافذة/ضغطة زر إضافية)
    ============================================================ */
-/* ورقة منزلقة من الأسفل (Bottom Sheet) بدل نافذة منتصف الشاشة -- نفس محتوى
-   frRenderPreviewBody() القراءة-فقط الفعلي، بس بحاوية/حركة مختلفة */
-function frRenderPreviewModal() {
-  if (!frPreviewOpen) return "";
-  const item = frCurrentItems.find(it => it.section_number === frPreviewSection);
-  return `
-  <div class="fr-sheet-overlay" id="frPreviewOverlay">
-    <div class="fr-sheet-box">
-      <div class="fr-sheet-handle"></div>
-      <div class="fr-sheet-head">
-        <span>${escapeHtml(item ? item.section_title : "")}</span>
-        <button type="button" class="fr-sheet-close" id="frPreviewCloseBtn"><i data-lucide="x"></i></button>
-      </div>
-      <div class="fr-sheet-body">
-        ${frPreviewLoading ? `<p class="fr-preview-empty">جارِ التحميل...</p>` : frRenderPreviewBody()}
-      </div>
-    </div>
-  </div>`;
-}
 
 /* نفس دوال العرض الحقيقية من كل صفحة تُعاد استخدامها مباشرة هنا -- نفس الشكل
    بالضبط اللي يشوفه المستخدم بصفحتها الأصلية (نموذج الخطاب/الاتفاقية/قائمة
    المستندات/مصفوفة المخاطر/ملخص الاجتماع/الملاحظات)، مو ملخّص مبسّط منفصل */
-function frRenderPreviewBody() {
-  if (frPreviewSection === 1) return renderMrPage1();
-  if (frPreviewSection === 2) return renderMrPage2();
-  if (frPreviewSection === 3) return renderMrPage3();
-  if (frPreviewSection === 4) return renderRmReadOnlyTable();
-  if (frPreviewSection === 5) return renderMeetingSummaryCards();
-  if (frPreviewSection === 6) return renderObsReadOnlyTable();
+function frRenderStepBody(section) {
+  if (section === 1) return renderMrPage1();
+  if (section === 2) return renderMrPage2();
+  if (section === 3) return renderMrPage3();
+  if (section === 4) return renderRmReadOnlyTable();
+  if (section === 5) return renderMeetingSummaryCards();
+  if (section === 6) return renderObsReadOnlyTable();
   return "";
 }
 
-async function frOpenPreview(section) {
-  frPreviewOpen = true;
-  frPreviewSection = section;
-  frPreviewLoading = true;
-  rerenderFRContent();
+function frStepGroup(section) {
+  if (section === 1 || section === 2 || section === 3) return "mr";
+  if (section === 4) return "rm";
+  if (section === 5) return "msum";
+  if (section === 6) return "obs";
+  return null;
+}
 
+/* يحمّل بيانات مجموعة المرحلة المطلوبة لو ما كانت محمّلة مسبقًا لنفس المهمة
+   (بدون أي رسم/render -- تستخدمها frGotoStep وأيضًا نقاط الدخول اللي توصل
+   لإنشاء تقرير بمهمة محدَّدة سلفًا زي "متابعة" بالقائمة أو التوجيه من
+   المراسلات المشتركة، عشان أول عرض للمدرّج ما يطلع فاضي/بيانات قديمة) */
+async function frEnsureStepLoaded(section) {
+  const group = frStepGroup(section);
   const missionId = frCreateSelectedTask;
+  const alreadyLoaded = (group === "mr" && frMrLoaded) || (group === "rm" && frRmLoaded)
+    || (group === "msum" && frMsumLoaded) || (group === "obs" && frObsLoaded);
+  if (alreadyLoaded) return;
+
   try {
-    if (section === 1 || section === 2 || section === 3) {
+    if (group === "mr") {
       await loadMissionReviewData(missionId);
-      mrCanEdit = false; // معاينة قراءة فقط دائمًا هنا، بغض النظر عن صلاحية التعبئة الفعلية
-    } else if (section === 4) {
+      mrCanEdit = false; // قراءة فقط دائمًا هنا، بغض النظر عن صلاحية التعبئة الفعلية
+      frMrLoaded = true;
+    } else if (group === "rm") {
       rmForceReadOnly = true;
       rmSelectedTaskId = String(missionId);
       await rmLoadItems(missionId);
-    } else if (section === 5) {
+      frRmLoaded = true;
+    } else if (group === "msum") {
       msumForceReadOnly = true;
       msumSelectedTaskId = String(missionId);
       await msumLoadData(missionId);
-    } else if (section === 6) {
+      frMsumLoaded = true;
+    } else if (group === "obs") {
       obsSelectedTaskId = String(missionId);
       await obsLoadList(missionId);
+      frObsLoaded = true;
     }
   } catch (e) {
     showToast("تعذّر تحميل بيانات المرحلة", "error");
   }
-  frPreviewLoading = false;
+}
+
+/* رقم المرحلة المفتوحة يتغيّر فورًا (بدون انتظار الشبكة) عشان يبان أي مرحلة
+   انتقلنا لها فورًا، وبيانات مجموعتها تُحمَّل مرة وحدة فقط لكل مهمة مختارة
+   (frMrLoaded/... تُصفَّر عند اختيار مهمة جديدة عبر frResetStepLoadState) */
+async function frGotoStep(section) {
+  frExpandedStep = section;
+  const group = frStepGroup(section);
+  const alreadyLoaded = (group === "mr" && frMrLoaded) || (group === "rm" && frRmLoaded)
+    || (group === "msum" && frMsumLoaded) || (group === "obs" && frObsLoaded);
+  if (alreadyLoaded) { rerenderFRContent(); return; }
+
+  frStepDataLoading = true;
+  rerenderFRContent();
+  await frEnsureStepLoaded(section);
+  frStepDataLoading = false;
   rerenderFRContent();
 }
 
-/* rmForceReadOnly/msumForceReadOnly أعلام عامة بلا مالك ثاني غير المعاينة هنا --
-   لازم ترجع false فور الإغلاق، وإلا تبقى القراءة فقط "متسربة" على صفحتي مصفوفة
-   المخاطر/ملخص الاجتماع الحقيقيتين حتى لصاحب الصلاحية الفعلي (نفس نمط
-   stTourResetForceFlags في senttasks.js) */
-function frResetPreviewForceFlags() {
+/* rmForceReadOnly/msumForceReadOnly أعلام عامة بلا مالك ثاني غير هذي الصفحة --
+   لازم ترجع false عند مغادرة إنشاء التقرير، وإلا تبقى القراءة فقط "متسربة"
+   على صفحتي مصفوفة المخاطر/ملخص الاجتماع الحقيقيتين حتى لصاحب الصلاحية
+   الفعلي (نفس نمط stTourResetForceFlags في senttasks.js) */
+function frResetStepLoadState() {
+  frMrLoaded = false; frRmLoaded = false; frMsumLoaded = false; frObsLoaded = false;
   if (typeof rmForceReadOnly !== "undefined") rmForceReadOnly = false;
   if (typeof msumForceReadOnly !== "undefined") msumForceReadOnly = false;
-}
-
-function frClosePreview() {
-  frPreviewOpen = false;
-  frPreviewSection = null;
-  frResetPreviewForceFlags();
-  rerenderFRContent();
 }
 
 function bindCreateReportEvents() {
   const backBtn = document.getElementById("frBackToListBtn");
   if (backBtn) backBtn.addEventListener("click", () => {
     frView = "list"; frCreateSelectedTask = ""; frCurrentReport = null;
-    frPreviewOpen = false; frPreviewSection = null; frExpandedStep = null;
-    frResetPreviewForceFlags();
+    frExpandedStep = null;
+    frResetStepLoadState();
     rerenderFRContent();
   });
 
   const taskSelect = document.getElementById("frCreateTaskSelect");
   if (taskSelect) taskSelect.addEventListener("change", async e => {
     frCreateSelectedTask = e.target.value;
-    frPreviewOpen = false; frPreviewSection = null; frExpandedStep = null;
-    frResetPreviewForceFlags();
-    if (frCreateSelectedTask) await frLoadChecklist(frCreateSelectedTask);
+    frExpandedStep = null;
+    frResetStepLoadState();
+    if (frCreateSelectedTask) {
+      await frLoadChecklist(frCreateSelectedTask);
+      if (frCurrentItems.length) { await frGotoStep(frEffectiveExpandedStep(frCurrentItems)); return; }
+    }
     rerenderFRContent();
   });
 
@@ -562,9 +581,8 @@ function bindCreateReportEvents() {
     if (btn.disabled) return;
     btn.addEventListener("click", () => {
       const num = parseInt(btn.dataset.frStepToggle, 10);
-      const current = frEffectiveExpandedStep(frCurrentItems);
-      frExpandedStep = current === num ? null : num;
-      rerenderFRContent();
+      if (num === frEffectiveExpandedStep(frCurrentItems)) return;
+      frGotoStep(num);
     });
   });
 
@@ -574,25 +592,9 @@ function bindCreateReportEvents() {
     const current = frEffectiveExpandedStep(items);
     const idx = items.findIndex(it => it.section_number === current);
     if (idx > -1 && idx < items.length - 1) {
-      frExpandedStep = items[idx + 1].section_number;
-      rerenderFRContent();
+      frGotoStep(items[idx + 1].section_number);
     }
   });
-
-  document.querySelectorAll("[data-fr-preview]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      frOpenPreview(parseInt(btn.dataset.frPreview, 10));
-    });
-  });
-
-  const previewOverlay = document.getElementById("frPreviewOverlay");
-  if (previewOverlay) {
-    previewOverlay.addEventListener("click", (e) => {
-      if (e.target === previewOverlay) frClosePreview();
-    });
-  }
-  const previewCloseBtn = document.getElementById("frPreviewCloseBtn");
-  if (previewCloseBtn) previewCloseBtn.addEventListener("click", frClosePreview);
 
   document.querySelectorAll("[data-fr-check]").forEach(cb => {
     cb.addEventListener("change", async () => {
