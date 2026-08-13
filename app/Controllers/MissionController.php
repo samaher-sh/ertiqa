@@ -96,8 +96,20 @@ class MissionController extends BaseController
         (new AuditLogModel())->log($missionId, $userId, 'mission_created', 'mission', $missionId, $missionCode . ' — ' . $targetDept['name_ar']);
 
         // اتفاقية مستوى الخدمة - رأس الاتفاقية + كل بنودها (Snapshot) بحالة فارغة
-        // (تُملأ فعليًا لاحقًا من قِبل ممثل الإدارة المستهدفة)
-        $slaId = $slaModel->insert(['mission_id' => $missionId, 'status' => 'pending'], true);
+        // (تُملأ فعليًا لاحقًا من قِبل ممثل الإدارة المستهدفة) -- قنوات الاتصال
+        // المعتمدة (خطوة 2 بالويزارد) تُحفظ هنا لأنها بيانات يعبّئها فريق
+        // المراجعة وقت إنشاء المهمة، لا الإدارة المستهدفة لاحقًا
+        $channels = $data['channels'] ?? [];
+        $slaId = $slaModel->insert([
+            'mission_id' => $missionId,
+            'status'     => 'pending',
+            'channel_email'       => !empty($channels['email']['active']) ? 1 : 0,
+            'channel_email_value' => $channels['email']['value'] ?? null,
+            'channel_memo'        => !empty($channels['memo']['active']) ? 1 : 0,
+            'channel_memo_value'  => $channels['memo']['value'] ?? null,
+            'channel_phone'       => !empty($channels['phone']['active']) ? 1 : 0,
+            'channel_phone_value' => $channels['phone']['value'] ?? null,
+        ], true);
 
         $slaSections = $this->slaSectionsSnapshot();
         $sortOrder = 0;

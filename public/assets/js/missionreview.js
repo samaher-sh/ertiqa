@@ -136,6 +136,14 @@ function renderMrPage2() {
     rowsBySection[r.section_title].push(r);
   });
 
+  // قنوات الاتصال المعتمدة اللي عبّاها فريق المراجعة وقت إنشاء المهمة (خطوة 2
+  // بويزارد "بدء مهمة") -- عرض فقط هنا دائمًا، لا تُعبَّأ من الإدارة المستهدفة
+  const mrChannels = [
+    { active: a.channel_email, value: a.channel_email_value, icon: "mail", label: "البريد الإلكتروني" },
+    { active: a.channel_memo, value: a.channel_memo_value, icon: "message-square", label: "المذكرات الداخلية" },
+    { active: a.channel_phone, value: a.channel_phone_value, icon: "phone", label: "الهاتف الداخلي" },
+  ].filter(c => Number(c.active) === 1 && c.value);
+
   return `
   <div class="wiz-card">
     <div class="wiz-card-head">
@@ -158,6 +166,22 @@ function renderMrPage2() {
         <label class="wiz-label">رقم جوال المنسّق</label>
         <input id="mrCoordPhone" type="tel" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="05XXXXXXXX" value="${escapeHtml(a.coordinator_phone || "")}" ${mrCanEdit ? "" : "readonly"}>
       </div>
+    </div>
+
+    <div class="wiz-channels" style="padding:0 24px 20px;">
+      <p class="wiz-channels-title">قنوات الاتصال المعتمدة</p>
+      ${mrChannels.length === 0 ? `<p class="fr-preview-empty" style="padding:0;">لم تُحدَّد قنوات اتصال</p>` : mrChannels.map(c => `
+        <div class="wiz-channel active">
+          <div class="wiz-channel-head" style="cursor:default;">
+            <span class="wiz-channel-check"><i data-lucide="check"></i></span>
+            <i class="ic" data-lucide="${c.icon}"></i>
+            <span>${c.label}</span>
+          </div>
+          <div class="wiz-channel-body">
+            <div class="msum-auto-field plain" ${c.icon === "mail" || c.icon === "phone" ? 'dir="ltr" style="justify-content:flex-end;"' : ""}>${escapeHtml(c.value)}</div>
+          </div>
+        </div>
+      `).join("")}
     </div>
   </div>
 
