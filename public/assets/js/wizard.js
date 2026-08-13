@@ -527,7 +527,7 @@ function renderWizPage2() {
     <div class="wiz-sla-grid">
       <div class="wiz-field">
         <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
-        <div class="msum-auto-field plain"></div>
+        <div class="msum-auto-field plain"><span class="val">${escapeHtml(wizP1.targetName) || "—"}</span></div>
       </div>
       <div class="wiz-field">
         <label class="wiz-label">تاريخ الاتفاقية</label>
