@@ -400,7 +400,6 @@ function renderApprovalStepper() {
   const expandedItem = items.find(it => it.section_number === expandedNum);
   const expandedState = expandedItem ? frStepState(expandedItem, items, readOnlyViewer) : "";
   const expandedIsDone = expandedItem ? !!frCurrentCompletion[expandedItem.section_number] : false;
-  const expandedCheckDisabled = !expandedIsDone || readOnlyViewer;
 
   return `
   <div class="fr-stepper-card">
@@ -437,11 +436,6 @@ function renderApprovalStepper() {
       <div class="fr-step-detail-body">
         ${frStepDataLoading ? `<p class="fr-preview-empty">جارِ التحميل...</p>` : frRenderStepBody(expandedNum)}
       </div>
-      <label class="fr-round-check-wrap ${expandedCheckDisabled ? "disabled" : ""}">
-        <input type="checkbox" data-fr-check="${expandedItem.section_number}" ${expandedState === "done" ? "checked" : ""} ${expandedCheckDisabled ? "disabled" : ""}>
-        <span class="fr-round-check"><i data-lucide="check"></i></span>
-        <span class="fr-round-check-label">${expandedState === "done" ? "تم اعتماد هذه المرحلة" : "تأشير باعتماد هذه المرحلة"}</span>
-      </label>
       ${!expandedIsDone ? `<p class="fr-step-hint">لم تكتمل بيانات هذه المرحلة بعد</p>` : ""}
     </div>` : ""}
 
@@ -451,21 +445,26 @@ function renderApprovalStepper() {
   </div>`;
 }
 
+/* ما فيه تأشير/checkbox منفصل لاعتماد المرحلة -- زر "التالي" نفسه هو اللي
+   يعتمد المرحلة الحالية وينتقل للي بعدها (bindCreateReportEvents)، فيبقى
+   مفعّلاً بس لو بيانات المرحلة الحالية فعليًا مكتملة (frCurrentCompletion) */
 function frRenderStepperActionBtn(items, expandedNum) {
   const expandedItem = items.find(it => it.section_number === expandedNum);
   if (!expandedItem) return "";
   const isLastStep = items.length > 0 && expandedNum === items[items.length - 1].section_number;
-  const expandedChecked = Number(expandedItem.is_checked) === 1;
+  const expandedDone = Number(expandedItem.is_checked) === 1 || !!frCurrentCompletion[expandedItem.section_number];
 
   if (isLastStep) {
-    const allChecked = items.length > 0 && items.every(it => Number(it.is_checked) === 1);
+    // باقي المراحل غير الأخيرة لازم تكون معتمدة سلفًا (مضمون أصلًا عبر تسلسل
+    // القفل)، والمرحلة الأخيرة نفسها تُعتمد بضغطة هذا الزر مباشرة
+    const priorChecked = items.slice(0, -1).every(it => Number(it.is_checked) === 1);
     return `
-    <button class="fr-submit-btn" id="frSubmitReportBtn" ${!allChecked || !frCurrentReport || frCurrentReport.status !== "draft" ? "disabled" : ""}>
+    <button class="fr-submit-btn" id="frSubmitReportBtn" ${!expandedDone || !priorChecked || !frCurrentReport || frCurrentReport.status !== "draft" ? "disabled" : ""}>
       <i data-lucide="send"></i> ${frCurrentReport && frCurrentReport.status === "draft" ? "اعتماد التقرير وإرساله" : "تم الإرسال"}
     </button>`;
   }
   return `
-  <button class="fr-next-btn" id="frNextStepBtn" ${!expandedChecked ? "disabled" : ""}>
+  <button class="fr-next-btn" id="frNextStepBtn" ${!expandedDone ? "disabled" : ""}>
     التالي <i data-lucide="chevron-left"></i>
   </button>`;
 }
@@ -532,6 +531,26 @@ async function frEnsureStepLoaded(section) {
   }
 }
 
+/* ما فيه تأشير/checkbox منفصل لاعتماد مرحلة -- ضغطة زر "التالي" (أو "اعتماد
+   التقرير وإرساله" بالمرحلة الأخيرة) نفسها هي اللي تعتمد المرحلة الحالية،
+   فتعلّمها is_checked=1 بالخادم قبل الانتقال. ترجع true لو نجح الاعتماد
+   (أو كانت المرحلة معتمدة أصلًا)، و false لو فشل الطلب */
+async function frApproveStage(section) {
+  const item = frCurrentItems.find(it => it.section_number === section);
+  if (!item) return false;
+  if (Number(item.is_checked) === 1) return true;
+  try {
+    await apiPost(base + "/dashboard/reports/api/toggle-check", {
+      report_id: frCurrentReport.id, section_number: section, checked: true,
+    });
+    item.is_checked = 1;
+    return true;
+  } catch (e) {
+    showToast("تعذّر اعتماد المرحلة", "error");
+    return false;
+  }
+}
+
 /* رقم المرحلة المفتوحة يتغيّر فورًا (بدون انتظار الشبكة) عشان يبان أي مرحلة
    انتقلنا لها فورًا، وبيانات مجموعتها تُحمَّل مرة وحدة فقط لكل مهمة مختارة
    (frMrLoaded/... تُصفَّر عند اختيار مهمة جديدة عبر frResetStepLoadState) */
@@ -590,36 +609,26 @@ function bindCreateReportEvents() {
   });
 
   const nextStepBtn = document.getElementById("frNextStepBtn");
-  if (nextStepBtn) nextStepBtn.addEventListener("click", () => {
+  if (nextStepBtn) nextStepBtn.addEventListener("click", async () => {
+    nextStepBtn.disabled = true;
     const items = frCurrentItems;
     const current = frEffectiveExpandedStep(items);
+    const ok = await frApproveStage(current);
+    if (!ok) { rerenderFRContent(); return; }
     const idx = items.findIndex(it => it.section_number === current);
     if (idx > -1 && idx < items.length - 1) {
       frGotoStep(items[idx + 1].section_number);
-    }
-  });
-
-  document.querySelectorAll("[data-fr-check]").forEach(cb => {
-    cb.addEventListener("change", async () => {
-      const section = parseInt(cb.dataset.frCheck, 10);
-      const item = frCurrentItems.find(it => it.section_number === section);
-      if (!item) return;
-      const newVal = Number(item.is_checked) === 1 ? 0 : 1;
-      try {
-        await apiPost(base + "/dashboard/reports/api/toggle-check", {
-          report_id: frCurrentReport.id, section_number: section, checked: !!newVal,
-        });
-        item.is_checked = newVal;
-      } catch (e) {
-        showToast("تعذّر تحديث حالة المرحلة", "error");
-      }
+    } else {
       rerenderFRContent();
-    });
+    }
   });
 
   const submitBtn = document.getElementById("frSubmitReportBtn");
   if (submitBtn) submitBtn.addEventListener("click", async () => {
     submitBtn.disabled = true;
+    const current = frEffectiveExpandedStep(frCurrentItems);
+    const ok = await frApproveStage(current);
+    if (!ok) { rerenderFRContent(); return; }
     try {
       const data = await apiPost(base + "/dashboard/reports/api/finalize", { report_id: frCurrentReport.id });
       if (data.success) {
