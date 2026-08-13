@@ -14,5 +14,7 @@ class ServiceAgreementModel extends Model
     protected $allowedFields = [
         'mission_id', 'status', 'submitted_by', 'submitted_at',
         'coordinator_name', 'coordinator_email', 'coordinator_phone',
+        'channel_email', 'channel_email_value', 'channel_memo', 'channel_memo_value',
+        'channel_phone', 'channel_phone_value',
     ];
 }

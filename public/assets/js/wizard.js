@@ -184,6 +184,11 @@ async function handleSendTask() {
       reviewer_email: wizP1.email,
       reviewer_phone: wizP1.phone,
       director_name:  wizP1.director,
+      channels: {
+        email: { active: wizP2.ch.email, value: wizP2.chVals.email },
+        memo:  { active: wizP2.ch.memo,  value: wizP2.chVals.memo },
+        phone: { active: wizP2.ch.phone, value: wizP2.chVals.phone },
+      },
     });
 
     if (data.success) {
