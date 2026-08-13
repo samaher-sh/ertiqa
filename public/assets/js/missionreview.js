@@ -61,8 +61,28 @@ function renderMissionReviewPage() {
         <div class="wiz-page-container">
           ${mrPage === 1 ? renderMrPage1() : mrPage === 2 ? renderMrPage2() : renderMrPage3()}
         </div>
+        ${renderMrNav()}
       `}
     </div>
+  </div>`;
+}
+
+/* التنقل بين المراحل الثلاث (زر التالي/السابق) -- نفس نمط wiz-nav المستخدم
+   بويزارد "بدء مهمة" بالضبط، بالإضافة لدوائر المراحل بالأعلى (data-mr-goto-step) */
+function renderMrNav() {
+  const isFirst = mrPage === STEPS[0].n;
+  const isLast = mrPage === STEPS[STEPS.length - 1].n;
+  return `
+  <div class="wiz-nav">
+    <button class="wiz-btn wiz-btn-outline" id="mrPrevBtn" ${isFirst ? "disabled" : ""} style="min-width:150px;justify-content:center;">
+      <i data-lucide="chevron-right"></i>السابق
+    </button>
+    <div class="wiz-dots">
+      ${STEPS.map(s => `<button class="wiz-dot ${mrPage === s.n ? "current" : ""}" data-mr-goto-step="${s.n}"></button>`).join("")}
+    </div>
+    <button class="wiz-btn wiz-btn-primary" id="mrNextBtn" ${isLast ? "disabled" : ""} style="min-width:150px;justify-content:center;">
+      التالي<i data-lucide="chevron-left"></i>
+    </button>
   </div>`;
 }
 
@@ -309,6 +329,15 @@ function bindMissionReviewEvents() {
       mrPage = parseInt(btn.dataset.mrGotoStep, 10);
       rerenderMRContent();
     });
+  });
+
+  const prevBtn = document.getElementById("mrPrevBtn");
+  if (prevBtn) prevBtn.addEventListener("click", () => {
+    if (mrPage > STEPS[0].n) { mrPage -= 1; rerenderMRContent(); }
+  });
+  const nextBtn = document.getElementById("mrNextBtn");
+  if (nextBtn) nextBtn.addEventListener("click", () => {
+    if (mrPage < STEPS[STEPS.length - 1].n) { mrPage += 1; rerenderMRContent(); }
   });
 
   if (mrPage === 2) bindMrPage2Events();
