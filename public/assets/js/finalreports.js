@@ -342,7 +342,10 @@ async function frLoadChecklist(missionId) {
   try {
     const data = await apiGet(base + "/dashboard/reports/api/checklist?mission_id=" + missionId);
     frCurrentReport = data.report;
-    frCurrentItems = data.items || [];
+    // section_number يجي أحيانًا نص رقمي (string) من الخادم حسب محرّك قاعدة البيانات
+    // (MySQL بالذات) لا رقم (number) -- بدون هذا التطبيع أي مقارنة === لاحقًا مع
+    // أرقام حرفية (زي frRenderStepBody/frStepGroup) تفشل بصمت ويطلع محتوى المرحلة فاضي
+    frCurrentItems = (data.items || []).map(it => ({ ...it, section_number: Number(it.section_number) }));
     frCurrentCompletion = data.completion || {};
   } catch (e) {
     frCurrentReport = null;
