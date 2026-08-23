@@ -8,6 +8,20 @@
 
 .mr-exists-toggle{ display:flex; flex-direction:column; gap:4px; align-items:center; }
 
+/* أزرار "يوجد/لا يوجد" مُنسَّقة كشارات (pills) بدل أزرار الراديو الافتراضية
+   للمتصفح -- input الراديو نفسه يبقى شغّال بالضبط (نفس name/value/checked)،
+   بس مخفي بصريًا؛ الشكل النهائي مطابق لباقي الشارات (wiz-pill) بالتطبيق */
+.mr-exists-pill{
+  display:flex; align-items:center; justify-content:center; gap:0; position:relative;
+  padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700;
+  background:#eef3f5; color:#94a3b8; border:1.5px solid #e2e8f0; cursor:pointer; user-select:none;
+  transition:all .12s;
+}
+.mr-exists-pill input{ position:absolute; opacity:0; width:0; height:0; margin:0; }
+.mr-exists-pill.yes:has(input:checked){ background:var(--p); color:#fff; border-color:var(--p); }
+.mr-exists-pill.no:has(input:checked){ background:#dc2626; color:#fff; border-color:#dc2626; }
+.mr-exists-pill:hover{ opacity:.85; }
+
 .mr-sla-note-input{
   width:100%; border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px;
   font-size:12px; font-family:inherit; outline:none;
@@ -15,7 +29,9 @@
 .mr-sla-note-input:focus{ border-color:var(--p); }
 .mr-sla-note-input[readonly]{ background:#f8fafc; color:#6b7280; }
 
-.mr-doc-file-input{ font-size:11px; margin-bottom:6px; display:block; }
+/* زر "رفع الملف" المُنسَّق -- label يغلّف input file مخفي (wiz-upload-pill
+   أصلًا مُعرَّف بـ wizard.css)، بدل زر "Choose File" الافتراضي للمتصفح */
+.mr-doc-upload-label{ cursor:pointer; margin-bottom:6px; }
 
 .wiz-doc-note-input[readonly]{ background:#f8fafc; color:#6b7280; }
 

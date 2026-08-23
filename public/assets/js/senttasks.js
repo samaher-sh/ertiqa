@@ -350,12 +350,14 @@ async function stOpenDocsPreview() {
 }
 
 function renderMrFormPanel() {
+  // بلا غلاف .wiz-card إضافي حوالين خطوات الويزارد كاملة (مسار التقدّم + محتوى
+  // الخطوة + التنقّل) -- نفس نمط renderSentTaskTour() بالضبط: كل قطعة سطر
+  // مباشر داخل .st-progress-view (gap:14px) عشان تاخذ تباعدها الطبيعي، بدل ما
+  // تُحشر كلها داخل بطاقة وحدة بلا أي فراغ بينها
   return `
   <div class="st-progress-view">
     <button type="button" class="st-progress-back" id="stMrFormBack"><i data-lucide="chevron-right"></i> رجوع</button>
-    <div class="wiz-card st-tour-card">
-      ${renderMrWizardBody()}
-    </div>
+    ${renderMrWizardBody()}
   </div>`;
 }
 

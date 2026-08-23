@@ -87,9 +87,10 @@ function renderMrNav() {
   const isLast = mrPage === STEPS[STEPS.length - 1].n;
   return `
   <div class="wiz-nav">
-    <button class="wiz-btn wiz-btn-outline" id="mrPrevBtn" ${isFirst ? "disabled" : ""} style="min-width:150px;justify-content:center;">
+    ${isFirst ? "" : `
+    <button class="wiz-btn wiz-btn-outline" id="mrPrevBtn" style="min-width:150px;justify-content:center;">
       <i data-lucide="chevron-right"></i>السابق
-    </button>
+    </button>`}
     <div class="wiz-dots">
       ${STEPS.map(s => `<button class="wiz-dot ${mrPage === s.n ? "current" : ""}" data-mr-goto-step="${s.n}"></button>`).join("")}
     </div>
@@ -197,7 +198,7 @@ function renderMrPage2() {
       </div>
       <div class="wiz-field">
         <label class="wiz-label">رقم جوال المنسّق</label>
-        <input id="mrCoordPhone" type="tel" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="05XXXXXXXX" value="${escapeHtml(a.coordinator_phone || "")}" ${mrCanEdit ? "" : "readonly"}>
+        <input id="mrCoordPhone" type="tel" inputmode="numeric" maxlength="10" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="05XXXXXXXX" value="${escapeHtml(a.coordinator_phone || "")}" ${mrCanEdit ? "" : "readonly"}>
       </div>
     </div>
 
@@ -296,14 +297,17 @@ function renderMrPage3() {
               <td style="text-align:center;">
                 ${mrCanEdit ? `
                   <div class="mr-exists-toggle">
-                    <label class="dr-radio"><input type="radio" name="mr-exists-${r.id}" value="1" ${Number(r.exists_flag) === 1 ? "checked" : ""}> يوجد</label>
-                    <label class="dr-radio"><input type="radio" name="mr-exists-${r.id}" value="0" ${r.exists_flag !== null && Number(r.exists_flag) === 0 ? "checked" : ""}> لا يوجد</label>
+                    <label class="mr-exists-pill yes"><input type="radio" name="mr-exists-${r.id}" value="1" ${Number(r.exists_flag) === 1 ? "checked" : ""}> يوجد</label>
+                    <label class="mr-exists-pill no"><input type="radio" name="mr-exists-${r.id}" value="0" ${r.exists_flag !== null && Number(r.exists_flag) === 0 ? "checked" : ""}> لا يوجد</label>
                   </div>
                 ` : `<span class="wiz-pill">${r.exists_flag === null || r.exists_flag === undefined ? "—" : (Number(r.exists_flag) ? "يوجد" : "لا يوجد")}</span>`}
               </td>
               <td style="text-align:center;">
                 ${mrCanEdit ? `
-                  <input type="file" class="mr-doc-file-input" id="mr-file-${r.id}">
+                  <label class="wiz-upload-pill mr-doc-upload-label" for="mr-file-${r.id}">
+                    <i data-lucide="upload"></i> <span data-mr-file-label="${r.id}">${r.file ? "استبدال الملف" : "رفع الملف"}</span>
+                  </label>
+                  <input type="file" class="mr-doc-file-input" id="mr-file-${r.id}" style="display:none;">
                 ` : ""}
                 ${r.file ? `<a class="dr-file-link" href="${base}/dashboard/documents/download/${r.file.id}" target="_blank"><i data-lucide="paperclip"></i> ${escapeHtml(r.file.file_name)}</a>` : (mrCanEdit ? "" : "<span class=\"wiz-pill\">لا يوجد ملف</span>")}
               </td>
@@ -370,11 +374,19 @@ function bindMrPage2Events() {
   // تستدعي rerenderMRContent() كاملة، ولو ما كانت هذي الحقول مربوطة بالحالة كان
   // أي ضغطة عليها بتمسح أي اسم/بريد/جوال لسا المستخدم يكتبه قبل الحفظ
   const coordName = document.getElementById("mrCoordName");
-  if (coordName) coordName.addEventListener("input", e => { mrAgreement.coordinator_name = e.target.value; });
+  if (coordName) coordName.addEventListener("input", e => {
+    const lettersOnly = e.target.value.replace(/[0-9٠-٩]/g, "");
+    e.target.value = lettersOnly;
+    mrAgreement.coordinator_name = lettersOnly;
+  });
   const coordEmail = document.getElementById("mrCoordEmail");
   if (coordEmail) coordEmail.addEventListener("input", e => { mrAgreement.coordinator_email = e.target.value; });
   const coordPhone = document.getElementById("mrCoordPhone");
-  if (coordPhone) coordPhone.addEventListener("input", e => { mrAgreement.coordinator_phone = e.target.value; });
+  if (coordPhone) coordPhone.addEventListener("input", e => {
+    const digitsOnly = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
+    e.target.value = digitsOnly;
+    mrAgreement.coordinator_phone = digitsOnly;
+  });
 
   document.querySelectorAll("[data-mr-agree]").forEach(el => {
     el.addEventListener("click", () => {
@@ -448,6 +460,16 @@ function bindMrPage2Events() {
 
 function bindMrPage3Events() {
   if (!mrCanEdit) return;
+
+  // زر "رفع الملف" المُنسَّق (label يغلّف input file مخفي) ما يعرض اسم الملف
+  // المختار تلقائيًا زي الـ input الخام -- نحدّث نص الزر يدويًا هنا
+  document.querySelectorAll(".mr-doc-file-input").forEach(input => {
+    input.addEventListener("change", () => {
+      const reqId = input.id.replace("mr-file-", "");
+      const label = document.querySelector(`[data-mr-file-label="${reqId}"]`);
+      if (label && input.files && input.files[0]) label.textContent = input.files[0].name;
+    });
+  });
 
   const submitBtn = document.getElementById("mrSubmitDocsBtn");
   if (submitBtn) submitBtn.addEventListener("click", async () => {
