@@ -16,7 +16,7 @@
 .fr-filters-icon-btn{ position:relative; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,.15); border:1.5px solid rgba(255,255,255,.4); color:#fff; cursor:pointer; }
 .fr-filters-icon-btn i{ width:15px; height:15px; }
 .fr-filters-icon-btn .fr-filter-count{ position:absolute; top:-6px; left:-6px; background:#fff; color:var(--pd); font-size:9px; font-weight:800; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-.fr-create-btn:hover{ background:#f9fafb; }
+.fr-create-btn:hover{ background:rgba(255,255,255,.28); }
 .fr-readonly-badge{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; padding:4px 10px; border-radius:9999px; background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.2); }
 
 /* ===== Filters accordion ===== */
@@ -89,8 +89,6 @@ table.fr-table tbody tr{ border-bottom:1px solid #eef3f5; }
 .fr-stepper-head{ padding:16px 20px; background:var(--p); }
 .fr-stepper-head-top{ display:flex; align-items:center; gap:12px; }.fr-stepper-head-top i, .fr-stepper-head-top svg{ width:15px; height:15px; color:rgba(255,255,255,.8); }
 .fr-stepper-head-top span.t{ font-size:13px; font-weight:700; color:#fff; }
-.fr-stepper-progress{ margin-top:10px; height:6px; border-radius:9999px; background:rgba(255,255,255,.22); overflow:hidden; }
-.fr-stepper-progress-fill{ height:100%; border-radius:9999px; background:#fff; transition:width .3s; }
 
 /* صف أفقي: دوائر المراحل متصلة بخط أفقي، يمرّر جانبيًا لو ضاقت الشاشة بدل ما
    يلتف لصفوف متعددة */

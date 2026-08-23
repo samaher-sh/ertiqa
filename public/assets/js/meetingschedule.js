@@ -36,10 +36,10 @@ function renderMeetingSchedulePage() {
   const locked = !mcSelectedTaskId;
 
   return `
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4 mc-page-wrap">
     ${renderLinkedTaskSelector(mcSelectedTaskId, "mcTaskSelect")}
 
-    <div class="mc-locked-wrap ${locked ? "locked" : ""}">
+    <div class="mc-locked-wrap mc-schedule-wrap ${locked ? "locked" : ""}">
       <div class="wiz-card mc-card">
         <div class="wiz-card-head">
           <i data-lucide="calendar"></i>

@@ -413,7 +413,7 @@ function bindSentTaskDetailEvents() {
     else if (nextPage === "riskMatrix") rmSelectedTaskId = missionId;
     else if (nextPage === "meetingSummary") msumSelectedTaskId = missionId;
     else if (nextPage === "observations") obsSelectedTaskId = missionId;
-    else if (nextPage === "finalReports") { frView = "create"; frCreateSelectedTask = missionId; }
+    else if (nextPage === "finalReports") { frView = "create"; frCreateSelectedTask = missionId; frViewingExisting = false; }
 
     activeContent = nextPage;
     sentTasksSelected = null;
