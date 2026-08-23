@@ -6,7 +6,7 @@
 .wiz-checkbox-visual.mr-toggle.checked{ background:#eaf4fa; }
 .wiz-checkbox-visual.no.mr-toggle.checked{ background:#fef2f2; }
 
-.mr-exists-toggle{ display:flex; flex-direction:column; gap:4px; align-items:center; }
+.mr-exists-toggle{ display:flex; flex-direction:row; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap; }
 
 /* أزرار "يوجد/لا يوجد" مُنسَّقة كشارات (pills) بدل أزرار الراديو الافتراضية
    للمتصفح -- input الراديو نفسه يبقى شغّال بالضبط (نفس name/value/checked)،
