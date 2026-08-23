@@ -29,6 +29,7 @@ class AuditLogModel extends Model
         'meeting_summary_saved'  => 'تم حفظ ملخص الاجتماع',
         'observation_added'      => 'تمت إضافة ملاحظة',
         'report_finalized'       => 'تم اعتماد التقرير النهائي',
+        'report_approved'        => 'اعتماد رئيس إدارة المراجعة الداخلية للتقرير النهائي',
     ];
 
     /** $detail نص مختصر يوصف الحدث فعليًا (اسم المستند، التاريخ/الوقت المقترح، ...) —

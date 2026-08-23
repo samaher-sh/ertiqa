@@ -32,7 +32,9 @@ class ReportController extends BaseController
         return in_array(session()->get('role_code'), ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
     }
 
-    /** المهمة لو المستخدم الحالي طرف فيها فعليًا (مراجع أو الإدارة المستهدفة)، وإلا null */
+    /** المهمة لو المستخدم الحالي طرف فيها فعليًا (مراجع أو الإدارة المستهدفة)، وإلا null.
+     *  رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
+     *  حتى لو مو عضو فريق فيها -- يحتاج يستعرض كل مراحلها (1-6) قبل اعتماد تقريرها */
     private function missionForParty(int $missionId): ?array
     {
         $missionModel = new MissionModel();
@@ -43,6 +45,10 @@ class ReportController extends BaseController
 
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
+
+        if (session()->get('role_code') === 'audit_head') {
+            return ((int) $mission['audit_department_id'] === $departmentId) ? $mission : null;
+        }
 
         $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);
@@ -58,10 +64,14 @@ class ReportController extends BaseController
     public function list()
     {
         $reportModel = new ReportModel();
+        $departmentId = (int) session()->get('department_id');
 
         if ($this->isHrDept()) {
-            $departmentId = (int) session()->get('department_id');
             $reports = $departmentId ? $reportModel->forTargetDepartment($departmentId) : [];
+        } elseif (session()->get('role_code') === 'audit_head') {
+            // رئيس إدارة المراجعة الداخلية يشرف على كل تقارير الإدارة، مو فقط تقارير
+            // مهام هو نفسه فريق فيها (audit_team_members) -- forUser() ما تشمله أصلًا
+            $reports = $departmentId ? $reportModel->forDepartment($departmentId) : [];
         } else {
             $reports = $reportModel->forUser((int) session()->get('user_id'));
         }
@@ -163,6 +173,45 @@ class ReportController extends BaseController
         if ($report && !empty($report['mission_id'])) {
             (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_finalized', 'report', $reportId, 'رقم التقرير: ' . $reportId);
         }
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    /** الاعتماد النهائي (pending_signatures → sent) مقصور على رئيس إدارة المراجعة
+     *  الداخلية، وفقط لتقارير إدارته هو (audit_department_id) */
+    private function canApproveReport(int $reportId): bool
+    {
+        if (session()->get('role_code') !== 'audit_head') {
+            return false;
+        }
+
+        $report = (new ReportModel())->find($reportId);
+        if (!$report) {
+            return false;
+        }
+
+        $mission = (new MissionModel())->find((int) $report['mission_id']);
+        return $mission && (int) $mission['audit_department_id'] === (int) session()->get('department_id');
+    }
+
+    /** POST /dashboard/reports/api/approve — اعتماد رئيس إدارة المراجعة الداخلية النهائي */
+    public function approve()
+    {
+        $data = $this->request->getJSON(true);
+        $reportId = (int) ($data['report_id'] ?? 0);
+
+        if (!$reportId || !$this->canApproveReport($reportId)) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية اعتماد هذا التقرير.']);
+        }
+
+        $reportModel = new ReportModel();
+        $report = $reportModel->find($reportId);
+        if (!$report || $report['status'] !== 'pending_signatures') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'التقرير غير جاهز للاعتماد حاليًا.']);
+        }
+
+        $reportModel->update($reportId, ['status' => 'sent']);
+        (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_approved', 'report', $reportId, 'رقم التقرير: ' . $reportId);
 
         return $this->response->setJSON(['success' => true]);
     }
