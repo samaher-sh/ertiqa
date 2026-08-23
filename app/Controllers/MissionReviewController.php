@@ -33,7 +33,9 @@ class MissionReviewController extends BaseController
     }
 
     /** المهمة لو المستخدم الحالي طرف فيها فعليًا (مراجع أو الإدارة المستهدفة)، وإلا null —
-     *  يسمح للمراجع بمعاينة (قراءة فقط) اللي عبّته الإدارة المستهدفة بعد إرساله */
+     *  يسمح للمراجع بمعاينة (قراءة فقط) اللي عبّته الإدارة المستهدفة بعد إرساله.
+     *  رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
+     *  حتى لو مو عضو فريق فيها -- يحتاج يستعرض هذي المرحلة قبل اعتماد التقرير النهائي */
     private function missionForParty(int $missionId): ?array
     {
         $missionModel = new MissionModel();
@@ -44,6 +46,10 @@ class MissionReviewController extends BaseController
 
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
+
+        if (session()->get('role_code') === 'audit_head') {
+            return ((int) $mission['audit_department_id'] === $departmentId) ? $mission : null;
+        }
 
         $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);

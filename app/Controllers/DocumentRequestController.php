@@ -15,7 +15,9 @@ class DocumentRequestController extends BaseController
     private const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
     private const MAX_SIZE_KB = 10240; // 10 ميجا
 
-    /** المهمة (لو المستخدم الحالي له صلاحية وصول فعلية لها، من أي طرف)، وإلا null */
+    /** المهمة (لو المستخدم الحالي له صلاحية وصول فعلية لها، من أي طرف)، وإلا null.
+     *  رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
+     *  حتى لو مو عضو فريق فيها -- يحتاج يستعرض قائمة المستندات قبل اعتماد التقرير النهائي */
     private function missionForCurrentUser(int $missionId): ?array
     {
         $missionModel = new MissionModel();
@@ -26,6 +28,10 @@ class DocumentRequestController extends BaseController
 
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
+
+        if (session()->get('role_code') === 'audit_head') {
+            return ((int) $mission['audit_department_id'] === $departmentId) ? $mission : null;
+        }
 
         $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);

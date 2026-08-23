@@ -77,6 +77,26 @@ class DashboardController extends BaseController
         // تستحيل تصير غير محدَّثة.
         $notifications = [];
         $isAuditMember = $roleCode === 'audit_member';
+        $isAuditHead   = $roleCode === 'audit_head';
+
+        // رئيس إدارة المراجعة الداخلية: إخطار مستقل لكل تقرير بانتظار اعتماده
+        // فعليًا (pending_signatures) بإدارته -- مفهوم مختلف عن إخطارات "task"
+        // أعلاه (بانتظار إجراء بمرحلة من مراحل المهمة نفسها)، فنوعه منفصل
+        // "report_approval" عشان زر "فتح" بالواجهة يوديه لصفحة التقرير النهائي
+        // مباشرة لا للمراسلات المشتركة
+        if ($isAuditHead && $departmentId) {
+            foreach ((new ReportModel())->forDepartment($departmentId) as $r) {
+                if ($r['status'] !== 'pending_signatures') continue;
+                $notifications[] = [
+                    'type'       => 'report_approval',
+                    'mission_id' => (int) $r['mission_id'],
+                    'updated_at' => $r['updated_at'] ?? '',
+                    'title'      => 'تقرير نهائي بانتظار اعتمادك',
+                    'body'       => 'المهمة (' . $r['mission_code'] . ') — التقرير جاهز وبانتظار اعتمادك النهائي.',
+                ];
+            }
+        }
+
         if ($isHrDept || $isAuditMember) {
             $forRole = $isHrDept ? 'target' : 'audit';
             $reportModel = null;

@@ -74,7 +74,7 @@ const ST_TOUR_STAGES = [
   { label: "مصفوفة المخاطر",          actions: ["risk_matrix_saved"],                           renderer: "rm" },
   { label: "الاجتماع",                actions: ["meeting_confirmed", "meeting_summary_saved"],  renderer: "msum" },
   { label: "الملاحظات",               actions: ["observation_added"],                           renderer: "obs" },
-  { label: "التقرير النهائي",         actions: ["report_finalized"],                            renderer: "log" },
+  { label: "التقرير النهائي",         actions: ["report_finalized", "report_approved"],         renderer: "log" },
 ];
 
 function renderSentTasksPage() {

@@ -40,6 +40,13 @@ let frExpandedStep = null; // رقم المرحلة المفتوحة حاليً�
 let frStepDataLoading = false;
 let frMrLoaded = false, frRmLoaded = false, frMsumLoaded = false, frObsLoaded = false;
 
+/* رئيس إدارة المراجعة الداخلية فقط: فلتر حالة يُضبط عند الدخول عبر مؤشر أداء
+   محدَّد بالرئيسية ("تحتاج اعتماد"/"معتمدة") أو بانر التنبيه، عشان القائمة تفتح
+   مباشرة على نفس المجموعة اللي بالمؤشر لا كل التقارير مرة وحدة -- "" = بلا فلتر
+   (الدخول العادي من القائمة الجانبية) */
+let frAuditHeadFilter = "";
+let frApproving = false;
+
 const frIsHrUser = () => isHrDept || isHrCoordinator;
 
 function rerenderFRContent() {
@@ -76,6 +83,8 @@ function renderFinalReportsPage() {
     ? frReportsList.filter(r => r.status === "pending_signatures")
     : hrUser
     ? frReportsList.filter(r => r.status === "sent")
+    : isAuditHead && frAuditHeadFilter
+    ? frReportsList.filter(r => r.status === frAuditHeadFilter)
     : frReportsList;
 
   return `<div class="flex flex-col gap-4">${renderFRTable(reportsToShow)}</div>`;
@@ -326,16 +335,23 @@ function bindFRTableEvents() {
 
   document.querySelectorAll("[data-fr-view]").forEach(btn => {
     btn.addEventListener("click", async () => {
-      frView = "create";
-      frCreateSelectedTask = btn.dataset.frView;
-      frViewingExisting = true;
-      frExpandedStep = null;
-      frResetStepLoadState();
-      await frLoadChecklist(frCreateSelectedTask);
-      if (frCurrentItems.length) await frEnsureStepLoaded(frEffectiveExpandedStep(frCurrentItems));
+      await frOpenReportForMission(btn.dataset.frView);
       rerenderFRContent();
     });
   });
+}
+
+/* يفتح تفاصيل/مراحل اعتماد تقرير مهمة معيّنة مباشرة (نفس تأثير زر "عرض" بجدول
+   القائمة) -- تُستخدم من هنا، وأيضًا من dashboard.js لمّا يُفتح إخطار
+   "report_approval" (رئيس إدارة المراجعة الداخلية عبر ودجت الإخطارات) */
+async function frOpenReportForMission(missionId) {
+  frView = "create";
+  frCreateSelectedTask = String(missionId);
+  frViewingExisting = true;
+  frExpandedStep = null;
+  frResetStepLoadState();
+  await frLoadChecklist(frCreateSelectedTask);
+  if (frCurrentItems.length) await frEnsureStepLoaded(frEffectiveExpandedStep(frCurrentItems));
 }
 
 /* ============================================================
@@ -441,9 +457,23 @@ function renderApprovalStepper() {
     </div>` : ""}
 
     <div class="fr-phases-footer">
-      ${readOnlyViewer ? `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(frCurrentReport ? frCurrentReport.status : "draft")}</span>` : frRenderStepperActionBtn(items, expandedNum)}
+      ${isAuditHead ? frRenderAuditHeadApproveBtn() : readOnlyViewer ? `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(frCurrentReport ? frCurrentReport.status : "draft")}</span>` : frRenderStepperActionBtn(items, expandedNum)}
     </div>
   </div>`;
+}
+
+/* رئيس إدارة المراجعة الداخلية: زر "اعتماد التقرير" يظهر فقط لمّا يكون التقرير
+   فعليًا بانتظار اعتماده (pending_signatures) -- لسا تحت الإعداد من عضو
+   المراجعة (draft) أو معتمد أصلًا (sent) يعرضان حالة نصية بس بدون أي إجراء */
+function frRenderAuditHeadApproveBtn() {
+  const status = frCurrentReport ? frCurrentReport.status : "draft";
+  if (status !== "pending_signatures") {
+    return `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(status)}</span>`;
+  }
+  return `
+  <button class="fr-submit-btn" id="frApproveReportBtn" ${frApproving ? "disabled" : ""}>
+    <i data-lucide="check-check"></i> ${frApproving ? "جارِ الاعتماد..." : "اعتماد التقرير"}
+  </button>`;
 }
 
 /* ما فيه تأشير/checkbox منفصل لاعتماد المرحلة -- زر "التالي" نفسه هو اللي
@@ -642,6 +672,26 @@ function bindCreateReportEvents() {
     } catch (e) {
       showToast("تعذّر الاتصال بالخادم", "error");
     }
+    rerenderFRContent();
+  });
+
+  const approveBtn = document.getElementById("frApproveReportBtn");
+  if (approveBtn) approveBtn.addEventListener("click", async () => {
+    frApproving = true;
+    rerenderFRContent();
+    try {
+      const data = await apiPost(base + "/dashboard/reports/api/approve", { report_id: frCurrentReport.id });
+      if (data.success) {
+        showToast("تم اعتماد التقرير بنجاح", "success");
+        await frLoadChecklist(frCreateSelectedTask);
+        await initFinalReportsData();
+      } else {
+        showToast(data.message || "تعذّر الاعتماد", "error");
+      }
+    } catch (e) {
+      showToast("تعذّر الاتصال بالخادم", "error");
+    }
+    frApproving = false;
     rerenderFRContent();
   });
 }

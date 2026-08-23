@@ -137,6 +137,9 @@ function renderSidebar() {
     btn.addEventListener("click", async () => {
       activeContent = btn.dataset.nav;
       activeStatCard = null;
+      // دخول عادي من القائمة الجانبية (لا عبر مؤشر أداء محدَّد) يشوف كل التقارير
+      // بلا فلتر -- غير كذا يبقى فلتر آخر مؤشر ضغطه "متسربًا" هنا لاحقًا
+      if (activeContent === "finalReports" && typeof frAuditHeadFilter !== "undefined") frAuditHeadFilter = "";
       renderSidebar();
       await renderContent();
       lucide.createIcons();
@@ -296,7 +299,7 @@ async function loadHomeData() {
    إجراء) بنفس شكل بطاقة الإخطار المستخدم سابقًا، مع زر "فتح" وزر إغلاق (X)
    مستقلين لكل إخطار */
 function renderNotificationsWidget() {
-  if (!(isHrDept || isHrCoordinator || isAuditMember)) return "";
+  if (!(isHrDept || isHrCoordinator || isAuditMember || isAuditHead)) return "";
 
   const items = homeNotifications.filter(n => !dismissedNotificationKeys.has(notificationKey(n)));
   return `
@@ -321,9 +324,10 @@ function renderNotificationsWidget() {
 function renderNotificationItem(n) {
   const key = notificationKey(n);
   const isMeeting = n.type === "meeting";
+  const icon = isMeeting ? "calendar-check" : n.type === "report_approval" ? "file-check" : "bell";
   return `
   <div class="home-banner-body notif-item">
-    <div class="home-banner-icon-box"><i data-lucide="${isMeeting ? "calendar-check" : "bell"}"></i></div>
+    <div class="home-banner-icon-box"><i data-lucide="${icon}"></i></div>
     <div class="home-banner-content">
       <div class="home-banner-title-row">
         <span class="home-banner-item-title">${escapeHtml(n.title)}</span>
@@ -432,6 +436,11 @@ function renderStatDetailPanel(idx) {
   const label = card ? card.label : "";
 
   if (isAuditHead) {
+    // كل مؤشر يوديك لنفس المجموعة اللي يعدّها بالضبط بصفحة التقارير النهائية
+    // (تحتاج اعتماد = pending_signatures، معتمدة = sent) بدل قائمة موحَّدة
+    // واحدة بلا تمييز مين ضغط مين
+    const isApprovedCard = card && card.key === "reportsApproved";
+    const targetStatus = isApprovedCard ? "sent" : "pending_signatures";
     return `
       <div class="detail-panel" style="border-color:var(--pb);">
         <div class="detail-head" style="background:var(--pl); border-color:var(--pb);">
@@ -440,10 +449,10 @@ function renderStatDetailPanel(idx) {
           <button class="detail-close" id="closeDetailBtn" style="color:var(--p);"><i data-lucide="x"></i></button>
         </div>
         <div class="detail-body">
-          <button class="task-row" id="statGoReportsBtn">
+          <button class="task-row" id="statGoReportsBtn" data-fr-status="${targetStatus}">
             <div class="task-row-icon"><i data-lucide="file-text"></i></div>
             <div class="task-row-body">
-              <p class="task-row-title">عرض تفاصيل التقارير</p>
+              <p class="task-row-title">${isApprovedCard ? "عرض التقارير المعتمدة" : "عرض التقارير التي تحتاج اعتماد"}</p>
               <p class="task-row-sub">الانتقال إلى صفحة التقارير النهائية</p>
             </div>
           </button>
@@ -537,6 +546,9 @@ function bindHomeEvents() {
       if (n.type === "meeting") {
         openMeetingScheduleForMission(n.mission_id);
         activeContent = "meetingSchedule";
+      } else if (n.type === "report_approval") {
+        await frOpenReportForMission(n.mission_id);
+        activeContent = "finalReports";
       } else {
         await loadMissionsForSelector();
         const task = missionsForSelector.find(m => Number(m.id) === Number(n.mission_id));
@@ -567,12 +579,17 @@ function bindHomeEvents() {
 
   const bannerOpenBtn = document.getElementById("homeBannerOpenBtn");
   if (bannerOpenBtn) bannerOpenBtn.addEventListener("click", async () => {
+    // البانر ما يظهر أصلًا إلا لمّا فيه تقارير بانتظار الاعتماد (reports_pending_count > 0)
+    frAuditHeadFilter = "pending_signatures";
+    frView = "list";
     activeContent = "finalReports";
     renderSidebar(); await renderContent(); lucide.createIcons();
   });
 
   const statGoReportsBtn = document.getElementById("statGoReportsBtn");
   if (statGoReportsBtn) statGoReportsBtn.addEventListener("click", async () => {
+    frAuditHeadFilter = statGoReportsBtn.dataset.frStatus || "";
+    frView = "list";
     activeContent = "finalReports";
     renderSidebar(); await renderContent(); lucide.createIcons();
   });

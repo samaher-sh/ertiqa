@@ -59,6 +59,22 @@ class ReportModel extends Model
             ->countAllResults();
     }
 
+    /**
+     * كل تقارير إدارة المراجعة الداخلية (بغض النظر عن فريق مهمّة بعينها) —
+     * يُستخدم لرئيس إدارة المراجعة الداخلية اللي يشرف على كل التقارير مو بس
+     * تقارير مهامه هو (نفس معيار countForDepartmentByStatus بالضبط)
+     */
+    public function forDepartment(int $auditDepartmentId): array
+    {
+        return $this->select('reports.*, m.mission_code, m.year, m.audit_department_id, m.target_department_id, ad.name_ar as audit_dept_name, td.name_ar as target_dept_name')
+            ->join('missions m', 'm.id = reports.mission_id')
+            ->join('departments ad', 'ad.id = m.audit_department_id', 'left')
+            ->join('departments td', 'td.id = m.target_department_id', 'left')
+            ->where('m.audit_department_id', $auditDepartmentId)
+            ->orderBy('reports.created_at', 'DESC')
+            ->findAll();
+    }
+
     public function findOrCreateForMission(int $missionId, int $userId): array
     {
         $existing = $this->where('mission_id', $missionId)->first();

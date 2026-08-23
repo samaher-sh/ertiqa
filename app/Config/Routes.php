@@ -50,5 +50,6 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('reports/api/preview',          'ReportController::preview');
     $routes->post('reports/api/toggle-check',    'ReportController::toggleCheck');
     $routes->post('reports/api/finalize',        'ReportController::finalize');
+    $routes->post('reports/api/approve',         'ReportController::approve');
     $routes->get('sent-tasks/api/timeline',      'SentTasksController::timeline');
 });
