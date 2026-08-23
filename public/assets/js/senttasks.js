@@ -35,6 +35,13 @@ let stTourLoading = false;
 let stShowDocsPreview = false;
 let stDocsPreviewLoading = false;
 
+/* نموذج "استكمال الاتفاقية والمستندات": يُفتح مكان بطاقة "إكمال الحقول" تحديدًا
+   لمّا تكون المرحلة التالية هي missionReview (دور الإدارة الخاضعة) -- بدل ما
+   ينقل المستخدم لصفحة "مراجعة المهمة" المستقلة (منتقي مهمة منفصل + شكل مختلف
+   تمامًا)، نضمّن نفس نموذجها الفعلي (renderMrWizardBody من missionreview.js)
+   هنا بشكل بطاقات المراسلات المشتركة، بصلاحية تعديل حقيقية */
+let stShowMrForm = false;
+
 /* forRole يحدد مين عليه الدور الحالي فعليًا بهذي المرحلة: "target" = الإدارة الخاضعة
    للمراجعة (تعبئة اتفاقية مستوى الخدمة + المستندات)، "audit" = عضو المراجعة (كل
    الباقي). الطرف الثاني يشوف نفس الصفحة لكن Read-only دائمًا (زر "عرض" بدل
@@ -133,6 +140,9 @@ async function stOpenTaskDetail(task) {
   stTourRmLoaded = false;
   stTourMsumLoaded = false;
   stTourObsLoaded = false;
+  stShowDocsPreview = false;
+  stShowMrForm = false;
+  stTourResetForceFlags();
   await stLoadTimeline(task.id);
 }
 
@@ -191,6 +201,7 @@ function renderSentTaskTimeline() {
 function stTourResetForceFlags() {
   if (typeof rmForceReadOnly !== "undefined") rmForceReadOnly = false;
   if (typeof msumForceReadOnly !== "undefined") msumForceReadOnly = false;
+  if (typeof mrEmbedded !== "undefined") mrEmbedded = false;
 }
 
 function stReachedTourStages() {
@@ -338,6 +349,26 @@ async function stOpenDocsPreview() {
   renderSidebar(); renderContent(); lucide.createIcons();
 }
 
+function renderMrFormPanel() {
+  return `
+  <div class="st-progress-view">
+    <button type="button" class="st-progress-back" id="stMrFormBack"><i data-lucide="chevron-right"></i> رجوع</button>
+    <div class="wiz-card st-tour-card">
+      ${renderMrWizardBody()}
+    </div>
+  </div>`;
+}
+
+async function stOpenMrForm() {
+  stShowMrForm = true;
+  mrEmbedded = true;
+  mrSelectedTaskId = String(sentTasksSelected.id);
+  mrPage = 1;
+  renderSidebar(); renderContent(); lucide.createIcons();
+  await loadMissionReviewData(mrSelectedTaskId);
+  renderSidebar(); renderContent(); lucide.createIcons();
+}
+
 /* ---------- Detail ---------- */
 function stIsMyTurn(nextStage) {
   if (!nextStage) return false;
@@ -376,10 +407,13 @@ function renderSentTaskDetail() {
         </div>
 
         <div class="st-complete-card">
-          ${stShowTour ? renderSentTaskTour() : stShowDocsPreview ? renderDocsPreviewPanel() : (nextStage ? (myTurn ? (
+          ${stShowTour ? renderSentTaskTour() : stShowDocsPreview ? renderDocsPreviewPanel() : stShowMrForm ? renderMrFormPanel() : (nextStage ? (myTurn ? (
             nextStage.key === "riskMatrix" ? `
           <div class="st-complete-hint"><i data-lucide="folder-check"></i><span>راجع المستندات اللي أرسلتها الإدارة الخاضعة أولًا قبل تعبئة "${nextStage.label}"</span></div>
           <button class="st-complete-btn" id="stDocsPreviewBtn"><i data-lucide="folder-check"></i> معاينة المستندات</button>
+          ` : nextStage.key === "missionReview" ? `
+          <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بك في نموذج "${nextStage.label}"</span></div>
+          <button class="st-complete-btn" id="stMrFormBtn"><i data-lucide="pencil"></i> إكمال الحقول</button>
           ` : `
           <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بك في نموذج "${nextStage.label}"</span></div>
           <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="pencil"></i> إكمال الحقول</button>
@@ -407,6 +441,7 @@ function bindSentTaskDetailEvents() {
     sentTasksSelected = null;
     stShowTour = false;
     stShowDocsPreview = false;
+    stShowMrForm = false;
     stTourResetForceFlags();
     renderSidebar(); renderContent(); lucide.createIcons();
   });
@@ -432,6 +467,21 @@ function bindSentTaskDetailEvents() {
     stShowDocsPreview = false;
     renderSidebar(); renderContent(); lucide.createIcons();
   });
+
+  const mrFormBtn = document.getElementById("stMrFormBtn");
+  if (mrFormBtn) mrFormBtn.addEventListener("click", stOpenMrForm);
+
+  const mrFormBack = document.getElementById("stMrFormBack");
+  if (mrFormBack) mrFormBack.addEventListener("click", () => {
+    stShowMrForm = false;
+    mrEmbedded = false;
+    renderSidebar(); renderContent(); lucide.createIcons();
+  });
+
+  // النموذج المضمَّن يحتاج نفس ربط أحداث "مراجعة المهمة" الحقيقية (التنقّل بين
+  // الخطوات، حفظ الاتفاقية، إرسال المستندات) -- bindMissionReviewEvents() آمنة
+  // هنا رغم غياب #mrTaskSelect (منتقي المهمة) لأنها أصلًا null-safe لعنصر مفقود
+  if (stShowMrForm) bindMissionReviewEvents();
 
   const gotoRiskMatrixBtn = document.getElementById("stGotoRiskMatrixBtn");
   if (gotoRiskMatrixBtn) gotoRiskMatrixBtn.addEventListener("click", () => {
@@ -465,8 +515,8 @@ function bindSentTaskDetailEvents() {
     const nextPage = completeBtn.dataset.nextPage;
 
     // نحمّل المهمة تلقائيًا بالصفحة الهدف بدل ما يُطلب من المستخدم يعيد اختيارها يدويًا
-    if (nextPage === "missionReview") mrSelectedTaskId = missionId;
-    else if (nextPage === "riskMatrix") rmSelectedTaskId = missionId;
+    // (missionReview لها مسار منفصل: stMrFormBtn أدناه، يفتحها مضمَّنة هنا مباشرة)
+    if (nextPage === "riskMatrix") rmSelectedTaskId = missionId;
     else if (nextPage === "meetingSummary") msumSelectedTaskId = missionId;
     else if (nextPage === "observations") obsSelectedTaskId = missionId;
     else if (nextPage === "finalReports") { frView = "create"; frCreateSelectedTask = missionId; frViewingExisting = false; }
