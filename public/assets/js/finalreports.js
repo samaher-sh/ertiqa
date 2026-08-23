@@ -31,6 +31,7 @@ let frFilterDeptId = "", frFilterTargetDeptId = ""; // نفس الإدارات �
 let frYearDdOpen = false, frDeptDdOpen = false, frTargetDdOpen = false, frStatusDdOpen = false;
 
 let frCreateSelectedTask = "";
+let frViewingExisting = false; // true لو وصلنا عبر زر "عرض" لتقرير موجود أصلًا (مهمته ثابتة، ما يحتاج منتقي)
 let frCurrentReport = null;
 let frCurrentItems = [];
 let frCurrentCompletion = {};
@@ -253,6 +254,7 @@ function bindFRTableEvents() {
   const createBtn = document.getElementById("frCreateBtn");
   if (createBtn) createBtn.addEventListener("click", () => {
     frView = "create"; frCreateSelectedTask = ""; frCurrentReport = null; frExpandedStep = null;
+    frViewingExisting = false;
     frResetStepLoadState();
     rerenderFRContent();
   });
@@ -326,6 +328,7 @@ function bindFRTableEvents() {
     btn.addEventListener("click", async () => {
       frView = "create";
       frCreateSelectedTask = btn.dataset.frView;
+      frViewingExisting = true;
       frExpandedStep = null;
       frResetStepLoadState();
       await frLoadChecklist(frCreateSelectedTask);
@@ -363,7 +366,7 @@ function renderCreateReportView() {
       <div><h2>إنشاء تقرير / متابعة الاعتماد</h2><p>Report Checklist</p></div>
     </div>
 
-    ${renderLinkedTaskSelector(frCreateSelectedTask, "frCreateTaskSelect")}
+    ${frViewingExisting ? "" : renderLinkedTaskSelector(frCreateSelectedTask, "frCreateTaskSelect")}
 
     ${frCreateSelectedTask ? renderApprovalStepper() : ""}
   </div>`;
@@ -395,7 +398,6 @@ function renderApprovalStepper() {
   const items = frCurrentItems;
   const checkedCount = items.filter(it => Number(it.is_checked) === 1).length;
   const total = items.length;
-  const pct = total ? Math.round((checkedCount / total) * 100) : 0;
   const expandedNum = frEffectiveExpandedStep(items);
   const expandedItem = items.find(it => it.section_number === expandedNum);
   const expandedState = expandedItem ? frStepState(expandedItem, items, readOnlyViewer) : "";
@@ -408,7 +410,6 @@ function renderApprovalStepper() {
         <i data-lucide="clipboard-list"></i><span class="t">مراحل الاعتماد</span>
         <span class="fr-phases-count" dir="ltr">${checkedCount} / ${total}</span>
       </div>
-      <div class="fr-stepper-progress"><div class="fr-stepper-progress-fill" style="width:${pct}%;"></div></div>
     </div>
 
     <div class="fr-hstep-track">
@@ -582,7 +583,7 @@ function bindCreateReportEvents() {
   const backBtn = document.getElementById("frBackToListBtn");
   if (backBtn) backBtn.addEventListener("click", () => {
     frView = "list"; frCreateSelectedTask = ""; frCurrentReport = null;
-    frExpandedStep = null;
+    frExpandedStep = null; frViewingExisting = false;
     frResetStepLoadState();
     rerenderFRContent();
   });

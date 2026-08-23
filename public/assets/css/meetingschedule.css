@@ -4,10 +4,14 @@
    ============================================================ */
 
 .mc-locked-wrap.locked{ opacity:.4; pointer-events:none; user-select:none; }
-/* الارتفاع مرتبط بمساحة الشاشة الفعلية المتبقية (بعد الشريط العلوي ومنتقي المهمة
-   وحشو الصفحة) بدل رقم ثابت بالبكسل، عشان الكومبوننت كامل (شامل صندوق الكتابة
-   بالأسفل) يبقى ضمن حدود الشاشة دائمًا بدون ما يحتاج المستخدم يمرّر لتحت ليشوفه */
-.mc-card{ display:flex; flex-direction:column; height:calc(100vh - 245px); max-height:calc(100vh - 245px); }
+/* سلسلة flex كاملة (mc-page-wrap → mc-schedule-wrap → mc-card → mc-chat-body)
+   تملأ بالضبط المساحة المتبقية فعليًا داخل content-area (بدل رقم vh ثابت كان
+   يفترض ارتفاعًا معينًا لمنتقي المهمة أعلاه، فينكسر ويحتاج تمرير الصفحة كاملة
+   لو طال اسم المهمة المختارة لسطرين مثلًا) -- فقط .mc-chat-body الداخلية هي
+   اللي تُمرَّر (overflow-y:auto)، والصفحة نفسها تبقى ضمن حدود الشاشة دائمًا */
+.mc-page-wrap{ flex:1; min-height:0; }
+.mc-schedule-wrap{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.mc-card{ display:flex; flex-direction:column; flex:1; min-height:0; }
 
 /* ══════ جسم المحادثة ══════ */
 .mc-chat-body{

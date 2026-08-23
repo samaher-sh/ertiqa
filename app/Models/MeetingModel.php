@@ -56,6 +56,7 @@ class MeetingModel extends Model
                 ->groupEnd()
             ->groupEnd()
             ->where('meetings.status', 'scheduled')
+            ->where('meetings.meeting_date IS NOT NULL')
             ->orderBy('meetings.meeting_date', 'ASC')
             ->findAll();
     }
@@ -81,6 +82,7 @@ class MeetingModel extends Model
             ->join('missions', 'missions.id = meetings.mission_id')
             ->whereIn('meetings.mission_id', $missionIds)
             ->where('meetings.status', 'scheduled')
+            ->where('meetings.meeting_date IS NOT NULL')
             ->orderBy('meetings.meeting_date', 'ASC')
             ->findAll();
     }

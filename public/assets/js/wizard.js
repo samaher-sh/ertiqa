@@ -111,9 +111,10 @@ function renderWizardNav() {
   const isFirst = wizardPage === WIZ_STEPS[0].n;
   const isLast = wizardPage === WIZ_STEPS[WIZ_STEPS.length - 1].n;
   return `<div class="wiz-nav">
-    <button class="wiz-btn wiz-btn-outline" id="wizPrevBtn" ${isFirst ? "disabled" : ""} style="min-width:150px;justify-content:center;">
+    ${isFirst ? "" : `
+    <button class="wiz-btn wiz-btn-outline" id="wizPrevBtn" style="min-width:150px;justify-content:center;">
       <i data-lucide="chevron-right"></i>السابق
-    </button>
+    </button>`}
     <div class="wiz-dots">
       ${WIZ_STEPS.map(s => `<button class="wiz-dot ${wizardPage === s.n ? "current" : ""}" data-goto-step="${s.n}"></button>`).join("")}
     </div>
