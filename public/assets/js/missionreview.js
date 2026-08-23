@@ -38,33 +38,46 @@ async function loadMissionReviewData(missionId) {
   mrLoading = false;
 }
 
+/* mrEmbedded: true لمّا يكون النموذج مضمَّنًا داخل تفاصيل مهمة "المراسلات
+   المشتركة" (senttasks.js) بدل صفحة "مراجعة المهمة" المستقلة -- يخلي
+   rerenderMRContent() يعيد رسم تفاصيل المراسلات المشتركة بدل ما "يقفز"
+   المستخدم لصفحة النموذج الخام المستقلة بعد أي حفظ/تنقّل بين الخطوات */
+let mrEmbedded = false;
+
 function renderMissionReviewPage() {
   const locked = !mrSelectedTaskId;
   return `
   <div class="flex flex-col gap-4">
     ${renderLinkedTaskSelector(mrSelectedTaskId, "mrTaskSelect")}
     <div class="mc-locked-wrap ${locked ? "locked" : ""}">
-      ${mrLoading ? `<p class="dr-empty">جارِ التحميل...</p>` : `
-        <div class="wiz-steps">
-          ${STEPS.map((st, i) => `
-            <div class="wiz-step">
-              <button class="wiz-step-btn" data-mr-goto-step="${st.n}">
-                <span class="wiz-step-circle ${mrPage === st.n ? "current" : mrPage > st.n ? "done" : ""}">
-                  ${mrPage > st.n ? '<i data-lucide="check"></i>' : st.n}
-                </span>
-                <span class="wiz-step-label ${mrPage === st.n ? "current" : mrPage > st.n ? "done" : ""}">${st.label}</span>
-              </button>
-              ${i < STEPS.length - 1 ? `<span class="wiz-step-line ${mrPage > st.n ? "done" : ""}"></span>` : ""}
-            </div>
-          `).join("")}
-        </div>
-        <div class="wiz-page-container">
-          ${mrPage === 1 ? renderMrPage1() : mrPage === 2 ? renderMrPage2() : renderMrPage3()}
-        </div>
-        ${renderMrNav()}
-      `}
+      ${renderMrWizardBody()}
     </div>
   </div>`;
+}
+
+/* جسم الويزارد (دوائر الخطوات + محتوى الخطوة الحالية + التنقّل) بمعزل عن منتقي
+   المهمة -- تُستخدم من renderMissionReviewPage() نفسها، وأيضًا مباشرة من
+   senttasks.js لتضمين نفس النموذج الفعلي داخل بطاقة "إكمال الحقول" */
+function renderMrWizardBody() {
+  return mrLoading ? `<p class="dr-empty">جارِ التحميل...</p>` : `
+    <div class="wiz-steps">
+      ${STEPS.map((st, i) => `
+        <div class="wiz-step">
+          <button class="wiz-step-btn" data-mr-goto-step="${st.n}">
+            <span class="wiz-step-circle ${mrPage === st.n ? "current" : mrPage > st.n ? "done" : ""}">
+              ${mrPage > st.n ? '<i data-lucide="check"></i>' : st.n}
+            </span>
+            <span class="wiz-step-label ${mrPage === st.n ? "current" : mrPage > st.n ? "done" : ""}">${st.label}</span>
+          </button>
+          ${i < STEPS.length - 1 ? `<span class="wiz-step-line ${mrPage > st.n ? "done" : ""}"></span>` : ""}
+        </div>
+      `).join("")}
+    </div>
+    <div class="wiz-page-container">
+      ${mrPage === 1 ? renderMrPage1() : mrPage === 2 ? renderMrPage2() : renderMrPage3()}
+    </div>
+    ${renderMrNav()}
+  `;
 }
 
 /* التنقل بين المراحل الثلاث (زر التالي/السابق) -- نفس نمط wiz-nav المستخدم
@@ -470,6 +483,12 @@ function bindMrPage3Events() {
 }
 
 function rerenderMRContent() {
+  if (mrEmbedded) {
+    // مضمَّن داخل تفاصيل "المراسلات المشتركة" -- الصفحة الفعلية اللي فيها
+    // النموذج هي "sentTasks"، مو "missionReview" المستقلة
+    renderSidebar(); renderContent(); lucide.createIcons();
+    return;
+  }
   const ca = document.getElementById("contentArea");
   if (!ca) return;
   ca.innerHTML = renderMissionReviewPage();
