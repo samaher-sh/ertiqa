@@ -28,6 +28,13 @@ let stTourMsumLoaded = false;
 let stTourObsLoaded = false;
 let stTourLoading = false;
 
+/* معاينة المستندات: تُفتح مكان بطاقة "إكمال الحقول" تحديدًا لمّا تكون المرحلة
+   التالية على عضو المراجعة هي "مصفوفة المخاطر" (يعني الإدارة الخاضعة أرسلت
+   المستندات للتو) -- عضو المراجعة يحتاج يعاين المستندات المرسلة أولًا قبل
+   كتابة مصفوفة المخاطر، بدل ما ينتقل مباشرة بدون ما يشوفها */
+let stShowDocsPreview = false;
+let stDocsPreviewLoading = false;
+
 /* forRole يحدد مين عليه الدور الحالي فعليًا بهذي المرحلة: "target" = الإدارة الخاضعة
    للمراجعة (تعبئة اتفاقية مستوى الخدمة + المستندات)، "audit" = عضو المراجعة (كل
    الباقي). الطرف الثاني يشوف نفس الصفحة لكن Read-only دائمًا (زر "عرض" بدل
@@ -305,6 +312,32 @@ function renderSentTaskTour() {
   </div>`;
 }
 
+/* معاينة المستندات المرسلة من الإدارة الخاضعة (قبل الانتقال لمصفوفة المخاطر) --
+   نفس دالة العرض الحقيقية لقائمة المستندات (renderMrPage3 من missionreview.js)
+   بإجبار القراءة فقط، ثم زر بالأسفل للانتقال الفعلي لمصفوفة المخاطر */
+function renderDocsPreviewPanel() {
+  return `
+  <div class="st-progress-view">
+    <button type="button" class="st-progress-back" id="stDocsPreviewBack"><i data-lucide="chevron-right"></i> رجوع</button>
+    <div class="wiz-card st-tour-card">
+      ${stDocsPreviewLoading ? `<p class="fr-preview-empty">جارِ التحميل...</p>` : renderMrPage3()}
+    </div>
+    <button type="button" class="st-tour-nav-btn primary" id="stGotoRiskMatrixBtn" style="width:100%;justify-content:center;">
+      الانتقال إلى مصفوفة المخاطر <i data-lucide="chevron-left"></i>
+    </button>
+  </div>`;
+}
+
+async function stOpenDocsPreview() {
+  stShowDocsPreview = true;
+  stDocsPreviewLoading = true;
+  renderSidebar(); renderContent(); lucide.createIcons();
+  await loadMissionReviewData(sentTasksSelected.id);
+  mrCanEdit = false; // معاينة قراءة فقط دائمًا هنا، بغض النظر عن صلاحية التعبئة الفعلية
+  stDocsPreviewLoading = false;
+  renderSidebar(); renderContent(); lucide.createIcons();
+}
+
 /* ---------- Detail ---------- */
 function stIsMyTurn(nextStage) {
   if (!nextStage) return false;
@@ -343,10 +376,14 @@ function renderSentTaskDetail() {
         </div>
 
         <div class="st-complete-card">
-          ${stShowTour ? renderSentTaskTour() : (nextStage ? (myTurn ? `
+          ${stShowTour ? renderSentTaskTour() : stShowDocsPreview ? renderDocsPreviewPanel() : (nextStage ? (myTurn ? (
+            nextStage.key === "riskMatrix" ? `
+          <div class="st-complete-hint"><i data-lucide="folder-check"></i><span>راجع المستندات اللي أرسلتها الإدارة الخاضعة أولًا قبل تعبئة "${nextStage.label}"</span></div>
+          <button class="st-complete-btn" id="stDocsPreviewBtn"><i data-lucide="folder-check"></i> معاينة المستندات</button>
+          ` : `
           <div class="st-complete-hint"><i data-lucide="pencil"></i><span>أكمل الحقول المتبقية الخاصة بك في نموذج "${nextStage.label}"</span></div>
           <button class="st-complete-btn" id="stCompleteBtn" data-next-page="${nextStage.key}"><i data-lucide="pencil"></i> إكمال الحقول</button>
-          ` : `
+          `) : `
           <div class="st-complete-hint"><i data-lucide="eye"></i><span>بانتظار الطرف الآخر لإكمال "${nextStage.label}" — تقدر تطّلع على المراحل المنجزة</span></div>
           <button class="st-complete-btn" id="stCompleteBtn" data-mode="progress"><i data-lucide="eye"></i> عرض</button>
           `) : `
@@ -369,6 +406,7 @@ function bindSentTaskDetailEvents() {
   document.getElementById("stBackBtn").addEventListener("click", () => {
     sentTasksSelected = null;
     stShowTour = false;
+    stShowDocsPreview = false;
     stTourResetForceFlags();
     renderSidebar(); renderContent(); lucide.createIcons();
   });
@@ -383,6 +421,24 @@ function bindSentTaskDetailEvents() {
   if (progressBack) progressBack.addEventListener("click", () => {
     stShowTour = false;
     stTourResetForceFlags();
+    renderSidebar(); renderContent(); lucide.createIcons();
+  });
+
+  const docsPreviewBtn = document.getElementById("stDocsPreviewBtn");
+  if (docsPreviewBtn) docsPreviewBtn.addEventListener("click", stOpenDocsPreview);
+
+  const docsPreviewBack = document.getElementById("stDocsPreviewBack");
+  if (docsPreviewBack) docsPreviewBack.addEventListener("click", () => {
+    stShowDocsPreview = false;
+    renderSidebar(); renderContent(); lucide.createIcons();
+  });
+
+  const gotoRiskMatrixBtn = document.getElementById("stGotoRiskMatrixBtn");
+  if (gotoRiskMatrixBtn) gotoRiskMatrixBtn.addEventListener("click", () => {
+    rmSelectedTaskId = String(sentTasksSelected.id);
+    activeContent = "riskMatrix";
+    stShowDocsPreview = false;
+    sentTasksSelected = null;
     renderSidebar(); renderContent(); lucide.createIcons();
   });
 
