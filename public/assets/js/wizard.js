@@ -371,11 +371,17 @@ function renderWizPage1() {
 }
 
 /* تصدير PDF لنموذج الخطاب الرسمي (صفحة 1) بحالته الحالية غير المحفوظة بعد --
-   نفس نمط exportObservationToPDF() بصفحة الملاحظات بالضبط (نافذة طباعة مستقلة
-   بمحتوى نظيف فقط، بدون شريط جانبي/عناصر تحكم التطبيق) لأن المهمة لسا ما اتحفظت
-   بقاعدة البيانات (ما فيه mission_id بعد لاستخدام /dashboard/pdf/mission-letter
-   الحقيقي، المخصص للمهام المُنشأة فعليًا) */
+   يستنسخ العنصر المعروض فعليًا على الشاشة (.wiz-paper) بنفس الـ HTML بالضبط
+   ويطبعه بربط ملفات CSS الحقيقية للتطبيق، عشان المستند المُصدَّر يطلع نسخة
+   طبق الأصل من النموذج اللي يشوفه المستخدم أمامه (نفس الخط والألوان والتنسيق)
+   بدل إعادة بناء تصميم مبسّط يختلف شكله عن الأصل -- آمن هنا لأن كل محتوى
+   .wiz-paper نص/mark عرض فقط (مو حقول إدخال حيّة) وتتم مزامنته مباشرة على
+   DOM الفعلي مع كل تغيير بالنموذج (بدل إعادة render كامل)، فالنسخة المستنسخة
+   مطابقة للمعروض دائمًا */
 function exportWizP1ToPDF() {
+  const paperEl = document.querySelector(".wiz-paper");
+  if (!paperEl) { showToast("تعذّر تجهيز المستند للتصدير", "error"); return; }
+
   const printWindow = window.open("", "_blank");
   if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
 
@@ -385,49 +391,12 @@ function exportWizP1ToPDF() {
   const deptAbbr = DEPT_ABBR[s.deptName] || "AUD";
   const missionCode = deptAbbr + refNumber;
 
-  printWindow.document.write(`
-    <html dir="rtl">
-      <head>
-        <title>الخطاب الرسمي - ${escapeHtml(missionCode)}</title>
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.8; }
-          ${PDF_LETTERHEAD_STYLE}
-          p { margin: 0 0 14px; font-size: 13px; }
-          mark { background:#eaf4fa; color:#196b7f; padding:1px 6px; border-radius:4px; font-weight:700; }
-          .procedure-box { background:#f8fbfd; border:1px solid #d8e6eb; border-radius:8px; padding:14px; margin-bottom:14px; }
-          .procedure-box .head { font-weight:700; color:#196b7f; margin-bottom:6px; font-size:12px; }
-          @media print { body { padding: 0; } }
-        </style>
-      </head>
-      <body>
-        ${pdfLetterheadHTML("الخطاب الرسمي", [
-          "التاريخ: " + escapeHtml(todayD.toLocaleDateString("en-GB")),
-          "رقم المهمة: <strong dir=\"ltr\">" + escapeHtml(missionCode) + "</strong>",
-        ])}
-        <p style="font-weight:700;">سعادة المدير التنفيذي لـ${s.deptName ? `<mark>${escapeHtml(s.deptName)}</mark>` : ""} المحترم</p>
-        <p style="font-weight:600;">السلام عليكم ورحمة الله وبركاته،،،</p>
-        <p>نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة <mark>${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark>، للقيام بعملية المراجعة الداخلية، وذلك وفق خطة المراجعة لعام <mark>${escapeHtml(s.year)}</mark>م المعتمدة من قبل المدير العام التنفيذي.</p>
-        <p>عليه نأمل تلطف سعادتكم بتوجيه من يلزم للعمل على التنسيق - خلال مدة لا تتجاوز (7) أيام عمل من تاريخه - لعقد اجتماع افتتاحي لفريق المراجعة مع سعادتكم أو من ترونه مناسباً:</p>
-        ${s.procedure ? `<div class="procedure-box"><div class="head">المراد مناقشته في الاجتماع</div><p style="margin:0;">${escapeHtml(s.procedure)}</p></div>` : ""}
-        <p>كما نأمل التكرم بتوجيه المختصين لتزويدنا بالمتطلبات الأولية (مرفق 1) والاطلاع والموافقة على اتفاقية مستوى الخدمة من قبل ممثل الإدارة (مرفق 2) حتى يتسنى لنا البدء بعملية المراجعة. إن تحضير هذه المتطلبات والموافقة على الاتفاقية مسبقاً سوف يساهم في سرعة وسهولة عملية المراجعة الداخلية ويقلل من إرباك أو مقاطعة موظفي الإدارة، هذه القائمة مبدئية ومن المحتمل أن نقوم بطلب وثائق ومستندات أخرى خلال عملية المراجعة.</p>
-        <p>حرصاً على وقتكم نأمل بتكليف مسؤول اتصال / منسق لمساعدة فريق العمل خلال فترة المراجعة.</p>
-        <p>علماً بأن المراجع الرئيسي لهذه العملية الأستاذ / <mark>${escapeHtml(s.reviewer || "...............")}</mark></p>
-        <p style="margin-bottom:4px;">والذي يمكن التواصل معه عبر القنوات التالية:</p>
-        <p style="margin:0 0 4px;">البريد الإلكتروني: <span dir="ltr">${escapeHtml(s.email || "........................")}</span></p>
-        <p>رقم الجوال: <span dir="ltr">${escapeHtml(s.phone || "........................")}</span></p>
-        <p style="font-weight:600;margin-top:20px;">وتقبلوا وافر تحياتي وتقديري،،،</p>
-        <p style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
-        ${s.director ? `<p style="font-weight:800;color:#196b7f;">${escapeHtml(s.director)}</p>` : ""}
-        ${pdfFooterHTML(missionCode)}
-        <script>
-          window.onload = () => {
-            window.print();
-            setTimeout(() => window.close(), 500);
-          }
-        </script>
-      </body>
-    </html>
-  `);
+  printWindow.document.write(printDocumentHTML({
+    title: "الخطاب الرسمي - " + missionCode,
+    cssFiles: ["dashboard.css", "wizard.css"],
+    bodyHtml: paperEl.outerHTML,
+    missionCode,
+  }));
   printWindow.document.close();
 }
 
@@ -614,7 +583,13 @@ function renderWizPage2() {
 }
 
 /* تصدير PDF لاتفاقية مستوى الخدمة (صفحة 2) بحالتها الحالية غير المحفوظة بعد --
-   نفس السبب والنمط المستخدم بـ exportWizP1ToPDF() أعلاه بالضبط */
+   ما نقدر نستنسخ نموذج الشاشة مباشرة زي exportWizP1ToPDF() لأن هذي الصفحة
+   حقول إدخال حيّة فعلية (input/textarea) مو نص عرض بس، وقيمة textarea اللي
+   يكتبها المستخدم ما تنعكس على HTML attribute تلقائيًا (تبقى بخاصية .value
+   بالـ DOM فقط) فاستنساخ outerHTML كان بيرجّع النص الأصلي القديم بدل المكتوب
+   فعليًا -- بدلها نعيد بناء نفس تصميم بطاقات .wiz-card الحقيقية من القيم
+   بالحالة (wizP2) عشان يطلع نفس الشكل المرئي تمامًا اللي يشوفه المستخدم على
+   الشاشة، بس بقيم نصية بدل حقول تفاعلية */
 function exportWizP2ToPDF() {
   const printWindow = window.open("", "_blank");
   if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
@@ -628,79 +603,90 @@ function exportWizP2ToPDF() {
   const activeChannels = channels.filter(c => s.ch[c.key]);
 
   const rowsHTML = SLA_SECTIONS.map((sec, si) => `
-    <tr><td colspan="4" style="font-weight:700;color:#196b7f;padding:8px;border:1px solid #b3d4e5;background:#f0f7fa;">${si + 1}. ${escapeHtml(sec.title)}</td></tr>
+    <tr class="wiz-sla-section-row"><td colspan="4"><span class="num">${si + 1}</span>${escapeHtml(sec.title)}</td></tr>
     ${sec.rows.map(row => `
-      <tr>
-        <td style="padding:8px;border:1px solid #d8e6eb;">${escapeHtml(row)}</td>
-        <td style="padding:8px;border:1px solid #d8e6eb;text-align:center;width:60px;">▢</td>
-        <td style="padding:8px;border:1px solid #d8e6eb;text-align:center;width:60px;">▢</td>
-        <td style="padding:8px;border:1px solid #d8e6eb;width:150px;"></td>
+      <tr class="wiz-sla-row">
+        <td><div class="lbl"><span class="dot"></span><span>${escapeHtml(row)}</span></div></td>
+        <td><div class="wiz-checkbox-visual readonly"></div></td>
+        <td><div class="wiz-checkbox-visual readonly"></div></td>
+        <td><div class="wiz-note-line"></div></td>
       </tr>
     `).join("")}
   `).join("");
 
-  printWindow.document.write(`
-    <html dir="rtl">
-      <head>
-        <title>اتفاقية مستوى الخدمة</title>
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          ${PDF_LETTERHEAD_STYLE}
-          .info-row { display:flex; gap:30px; margin-bottom:20px; }
-          .info-row .field { flex:1; }
-          .label { font-size:11px; color:#6b8c95; font-weight:bold; display:block; margin-bottom:4px; }
-          .value { font-size:13px; font-weight:600; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size:12px; }
-          th { background: #f0f7fa; color: #196b7f; padding: 8px; border: 1px solid #b3d4e5; text-align:right; }
-          .sig-grid { display:flex; gap:30px; margin-top:30px; }
-          .sig-box { flex:1; border:1px solid #d8e6eb; border-radius:8px; padding:16px; font-size:13px; }
-          .sig-box .t { font-weight:700; margin-bottom:10px; color:#196b7f; }
-          .disclosure { margin-top:24px; padding:14px 16px; border-radius:8px; background:#eaf4fa; border:1px solid #b3d4e5; }
-          .disclosure .t { font-weight:800; color:#196b7f; margin:0 0 8px; font-size:13px; }
-          .disclosure p { margin:0; font-size:12px; line-height:1.9; }
-          @media print { body { padding: 0; } }
-        </style>
-      </head>
-      <body>
-        ${pdfLetterheadHTML("اتفاقية مستوى الخدمة", [
-          "التاريخ: " + escapeHtml(new Date().toLocaleDateString("en-GB")),
-        ])}
-        <div class="info-row">
-          <div class="field"><span class="label">الإدارة الخاضعة للمراجعة</span><span class="value">${escapeHtml(s.subjectDept || "—")}</span></div>
-          <div class="field"><span class="label">تاريخ الاتفاقية</span><span class="value">${escapeHtml(s.date || "—")}</span></div>
+  const bodyHtml = `
+    <div class="wiz-card">
+      <div class="wiz-card-head"><i data-lucide="file-text"></i><h2>اتفاقية مستوى الخدمة</h2></div>
+      <div class="wiz-sla-grid">
+        <div class="wiz-field">
+          <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
+          <div class="msum-auto-field plain"><span class="val">${escapeHtml(s.subjectDept || "—")}</span></div>
         </div>
-        <p><strong>وصف الخدمة:</strong> ${escapeHtml(s.desc)}</p>
-        <p><strong>قنوات الاتصال المعتمدة:</strong> ${activeChannels.length ? activeChannels.map(c => escapeHtml(c.label)).join("، ") : "—"}</p>
-        <table>
-          <thead><tr><th>الموضوع</th><th style="width:60px;">موافق</th><th style="width:60px;">غير موافق</th><th style="width:150px;">ملاحظات</th></tr></thead>
+        <div class="wiz-field">
+          <label class="wiz-label">تاريخ الاتفاقية</label>
+          <div class="msum-auto-field plain"><span class="val">${escapeHtml(s.date || "—")}</span></div>
+        </div>
+        <div class="wiz-field span2">
+          <label class="wiz-label">وصف الخدمة</label>
+          <div class="msum-auto-field plain" style="min-height:60px;align-items:flex-start;"><span class="val">${escapeHtml(s.desc || "—")}</span></div>
+        </div>
+      </div>
+      <div class="wiz-channels">
+        <p class="wiz-channels-title">قنوات الاتصال المعتمدة</p>
+        ${activeChannels.length ? activeChannels.map(c => `
+          <div class="wiz-channel active">
+            <div class="wiz-channel-head"><span class="wiz-channel-check"><i data-lucide="check"></i></span><span>${escapeHtml(c.label)}</span></div>
+            <div class="wiz-channel-body"><span>${escapeHtml(s.chVals[c.key] || "—")}</span></div>
+          </div>`).join("") : `<p style="font-size:13px;color:#9ca3af;margin:0;">لا توجد قنوات محددة</p>`}
+      </div>
+    </div>
+
+    <div class="wiz-card">
+      <div class="wiz-card-head"><i data-lucide="clipboard-list"></i><span style="color:#fff;font-weight:700;font-size:14px;">بنود الاتفاقية</span></div>
+      <div class="wiz-table-wrap">
+        <table class="wiz-table">
+          <thead><tr><th>الموضوع</th><th class="center">موافق</th><th class="center">غير موافق</th><th style="width:200px;">ملاحظات إن وجد</th></tr></thead>
           <tbody>${rowsHTML}</tbody>
         </table>
-        <div class="sig-grid">
-          <div class="sig-box">
-            <p class="t">المراجع الرئيسي</p>
-            <p>الاسم: ${escapeHtml(s.sigName || "—")}</p>
-            ${s.sigSignature ? `<img src="${s.sigSignature}" alt="التوقيع" style="max-width:180px;max-height:70px;display:block;margin:6px 0;">` : ""}
-            <p>التاريخ: ${escapeHtml(s.sigDate || "—")}</p>
+      </div>
+    </div>
+
+    <div class="wiz-card">
+      <div class="wiz-card-head"><i data-lucide="file-text"></i><span style="color:#fff;font-weight:700;font-size:14px;">التوقيعات</span></div>
+      <div class="wiz-sig-grid">
+        <div class="wiz-sig-card active">
+          <p class="wiz-sig-title">المراجع الرئيسي</p>
+          <div class="msum-auto-field plain"><span class="val">${escapeHtml(s.sigName || "—")}</span></div>
+          <div>
+            <p class="wiz-sig-mini-label">التاريخ</p>
+            <div class="msum-auto-field plain"><span class="val">${escapeHtml(s.sigDate || "—")}</span></div>
           </div>
-          <div class="sig-box">
-            <p class="t">ممثل الإدارة</p>
-            <p style="color:#9ca3af;">تُملأ من قِبل الإدارة المستهدفة</p>
+          <div>
+            <p class="wiz-sig-mini-label">التوقيع</p>
+            ${s.sigSignature ? `<img src="${s.sigSignature}" alt="التوقيع" style="max-width:220px;max-height:80px;display:block;">` : `<div class="wiz-sig-blank-box solid"></div>`}
           </div>
         </div>
-        <div class="disclosure">
-          <p class="t">المسؤولية والإفصاح</p>
-          <p>تؤكد إدارة المراجعة الداخلية، بأن جميع المعلومات المستلمة سوف تتعامل معها الإدارة بسرية عالية، وفقاً للمادة التاسعة عشرة من قرار مجلس الوزراء 129 بتاريخ 06/04/1428هـ اللائحة الموحدة لوحدات المراجعة الداخلية.</p>
+        <div class="wiz-sig-card locked">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p class="wiz-sig-title">ممثل الإدارة</p>
+            <span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span>
+          </div>
+          <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
+          <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
+          <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-pad-card locked-pad"></div></div>
         </div>
-        ${pdfFooterHTML()}
-        <script>
-          window.onload = () => {
-            window.print();
-            setTimeout(() => window.close(), 500);
-          }
-        </script>
-      </body>
-    </html>
-  `);
+      </div>
+      <div class="wiz-disclosure">
+        <p class="wiz-disclosure-title">المسؤولية والإفصاح</p>
+        <p class="wiz-disclosure-text">تؤكد إدارة المراجعة الداخلية، بأن جميع المعلومات المستلمة سوف تتعامل معها الإدارة بسرية عالية، وفقاً للمادة التاسعة عشرة من قرار مجلس الوزراء 129 بتاريخ 06/04/1428هـ اللائحة الموحدة لوحدات المراجعة الداخلية.</p>
+      </div>
+    </div>`;
+
+  printWindow.document.write(printDocumentHTML({
+    title: "اتفاقية مستوى الخدمة",
+    cssFiles: ["dashboard.css", "wizard.css", "meetingsummary.css"],
+    bodyHtml,
+  }));
   printWindow.document.close();
 }
 

@@ -91,71 +91,30 @@ async function obsLoadList(missionId) {
 
 /* تصدير PDF لملاحظة واحدة بعينها عبر نافذة طباعة (لا يوجد endpoint حقيقي بالباك-إند
    لتوليد PDF مباشرة، فنستخدم نافذة طباعة كما بباقي الصفحات) — يستخدم بيانات نفس
-   الملاحظة المفتوحة بالنموذج فقط، وليس قائمة الملاحظات كاملة */
+   الملاحظة المفتوحة بالنموذج فقط، وليس قائمة الملاحظات كاملة.
+   يبني المستند بنفس تصميم بطاقة "عرض الملاحظة" الحقيقية (renderObsViewBody())
+   بدل جدول مبسّط منفصل التصميم، عشان يطلع نفس الشكل اللي يشوفه المستخدم فعليًا
+   بالضبط (نفس الألوان/الشارات/التخطيط) -- نبدّل obsViewTarget مؤقتًا فقط لبناء
+   الـ HTML، بدون أي تأثير على الصفحة الحية (bindObsViewEvents/rerender ما تُستدعى) */
 function exportObservationToPDF(obs) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
 
-  const today = new Date().toLocaleDateString("en-GB");
   const refLabel = obs.ref || "سيُحدَّد بعد الحفظ";
   const linkedMission = missionsForSelector.find(m => String(m.id) === String(obsSelectedTaskId));
   const missionCode = linkedMission ? linkedMission.mission_code : "";
 
-  const fields = [
-    ["عنوان الملاحظة", obs.title],
-    ["الإدارة محل المراجعة", obs.dept],
-    ["تاريخ المراجعة", obs.date],
-    ["الحالة (الخطر)", obs.risk],
-    ["الملاحظة", obs.observation],
-    ["المعيار أو النظام", obs.standard],
-    ["السبب", obs.reason],
-    ["الأثر", obs.impact],
-    ["التوصيات", obs.recommendations],
-  ];
+  const savedViewTarget = obsViewTarget;
+  obsViewTarget = obs;
+  const bodyHtml = renderObsViewBody();
+  obsViewTarget = savedViewTarget;
 
-  const fieldsHTML = fields.map(([label, value]) => `
-    <tr>
-      <td style="padding: 12px; border: 1px solid #d8e6eb; font-weight: bold; width: 30%; color: #6b8c95;">${escapeHtml(label)}</td>
-      <td style="padding: 12px; border: 1px solid #d8e6eb; color: #152c33;">${escapeHtml(value || "—")}</td>
-    </tr>
-  `).join("");
-
-  printWindow.document.write(`
-    <html dir="rtl">
-      <head>
-        <title>ملاحظة رقابية - ${escapeHtml(refLabel)}</title>
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          ${PDF_LETTERHEAD_STYLE}
-          .header-info { display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fbfd; padding: 20px; border-radius: 8px; border: 1px solid #d8e6eb; }
-          .header-info div { display: flex; flex-direction: column; gap: 5px; }
-          .label { font-size: 12px; color: #6b8c95; font-weight: bold; }
-          .value { font-size: 16px; font-weight: bold; color: #152c33; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          @media print {
-            body { padding: 0; }
-            button { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        ${pdfLetterheadHTML("ملاحظة رقابية" + (missionCode ? " — " + missionCode : ""), [
-          "المرجع: <strong dir=\"ltr\">" + escapeHtml(refLabel) + "</strong>",
-          "تاريخ التصدير: " + today,
-        ])}
-
-        <table>${fieldsHTML}</table>
-
-        ${pdfFooterHTML(missionCode)}
-        <script>
-          window.onload = () => {
-            window.print();
-            setTimeout(() => window.close(), 500);
-          }
-        </script>
-      </body>
-    </html>
-  `);
+  printWindow.document.write(printDocumentHTML({
+    title: "ملاحظة رقابية - " + refLabel,
+    cssFiles: ["dashboard.css", "observations.css"],
+    bodyHtml,
+    missionCode,
+  }));
   printWindow.document.close();
 }
 

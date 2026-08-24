@@ -76,40 +76,50 @@ async function apiPostFile(path, formData) {
 }
 
 /* ============================================================
-   قالب هيدر/فوتر PDF موحّد -- تستخدمه كل مستندات "نافذة الطباعة" المولَّدة
-   بالمتصفح (تصدير ملاحظة، الخطاب الرسمي بالمعالج، اتفاقية مستوى الخدمة)
-   عشان تطلع بنفس الهوية البصرية بالضبط زي مستندات mPDF الرسمية
-   (خطاب المهمة، مصفوفة المخاطر، ملخص الاجتماع، التقرير النهائي) --
-   كانت كل صفحة قبل هذا تبني letterhead خاص فيها بشعار مختلف (kamc.png بدل
-   النسخة المقصوصة kamc-pdf-logo.png) وسماكة حدّ مختلفة وفوتر مختلف تمامًا،
-   فيبان للمستخدم إن كل تصدير "شكله" مستقل عن البقية
+   نافذة طباعة "بنفس شكل النموذج الحقيقي بالضبط" -- تُستخدم لتصدير المستندات
+   اللي عندها معاينة مصمَّمة جاهزة على الشاشة (نموذج الخطاب الرسمي بالمعالج،
+   بطاقة عرض الملاحظة) بدل إعادة بناء تصميم مبسّط يختلف شكله عن الأصل: تربط
+   ملفات CSS الحقيقية للتطبيق (بدل تكرارها بنسخة مصغّرة) وتحقن HTML العنصر
+   المعروض فعليًا على الشاشة (outerHTML) كما هو -- فيطلع المستند المُصدَّر
+   نسخة طبق الأصل من النموذج اللي يشوفه المستخدم، بنفس الخط (Cairo) ونفس
+   الألوان والتنسيق تمامًا، بدل نسخة "شبيهة" بألوان مقاربة فقط
    ============================================================ */
-const PDF_LETTERHEAD_STYLE = `
-  .pdf-letterhead{ display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:1.5px solid #3185b3; padding-bottom:10px; margin-bottom:24px; }
-  .pdf-letterhead-brand{ display:flex; align-items:center; gap:10px; }
-  .pdf-letterhead-brand img{ height:34px; width:auto; }
-  .pdf-letterhead-titles h1{ font-size:15px; color:#196b7f; margin:0; }
-  .pdf-letterhead-titles p{ font-size:11px; color:#6b8c95; margin:3px 0 0; }
-  .pdf-letterhead-meta{ text-align:left; font-size:11px; color:#4b5563; white-space:nowrap; }
-  .pdf-letterhead-meta p{ margin:2px 0; }
-  .pdf-footer{ margin-top:40px; padding-top:8px; border-top:1px solid #d8e6eb; font-size:9px; color:#9ca3af; text-align:center; }
-`;
-
-function pdfLetterheadHTML(docTitle, metaLines) {
-  const metaHTML = (metaLines || []).map(l => `<p>${l}</p>`).join("");
+function printDocumentHTML({ title, cssFiles, bodyHtml, missionCode }) {
+  const cssLinks = (cssFiles || []).map(f => `<link rel="stylesheet" href="${base}/assets/css/${f}">`).join("\n");
   return `
-    <div class="pdf-letterhead">
-      <div class="pdf-letterhead-brand">
-        <img src="${base}/assets/images/kamc-pdf-logo.png" alt="مدينة الملك عبدالله الطبية">
-        <div class="pdf-letterhead-titles">
-          <h1>إدارة المراجعة الداخلية</h1>
-          <p>${escapeHtml(docTitle)}</p>
-        </div>
-      </div>
-      <div class="pdf-letterhead-meta">${metaHTML}</div>
-    </div>`;
-}
-
-function pdfFooterHTML(missionCode) {
-  return `<div class="pdf-footer">مستند صادر من نظام ارتقاء — إدارة المراجعة الداخلية${missionCode ? "، سرّي وخاص بالمهمة " + escapeHtml(missionCode) : ""}</div>`;
+    <html dir="rtl">
+      <head>
+        <meta charset="UTF-8">
+        <title>${escapeHtml(title || "مستند")}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <script src="https://unpkg.com/lucide@latest"></script>
+        ${cssLinks}
+        <style>
+          body{ background:#eef4f7; padding:32px 16px; display:flex; justify-content:center; }
+          .print-doc-wrap{ width:100%; max-width:820px; }
+          .wiz-paper{ min-height:auto !important; }
+          .obs-form-back, #obsViewEditBtn{ display:none !important; }
+          .print-doc-footer{ margin:16px auto 0; max-width:820px; padding-top:8px; border-top:1px solid #d8e6eb; font-size:9px; color:#9ca3af; text-align:center; }
+          @media print {
+            body{ background:#fff; padding:0; display:block; }
+            .print-doc-wrap{ max-width:none; }
+            .wiz-paper, .obs-form-card{ border:none !important; box-shadow:none !important; border-radius:0 !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-doc-wrap">${bodyHtml}</div>
+        <div class="print-doc-footer">مستند صادر من نظام ارتقاء — إدارة المراجعة الداخلية${missionCode ? "، سرّي وخاص بالمهمة " + escapeHtml(missionCode) : ""}</div>
+        <script>
+          window.onload = () => {
+            // تحويل أي أيقونات data-lucide متبقية (مثلاً ببطاقات مُعاد بناؤها من
+            // الحالة بدل استنساخ DOM جاهز أصلاً محوَّل) قبل الطباعة -- لا تأثير
+            // لها لو ما فيه عناصر data-lucide أصلاً
+            try { window.lucide && window.lucide.createIcons(); } catch (e) {}
+            window.print();
+            setTimeout(() => window.close(), 500);
+          }
+        </script>
+      </body>
+    </html>`;
 }
