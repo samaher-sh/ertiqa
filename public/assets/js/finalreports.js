@@ -174,7 +174,7 @@ function renderFRTable(reports) {
       <i class="main" data-lucide="file-text"></i>
       <div>
         <h2>${isPresident ? "التقارير التي تتطلب المراجعة" : "التقارير النهائية"}</h2>
-        <p>${isPresident ? "تقارير تحت المراجعة تنتظر الاعتماد" : "Final Reports"}</p>
+        ${isPresident ? `<p>تقارير تحت المراجعة تنتظر الاعتماد</p>` : ""}
       </div>
       <span class="fr-count-badge">${frLoading ? "..." : filtered.length + " تقرير"}</span>
       <div class="fr-header-actions">
@@ -244,9 +244,8 @@ function renderFRTable(reports) {
                 <td><span class="fr-status-pill" style="background:${approved ? "#f0fdf4" : "#fef9ec"};color:${approved ? "#1f5f7a" : "#b45309"};"><span class="dot" style="background:${approved ? "#3185b3" : "#f59e0b"};"></span>${statusLabel}</span></td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px;">
-                    ${isPresident
-                      ? `<button class="fr-action-view-btn" data-fr-view="${r.mission_id}">عرض</button>`
-                      : `<button class="fr-action-view-btn" data-fr-view="${r.mission_id}">عرض</button>`}
+                    <button class="fr-action-view-btn" data-fr-view="${r.mission_id}">عرض</button>
+                    ${isAuditHead && approved ? `<button class="fr-action-pdf-btn" data-fr-pdf="${r.mission_id}" title="تصدير PDF"><i data-lucide="file-down"></i></button>` : ""}
                   </div>
                 </td>
               </tr>`;
@@ -258,7 +257,22 @@ function renderFRTable(reports) {
   `;
 }
 
+/* زر "تصدير PDF" (رئيس إدارة المراجعة الداخلية، تقارير معتمدة فقط) -- مستخدم
+   بجدول القائمة وأيضًا بتذييل مراحل الاعتماد لتقرير مفتوح، فدالة ربط مشتركة
+   بدل تكرارها بمكانين */
+function frBindPdfExportButtons() {
+  document.querySelectorAll("[data-fr-pdf]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const missionId = btn.dataset.frPdf;
+      const w = window.open(base + "/dashboard/pdf/final-report/" + missionId, "_blank");
+      if (!w) showToast("يرجى السماح بالنوافذ المنبثقة لهذا الموقع لتصدير PDF", "error");
+    });
+  });
+}
+
 function bindFRTableEvents() {
+  frBindPdfExportButtons();
   const createBtn = document.getElementById("frCreateBtn");
   if (createBtn) createBtn.addEventListener("click", () => {
     frView = "create"; frCreateSelectedTask = ""; frCurrentReport = null; frExpandedStep = null;
@@ -378,7 +392,7 @@ function renderCreateReportView() {
     <div class="fr-topbar">
       <button class="fr-back-btn" id="frBackToListBtn"><i data-lucide="chevron-right"></i> التقارير النهائية</button>
       <div class="fr-topbar-sep"></div>
-      <div><h2>إنشاء تقرير / متابعة الاعتماد</h2><p>Report Checklist</p></div>
+      <div><h2>إنشاء تقرير / متابعة الاعتماد</h2></div>
     </div>
 
     ${frViewingExisting ? "" : renderLinkedTaskSelector(frCreateSelectedTask, "frCreateTaskSelect")}
@@ -466,6 +480,13 @@ function renderApprovalStepper() {
    المراجعة (draft) أو معتمد أصلًا (sent) يعرضان حالة نصية بس بدون أي إجراء */
 function frRenderAuditHeadApproveBtn() {
   const status = frCurrentReport ? frCurrentReport.status : "draft";
+  if (status === "sent") {
+    return `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:12px;color:#6b7280;">${frStatusLabel(status)}</span>
+      <button class="fr-action-pdf-btn" id="frExportPdfBtn" data-fr-pdf="${frCreateSelectedTask}" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</button>
+    </div>`;
+  }
   if (status !== "pending_signatures") {
     return `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(status)}</span>`;
   }
@@ -620,6 +641,7 @@ function frResetStepLoadState() {
 }
 
 function bindCreateReportEvents() {
+  frBindPdfExportButtons();
   const backBtn = document.getElementById("frBackToListBtn");
   if (backBtn) backBtn.addEventListener("click", () => {
     frView = "list"; frCreateSelectedTask = ""; frCurrentReport = null;

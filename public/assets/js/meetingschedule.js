@@ -43,7 +43,7 @@ function renderMeetingSchedulePage() {
       <div class="wiz-card mc-card">
         <div class="wiz-card-head">
           <i data-lucide="calendar"></i>
-          <div><h2>جدولة اجتماع</h2><p>Meeting Schedule</p></div>
+          <div><h2>جدولة اجتماع</h2></div>
         </div>
 
         <div class="mc-chat-body" id="mcChatBody">

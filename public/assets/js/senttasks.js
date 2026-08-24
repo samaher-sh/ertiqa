@@ -103,7 +103,7 @@ function renderSentTasksList() {
       <div class="st-card-head">
         <div class="st-card-head-left">
           <i data-lucide="send"></i>
-          <div><h2>المراسلات المشتركة</h2><p>Sent Tasks &amp; Communications</p></div>
+          <div><h2>المراسلات المشتركة</h2></div>
         </div>
         <span class="st-count-badge">${missionsForSelector.length} مهمة</span>
       </div>

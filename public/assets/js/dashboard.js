@@ -114,7 +114,6 @@ function renderSidebar() {
       <div class="nav-icon-box"><i data-lucide="${item.icon}"></i></div>
       <div class="nav-text">
         <span class="nav-label">${item.label}</span>
-        <span class="nav-desc">${item.desc}</span>
       </div>
       ${!navOpen ? `<span class="nav-tooltip">${item.label}</span>` : ""}
     </button>
@@ -349,13 +348,13 @@ function renderNotificationItem(n) {
 function homeStatsCards() {
   if (isAuditHead) {
     return [
-      { key: "reportsPending",  label: "تقارير تحتاج اعتماد", sub: "Reports Requiring Approval", value: homeStats.reports_pending_count || 0 },
-      { key: "reportsApproved", label: "التقارير المعتمدة",   sub: "Approved Reports",           value: homeStats.reports_approved_count || 0 },
+      { key: "reportsPending",  label: "تقارير تحتاج اعتماد", value: homeStats.reports_pending_count || 0 },
+      { key: "reportsApproved", label: "التقارير المعتمدة",   value: homeStats.reports_approved_count || 0 },
     ];
   }
   return [
-    { key: "activeMissions",    label: "المهام النشطة",   sub: "Active Tasks",       value: activeMissions.length },
-    { key: "scheduledMeetings", label: "اجتماعات مجدولة", sub: "Scheduled Meetings", value: scheduledMeetings.length },
+    { key: "activeMissions",    label: "المهام النشطة",   value: activeMissions.length },
+    { key: "scheduledMeetings", label: "اجتماعات مجدولة", value: scheduledMeetings.length },
   ];
 }
 
@@ -403,7 +402,6 @@ function renderHomeTab() {
         <div class="stat-action-top"><span class="stat-dot light"></span></div>
         <div>
           <p class="stat-action-label">بدء مهمة</p>
-          <p class="stat-action-sub">New Audit Task</p>
         </div>
         <p class="stat-action-cta"><i data-lucide="plus"></i> ابدأ</p>
       </button>
@@ -418,7 +416,6 @@ function renderHomeTab() {
         </div>
         <div>
           <p class="stat-label">${s.label}</p>
-          <p class="stat-sub">${s.sub}</p>
         </div>
         <p class="stat-value">${s.value}</p>
       </button>
@@ -658,14 +655,13 @@ function bindHomeEvents() {
 
 /* ---------- صفحة "قيد الإنشاء" لبقية الأقسام ---------- */
 function renderPlaceholder(key) {
-  const item = navItemsData.find(n => n.key === key) || { label: "الصفحة", desc: "" };
+  const item = navItemsData.find(n => n.key === key) || { label: "الصفحة" };
   return `
     <div class="placeholder-card">
       <div class="placeholder-head">
         <i data-lucide="${item.icon || "settings"}"></i>
         <div>
           <h2>${item.label}</h2>
-          <p>${item.desc}</p>
         </div>
       </div>
       <div class="placeholder-body">
