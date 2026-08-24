@@ -276,11 +276,16 @@ async function loadHomeData() {
     // منسّق/مدير الإدارة الخاضعة للمراجعة يرى المهام الموجّهة فعليًا لإدارته
     // (target_department_id)، لا المهام التي يقودها أو ضمن فريقها (وهو مفهوم خاص بالمراجعين)
     const missionsUrl = isHrDept ? base + "/dashboard/api/target-missions" : base + "/dashboard/api/active-missions";
-    const [stats, missionsData, meetingsData] = await Promise.all([
+    const promises = [
       apiGet(base + "/dashboard/api/home-stats"),
       apiGet(missionsUrl),
       apiGet(base + "/dashboard/api/scheduled-meetings"),
-    ]);
+    ];
+    // رئيس إدارة المراجعة الداخلية يحتاج frReportsList نفسها (finalreports.js) هنا
+    // عشان القائمة المنسدلة لمؤشري "تحتاج اعتماد"/"معتمدة" تعرض التقارير الفعلية
+    // مباشرة، بدل ما يُضطر ينتقل لصفحة ثانية بس عشان يشوفها
+    if (isAuditHead) promises.push(initFinalReportsData());
+    const [stats, missionsData, meetingsData] = await Promise.all(promises);
     homeStats = stats;
     activeMissions = missionsData.missions || [];
     scheduledMeetings = meetingsData.meetings || [];
@@ -436,11 +441,27 @@ function renderStatDetailPanel(idx) {
   const label = card ? card.label : "";
 
   if (isAuditHead) {
-    // كل مؤشر يوديك لنفس المجموعة اللي يعدّها بالضبط بصفحة التقارير النهائية
-    // (تحتاج اعتماد = pending_signatures، معتمدة = sent) بدل قائمة موحَّدة
-    // واحدة بلا تمييز مين ضغط مين
+    // كل مؤشر يعرض التقارير الفعلية اللي يعدّها بالضبط مباشرة بالقائمة المنسدلة
+    // (تحتاج اعتماد = pending_signatures، معتمدة = sent) -- الضغط على أي تقرير
+    // يوديك لتفاصيله مباشرة (نفس renderApprovalStepper)، بدل زر عام يوديك
+    // لصفحة قائمة ثانية تحتاج بعدها تدور على التقرير مرة ثانية
     const isApprovedCard = card && card.key === "reportsApproved";
     const targetStatus = isApprovedCard ? "sent" : "pending_signatures";
+    const reports = (typeof frReportsList !== "undefined" ? frReportsList : []).filter(r => r.status === targetStatus);
+    const bodyHtml = reports.length === 0
+      ? `<p class="empty-hint">لا توجد بيانات لعرضها حالياً</p>`
+      : reports.map(r => `
+        <button class="task-row" data-report-mission="${r.mission_id}">
+          <div class="task-row-icon"><i data-lucide="file-text"></i></div>
+          <div class="task-row-body">
+            <p class="task-row-title">${escapeHtml(r.mission_code)} — ${escapeHtml(r.target_dept_name || "")}</p>
+            <p class="task-row-sub">${escapeHtml((r.created_at || "").slice(0, 10))}</p>
+          </div>
+          <div class="task-row-badges">
+            <span class="task-phase-badge">${isApprovedCard ? "معتمد" : "بانتظار الاعتماد"}</span>
+          </div>
+        </button>
+      `).join("");
     return `
       <div class="detail-panel" style="border-color:var(--pb);">
         <div class="detail-head" style="background:var(--pl); border-color:var(--pb);">
@@ -448,15 +469,7 @@ function renderStatDetailPanel(idx) {
           <p class="detail-title" style="color:var(--p);">${label}</p>
           <button class="detail-close" id="closeDetailBtn" style="color:var(--p);"><i data-lucide="x"></i></button>
         </div>
-        <div class="detail-body">
-          <button class="task-row" id="statGoReportsBtn" data-fr-status="${targetStatus}">
-            <div class="task-row-icon"><i data-lucide="file-text"></i></div>
-            <div class="task-row-body">
-              <p class="task-row-title">${isApprovedCard ? "عرض التقارير المعتمدة" : "عرض التقارير التي تحتاج اعتماد"}</p>
-              <p class="task-row-sub">الانتقال إلى صفحة التقارير النهائية</p>
-            </div>
-          </button>
-        </div>
+        <div class="detail-body">${bodyHtml}</div>
       </div>
     `;
   }
@@ -586,12 +599,13 @@ function bindHomeEvents() {
     renderSidebar(); await renderContent(); lucide.createIcons();
   });
 
-  const statGoReportsBtn = document.getElementById("statGoReportsBtn");
-  if (statGoReportsBtn) statGoReportsBtn.addEventListener("click", async () => {
-    frAuditHeadFilter = statGoReportsBtn.dataset.frStatus || "";
-    frView = "list";
-    activeContent = "finalReports";
-    renderSidebar(); await renderContent(); lucide.createIcons();
+  document.querySelectorAll("[data-report-mission]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await frOpenReportForMission(btn.dataset.reportMission);
+      activeContent = "finalReports";
+      activeStatCard = null;
+      renderSidebar(); await renderContent(); lucide.createIcons();
+    });
   });
 
   document.querySelectorAll(".stat-card").forEach(btn => {
