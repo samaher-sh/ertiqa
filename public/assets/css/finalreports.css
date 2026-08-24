@@ -52,9 +52,6 @@ table.fr-table tbody tr{ border-bottom:1px solid #eef3f5; }
 .fr-action-approve-btn i{ width:11px; height:11px; }
 .fr-action-approved-pill{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#1f5f7a; background:#f0fdf4; border:1px solid #b3d4e5; padding:6px 12px; border-radius:8px; }
 .fr-action-approved-pill i{ width:11px; height:11px; }
-.fr-audithead-note{ padding:14px 24px; display:flex; align-items:center; gap:12px; background:#f0fdf4; border-top:1px solid #b3d4e5; }.fr-audithead-note i, .fr-audithead-note svg{ width:14px; height:14px; color:#1f5f7a; }
-.fr-audithead-note p{ font-size:12px; font-weight:600; color:#1f5f7a; margin:0; }
-
 /* ===== Create report view ===== */
 .fr-topbar{ background:#fff; border-radius:16px; display:flex; align-items:center; gap:12px; padding:14px 20px; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.07); }
 .fr-back-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; color:var(--pd); border:1px solid var(--pb); background:none; }
