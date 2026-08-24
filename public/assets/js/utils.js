@@ -84,8 +84,9 @@ async function apiPostFile(path, formData) {
    نسخة طبق الأصل من النموذج اللي يشوفه المستخدم، بنفس الخط (Cairo) ونفس
    الألوان والتنسيق تمامًا، بدل نسخة "شبيهة" بألوان مقاربة فقط
    ============================================================ */
-function printDocumentHTML({ title, cssFiles, bodyHtml, missionCode }) {
+function printDocumentHTML({ title, cssFiles, bodyHtml, missionCode, maxWidth }) {
   const cssLinks = (cssFiles || []).map(f => `<link rel="stylesheet" href="${base}/assets/css/${f}">`).join("\n");
+  const mw = maxWidth || 820;
   return `
     <html dir="rtl">
       <head>
@@ -96,10 +97,12 @@ function printDocumentHTML({ title, cssFiles, bodyHtml, missionCode }) {
         ${cssLinks}
         <style>
           body{ background:#eef4f7; padding:32px 16px; display:flex; justify-content:center; }
-          .print-doc-wrap{ width:100%; max-width:820px; }
+          .print-doc-wrap{ width:100%; max-width:${mw}px; }
           .wiz-paper{ min-height:auto !important; }
           .obs-form-back, #obsViewEditBtn{ display:none !important; }
-          .print-doc-footer{ margin:16px auto 0; max-width:820px; padding-top:8px; border-top:1px solid #d8e6eb; font-size:9px; color:#9ca3af; text-align:center; }
+          .fr-print-section-title{ font-size:16px; font-weight:800; color:#196b7f; border-bottom:2px solid #3185b3; padding-bottom:8px; margin:0 0 16px; }
+          .fr-print-section + .fr-print-section{ margin-top:32px; }
+          .print-doc-footer{ margin:16px auto 0; max-width:${mw}px; padding-top:8px; border-top:1px solid #d8e6eb; font-size:9px; color:#9ca3af; text-align:center; }
           @media print {
             body{ background:#fff; padding:0; display:block; }
             .print-doc-wrap{ max-width:none; }
