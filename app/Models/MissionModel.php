@@ -43,6 +43,24 @@ class MissionModel extends Model
     }
 
     /**
+     * رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
+     * حتى لو مو عضو فريق فيها ولا رئيسها -- activeMissionsForUser() فوق ما ترجّع
+     * له شي أبدًا (يفحص فقط mission_head_id/عضوية الفريق)، وهذا كان يخلي
+     * "منتقي المهمة المرتبطة" (missionsForSelector بالواجهة) فاضي تمامًا لرئيس
+     * إدارة المراجعة الداخلية بأي صفحة تستخدمه (زي ملخص الاجتماع)، حتى لو كان
+     * أصلًا يشاهد نفس المهمة عبر مراحل الاعتماد بالتقرير النهائي
+     */
+    public function activeMissionsForAuditDepartment(int $departmentId): array
+    {
+        return $this->select('missions.*, td.name_ar as target_department_name')
+            ->join('departments td', 'td.id = missions.target_department_id')
+            ->where('missions.audit_department_id', $departmentId)
+            ->where('missions.status', 'active')
+            ->orderBy('missions.created_at', 'DESC')
+            ->findAll();
+    }
+
+    /**
      * missions.current_stage لا يتحدّث تلقائيًا بأي مكان بالنظام (يبقى 1 دائمًا منذ
      * الإنشاء) — هذي الدالة تحدد فعليًا أول مرحلة غير مكتملة بالمهمة من واقع قاعدة
      * البيانات نفسها. مصدر واحد مشترك يستخدمه SentTasksController (زر إكمال

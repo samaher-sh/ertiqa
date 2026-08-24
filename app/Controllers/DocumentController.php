@@ -13,6 +13,25 @@ class DocumentController extends BaseController
     private const MAX_SIZE_KB = 10240; // 10 ميجا
 
     /**
+     * رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
+     * حتى لو مو عضو فريق فيها -- نفس نمط PdfController::assertMissionAccess/
+     * ReportController::missionForParty، مطلوب هنا لأن endpoint المرفقات هذا هو
+     * اللي كان يفشل بصمت (403) ويكسر تحميل بيانات ملخص الاجتماع كاملة عبر
+     * Promise.all بمسم meetingsummary.js لمّا يُستخدم رئيس إدارة المراجعة
+     * الداخلية (مثلًا أثناء تصدير التقرير النهائي)
+     */
+    private function missionAccessAllowed(int $missionId): bool
+    {
+        if (session()->get('role_code') === 'audit_head') {
+            $mission = (new MissionModel())->find($missionId);
+            return $mission && (int) $mission['audit_department_id'] === (int) session()->get('department_id');
+        }
+        $userId = (int) session()->get('user_id');
+        $allowedIds = array_map('intval', array_column((new MissionModel())->activeMissionsForUser($userId), 'id'));
+        return in_array($missionId, $allowedIds, true);
+    }
+
+    /**
      * POST /dashboard/meetings/api/upload — رفع مرفق لاجتماع معيّن
      */
     public function uploadMeetingAttachment()
@@ -77,11 +96,8 @@ class DocumentController extends BaseController
     public function meetingAttachments()
     {
         $missionId = (int) $this->request->getGet('mission_id');
-        $userId = (int) session()->get('user_id');
 
-        $missionModel = new MissionModel();
-        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
-        if (!in_array($missionId, $allowedIds, true)) {
+        if (!$this->missionAccessAllowed($missionId)) {
             return $this->response->setStatusCode(403)->setJSON(['success' => false]);
         }
 
@@ -104,10 +120,7 @@ class DocumentController extends BaseController
         $doc = $docModel->find($id);
         if (!$doc) throw new \CodeIgniter\Exceptions\PageNotFoundException('الملف غير موجود.');
 
-        $userId = (int) session()->get('user_id');
-        $missionModel = new MissionModel();
-        $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
-        if (!in_array((int) $doc['mission_id'], $allowedIds, true)) {
+        if (!$this->missionAccessAllowed((int) $doc['mission_id'])) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذا الملف.');
         }
 

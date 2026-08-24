@@ -264,11 +264,59 @@ function frBindPdfExportButtons() {
   document.querySelectorAll("[data-fr-pdf]").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
-      const missionId = btn.dataset.frPdf;
-      const w = window.open(base + "/dashboard/pdf/final-report/" + missionId, "_blank");
-      if (!w) showToast("يرجى السماح بالنوافذ المنبثقة لهذا الموقع لتصدير PDF", "error");
+      exportFinalReportToPDF(btn.dataset.frPdf);
     });
   });
+}
+
+/* تصدير التقرير النهائي كاملًا (كل مراحله الست) -- بنفس نمط تصدير الخطاب
+   الرسمي/الملاحظة: يعيد استخدام نفس دوال العرض الحقيقية (frRenderStepBody)
+   اللي تبني محتوى كل مرحلة بمدرّج "مراحل الاعتماد" هنا بالضبط، بدل جدول
+   مبسّط منفصل الشكل (كان هذا آخر تصدير بالنظام يستخدم مستند mPDF بتصميم
+   مختلف عن باقي التصديرات بعد توحيدها). نفتح نافذة الطباعة فورًا (بدون
+   انتظار) عشان المتصفح ما يمنعها كـ popup غير ناتج عن ضغطة مستخدم مباشرة،
+   ثم نملأها بعد تحميل بيانات المراحل الأربع كاملة (مو بس المرحلة المفتوحة
+   حاليًا) -- تحميل المراحل يترك الصفحة نفسها بحالة "تقرير مفتوح" لنفس
+   المهمة (frOpenReportForMission)، وهو تأثير جانبي مقصود ومقبول بدل نسخ/رجّع
+   عشرات متغيرات الحالة عبر 4 ملفات مختلفة */
+async function exportFinalReportToPDF(missionId) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
+  printWindow.document.write('<html dir="rtl"><body style="font-family:sans-serif;padding:60px;text-align:center;color:#6b8c95;">جارِ تجهيز التقرير للتصدير...</body></html>');
+
+  await frOpenReportForMission(missionId);
+  await frEnsureStepLoaded(1);
+  await frEnsureStepLoaded(4);
+  await frEnsureStepLoaded(5);
+  await frEnsureStepLoaded(6);
+  rerenderFRContent();
+
+  if (printWindow.closed) return;
+
+  const missionCode = (mrMission && mrMission.mission_code) || "";
+  const sections = [
+    ["1. طلب المراجعة الداخلية", frRenderStepBody(1)],
+    ["2. اتفاقية مستوى الخدمة", frRenderStepBody(2)],
+    ["3. قائمة المستندات", frRenderStepBody(3)],
+    ["4. مصفوفة المخاطر", frRenderStepBody(4)],
+    ["5. ملخص الاجتماع", frRenderStepBody(5)],
+    ["6. الملاحظات", frRenderStepBody(6)],
+  ];
+  const bodyHtml = sections.map(([title, html], i) => `
+    <div class="fr-print-section"${i > 0 ? ' style="page-break-before:always;"' : ""}>
+      <h1 class="fr-print-section-title">${escapeHtml(title)}</h1>
+      ${html}
+    </div>`).join("");
+
+  printWindow.document.open();
+  printWindow.document.write(printDocumentHTML({
+    title: "التقرير النهائي - " + missionCode,
+    cssFiles: ["dashboard.css", "wizard.css", "missionreview.css", "documentrequests.css", "riskmatrix.css", "meetingsummary.css", "observations.css", "finalreports.css"],
+    bodyHtml,
+    missionCode,
+    maxWidth: 1100,
+  }));
+  printWindow.document.close();
 }
 
 function bindFRTableEvents() {

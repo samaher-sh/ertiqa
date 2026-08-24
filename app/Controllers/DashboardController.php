@@ -171,11 +171,18 @@ class DashboardController extends BaseController
      */
     public function activeMissions()
     {
-        $userId = (int) session()->get('user_id');
         $missionModel = new MissionModel();
 
+        if (session()->get('role_code') === 'audit_head') {
+            $departmentId = session()->get('department_id');
+            $missions = $departmentId ? $missionModel->activeMissionsForAuditDepartment((int) $departmentId) : [];
+        } else {
+            $userId = (int) session()->get('user_id');
+            $missions = $missionModel->activeMissionsForUser($userId);
+        }
+
         return $this->response->setJSON([
-            'missions' => $this->withRealStage($missionModel, $missionModel->activeMissionsForUser($userId)),
+            'missions' => $this->withRealStage($missionModel, $missions),
         ]);
     }
 
