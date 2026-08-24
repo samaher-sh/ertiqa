@@ -40,7 +40,7 @@ function renderDocumentRequestsPage() {
         <div class="wiz-card-head" style="justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:10px;">
             <i data-lucide="folder-check"></i>
-            <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents Checklist</p></div>
+            <div><h2>قائمة المستندات المطلوبة</h2></div>
           </div>
           <button type="button" class="wiz-add-doc-btn" id="drToggleAddBtn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);">
             ${drShowAddRow ? '<i data-lucide="x"></i> إلغاء' : '<i data-lucide="plus"></i> إضافة مستند'}

@@ -7,7 +7,7 @@ function renderSettingsPage() {
   return `
   <div class="flex flex-col gap-5">
     <div class="wiz-card">
-      <div class="wiz-card-head"><i data-lucide="settings"></i><div><h2>الإعدادات</h2><p>System Settings</p></div></div>
+      <div class="wiz-card-head"><i data-lucide="settings"></i><div><h2>الإعدادات</h2></div></div>
       <div class="settings-body">
         <div class="settings-icon"><i data-lucide="settings"></i></div>
         <p class="msg">صفحة الإعدادات قيد التطوير</p>

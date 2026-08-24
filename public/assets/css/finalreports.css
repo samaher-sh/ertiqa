@@ -52,6 +52,11 @@ table.fr-table tbody tr{ border-bottom:1px solid #eef3f5; }
 .fr-action-approve-btn i{ width:11px; height:11px; }
 .fr-action-approved-pill{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#1f5f7a; background:#f0fdf4; border:1px solid #b3d4e5; padding:6px 12px; border-radius:8px; }
 .fr-action-approved-pill i{ width:11px; height:11px; }
+/* زر "تصدير PDF" (رئيس إدارة المراجعة الداخلية، تقارير معتمدة) -- بجدول القائمة
+   يظهر أيقونة فقط (title كـtooltip)، وبتذييل مراحل الاعتماد أيقونة+نص */
+.fr-action-pdf-btn{ display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; color:var(--pd); background:var(--pl); border:1px solid var(--pb); cursor:pointer; }
+.fr-action-pdf-btn:hover{ background:var(--p); color:#fff; }
+.fr-action-pdf-btn i{ width:13px; height:13px; }
 /* ===== Create report view ===== */
 .fr-topbar{ background:#fff; border-radius:16px; display:flex; align-items:center; gap:12px; padding:14px 20px; border:1px solid #d8e6eb; box-shadow:0 2px 12px rgba(13,132,181,.07); }
 .fr-back-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; color:var(--pd); border:1px solid var(--pb); background:none; }

@@ -9,6 +9,11 @@ use App\Models\MeetingModel;
 use App\Models\MeetingAttendeeModel;
 use App\Models\MeetingSummaryPointModel;
 use App\Models\MeetingApprovalModel;
+use App\Models\ServiceAgreementModel;
+use App\Models\ServiceAgreementResponseModel;
+use App\Models\DocumentRequestModel;
+use App\Models\AuditNoteModel;
+use App\Models\ReportModel;
 use Mpdf\Mpdf;
 
 class PdfController extends BaseController
@@ -100,6 +105,15 @@ class PdfController extends BaseController
 
     private function assertMissionAccess(array $mission): void
     {
+        // رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
+        // حتى لو مو عضو فريق فيها -- يحتاج يصدّر تقارير مهام لسا ما شارك بها مباشرة
+        if (session()->get('role_code') === 'audit_head') {
+            if ((int) $mission['audit_department_id'] !== (int) session()->get('department_id')) {
+                throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
+            }
+            return;
+        }
+
         $userId = (int) session()->get('user_id');
         $missionModel = new MissionModel();
         $allowed = $missionModel->activeMissionsForUser($userId);
@@ -193,5 +207,57 @@ class PdfController extends BaseController
         $this->applyRunningHeader($mpdf, 'ملخص الاجتماع', $mission['mission_code'], $targetDept['name_ar'] ?? '');
         $this->applyRunningFooter($mpdf, $mission['mission_code']);
         $this->streamPdf($mpdf, $html, 'ملخص-اجتماع-' . $mission['mission_code'] . '.pdf');
+    }
+
+    /**
+     * تصدير التقرير النهائي الكامل (كل مراحله الست بمستند واحد) — مقصور على
+     * تقارير معتمدة فعليًا (status = sent)، مو تحت الإعداد أو بانتظار الاعتماد
+     */
+    public function finalReport(int $missionId)
+    {
+        $missionModel = new MissionModel();
+        $mission = $missionModel->find($missionId);
+        if (!$mission) throw new \CodeIgniter\Exceptions\PageNotFoundException('المهمة غير موجودة');
+        $this->assertMissionAccess($mission);
+
+        $report = (new ReportModel())->where('mission_id', $missionId)->first();
+        if (!$report || $report['status'] !== 'sent') {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('التقرير غير معتمد بعد.');
+        }
+
+        $deptModel = new DepartmentModel();
+        $targetDept = $deptModel->find($mission['target_department_id']);
+
+        $agreement    = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+        $slaResponses = (new ServiceAgreementResponseModel())->forMission($missionId);
+        $docRequests  = (new DocumentRequestModel())->forMissionWithResponses($missionId);
+        $riskItems    = (new RiskMatrixItemModel())->forMission($missionId);
+
+        $meeting   = (new MeetingModel())->firstForMission($missionId);
+        $attendees = $meeting ? (new MeetingAttendeeModel())->forMeeting($meeting['id']) : [];
+        $points    = $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [];
+        $approvals = $meeting ? (new MeetingApprovalModel())->forMeeting($meeting['id']) : [];
+
+        $observations = (new AuditNoteModel())->forMission($missionId);
+
+        $html = view('pdf/final-report', [
+            'mission'      => $mission,
+            'targetDept'   => $targetDept,
+            'report'       => $report,
+            'agreement'    => $agreement,
+            'slaResponses' => $slaResponses,
+            'docRequests'  => $docRequests,
+            'riskItems'    => $riskItems,
+            'meeting'      => $meeting,
+            'attendees'    => $attendees,
+            'points'       => $points,
+            'approvals'    => $approvals,
+            'observations' => $observations,
+        ]);
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '');
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'تقرير-نهائي-' . $mission['mission_code'] . '.pdf');
     }
 }

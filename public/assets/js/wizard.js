@@ -232,7 +232,7 @@ function renderWizPage1() {
     <div class="wiz-card">
       <div class="wiz-card-head">
         <i data-lucide="plus"></i>
-        <div><h2>طلب المراجعة الداخلية</h2><p>Internal Audit Request</p></div>
+        <div><h2>طلب المراجعة الداخلية</h2></div>
       </div>
       <div class="wiz-card-body">
 
@@ -522,7 +522,6 @@ function renderWizPage2() {
     <div class="wiz-card-head">
       <i data-lucide="file-text"></i>
       <h2 style="margin:0;">اتفاقية مستوى الخدمة</h2>
-      <p style="margin:2px 0 0 6px;">— Service Level Agreement</p>
       <button type="button" class="obs-btn-pdf" id="wizP2ExportBtn" style="margin-right:auto;"><i data-lucide="file-text"></i> تصدير PDF</button>
     </div>
     <div class="wiz-sla-grid">
@@ -691,7 +690,7 @@ function exportWizP2ToPDF() {
             <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
             <div>
               <h1>إدارة المراجعة الداخلية</h1>
-              <p class="sub">اتفاقية مستوى الخدمة — Service Level Agreement</p>
+              <p class="sub">اتفاقية مستوى الخدمة</p>
             </div>
           </div>
           <div class="letterhead-meta">

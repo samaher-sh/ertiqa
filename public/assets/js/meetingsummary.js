@@ -148,7 +148,7 @@ function renderMeetingSummaryCards() {
       <div class="wiz-card">
         <div class="wiz-card-head">
           <i data-lucide="users"></i>
-          <div><h2>ملخص الاجتماع</h2><p>Meeting Summary</p></div>
+          <div><h2>ملخص الاجتماع</h2></div>
           ${allReadOnly && !msumForceReadOnly ? `<span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>` : ""}
           <div style="display:flex;gap:8px;margin-right:auto;">
             ${!allReadOnly ? `<label class="msum-attach-btn" style="cursor:pointer;box-shadow:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);">

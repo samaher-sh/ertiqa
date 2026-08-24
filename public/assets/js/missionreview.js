@@ -183,7 +183,6 @@ function renderMrPage2() {
     <div class="wiz-card-head">
       <i data-lucide="file-text"></i>
       <h2 style="margin:0;">اتفاقية مستوى الخدمة</h2>
-      <p style="margin:2px 0 0 6px;">— Service Level Agreement</p>
       ${a.status === "submitted" ? `<span class="dr-status-badge yes" style="margin-right:auto;">تم الإرسال</span>` : ""}
     </div>
 
@@ -275,7 +274,7 @@ function renderMrPage3() {
     <div class="wiz-card-head" style="justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:10px;">
         <i data-lucide="file-text"></i>
-        <div><h2>قائمة المستندات المطلوبة</h2><p>Required Documents Checklist</p></div>
+        <div><h2>قائمة المستندات المطلوبة</h2></div>
       </div>
     </div>
     <div class="wiz-table-wrap">
