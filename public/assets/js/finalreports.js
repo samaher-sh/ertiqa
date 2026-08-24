@@ -511,9 +511,11 @@ function frRenderStepBody(section) {
   if (section === 1) return renderMrPage1();
   if (section === 2) return renderMrPage2();
   if (section === 3) return renderMrPage3();
-  if (section === 4) return renderRmReadOnlyTable();
+  // section 4/6: زر "عرض" بعمود الإجراءات يفتح بطاقة تفاصيل الصف بدل الجدول
+  // (rmView/obsView === "view")، بنفس مكانه هنا تمامًا -- "رجوع" بالبطاقة يرجّعها
+  if (section === 4) return (rmView === "view" && rmViewTarget) ? renderRmViewBody() : renderRmReadOnlyTable(true);
   if (section === 5) return renderMeetingSummaryCards();
-  if (section === 6) return renderObsReadOnlyTable();
+  if (section === 6) return (obsView === "view" && obsViewTarget) ? renderObsViewBody() : renderObsReadOnlyTable(true);
   return "";
 }
 
@@ -543,6 +545,7 @@ async function frEnsureStepLoaded(section) {
       frMrLoaded = true;
     } else if (group === "rm") {
       rmForceReadOnly = true;
+      rmEmbedded = true;
       rmSelectedTaskId = String(missionId);
       await rmLoadItems(missionId);
       frRmLoaded = true;
@@ -552,6 +555,8 @@ async function frEnsureStepLoaded(section) {
       await msumLoadData(missionId);
       frMsumLoaded = true;
     } else if (group === "obs") {
+      obsForceReadOnly = true;
+      obsEmbedded = true;
       obsSelectedTaskId = String(missionId);
       await obsLoadList(missionId);
       frObsLoaded = true;
@@ -606,6 +611,12 @@ function frResetStepLoadState() {
   frMrLoaded = false; frRmLoaded = false; frMsumLoaded = false; frObsLoaded = false;
   if (typeof rmForceReadOnly !== "undefined") rmForceReadOnly = false;
   if (typeof msumForceReadOnly !== "undefined") msumForceReadOnly = false;
+  // rmView/obsView قد تكون بقيت على "view" (المستخدم فتح "عرض" لخطر/ملاحظة
+  // ولم يرجع) -- لازم ترجع "list" هنا وإلا لو زار المستخدم صفحة مصفوفة
+  // المخاطر/الملاحظات المستقلة بعدها مباشرة، تطلع له بطاقة التفاصيل القديمة
+  // بدل قائمتها (نفس نمط تصفير rmForceReadOnly/msumForceReadOnly أعلاه)
+  if (typeof rmEmbedded !== "undefined") { rmEmbedded = false; rmView = "list"; rmViewTarget = null; rmOpenMenuId = null; }
+  if (typeof obsForceReadOnly !== "undefined") { obsForceReadOnly = false; obsEmbedded = false; obsView = "list"; obsViewTarget = null; obsOpenMenuId = null; }
 }
 
 function bindCreateReportEvents() {
@@ -693,5 +704,16 @@ function bindCreateReportEvents() {
     frApproving = false;
     rerenderFRContent();
   });
+
+  // خطوتا "مصفوفة المخاطر"/"الملاحظات" مضمَّنتان هنا بنفس عمود الإجراءات
+  // (قائمة ⋮: عرض فقط دائمًا، بما إن rmForceReadOnly/obsForceReadOnly مُجبَرتان
+  // بمراحل الاعتماد) -- bindRmListEvents/bindObsListEvents آمنتان دائمًا (كل
+  // عناصرهما محروسة بـ if(el))، وbindRmViewEvents/bindObsViewEvents تُستدعيان
+  // فقط لمّا تكون بطاقة "عرض" فعليًا هي المعروضة (عندها عنصر #rmViewBack/
+  // #obsViewBack غير محروس بـ if، فاستدعاؤه بلا داعٍ يرمي خطأ)
+  bindRmListEvents();
+  if (rmView === "view" && rmViewTarget) bindRmViewEvents();
+  bindObsListEvents();
+  if (obsView === "view" && obsViewTarget) bindObsViewEvents();
 }
 

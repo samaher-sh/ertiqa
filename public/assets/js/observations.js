@@ -23,9 +23,16 @@ let obsShowAdvanced = false;
 let obsAdvDateFrom = "";
 let obsAdvDateTo = "";
 let obsOpenMenuId = null;
+/* obsForceReadOnly: تجبر القراءة فقط بغض النظر عن الدور (تستخدمها مراحل
+   الاعتماد بالتقرير النهائي، عشان عضو المراجعة نفسه ما يقدر يعدّل/يحذف من
+   داخل مراجعة التقرير -- نفس نمط rmForceReadOnly/msumForceReadOnly).
+   obsEmbedded: مضمَّن داخل التقرير النهائي بدل صفحة الملاحظات المستقلة -- يخلي
+   rerenderObsContent() يعيد رسم التقرير النهائي بدل ما "يقفز" لصفحة الملاحظات */
+let obsForceReadOnly = false;
+let obsEmbedded = false;
 
 const isObsHrUser = () => isHrDept || isHrCoordinator;
-const obsIsReadOnly = () => isObsHrUser() || isAuditHead;
+const obsIsReadOnly = () => obsForceReadOnly || isObsHrUser() || isAuditHead;
 
 /* الإدارة محل المراجعة تُشتق دائمًا من المهمة المختارة حاليًا (target_department_id
    الحقيقي بالمهمة) — بدون اختيار يدوي منفصل بالنموذج */
@@ -36,6 +43,12 @@ function obsMissionDept() {
 
 
 function rerenderObsContent() {
+  if (obsEmbedded) {
+    // مضمَّن داخل "مراحل الاعتماد" بالتقرير النهائي -- الصفحة الفعلية اللي فيها
+    // الجدول هي "finalReports"، مو "observations" المستقلة
+    renderSidebar(); renderContent(); lucide.createIcons();
+    return;
+  }
   const active = document.activeElement;
   const activeId = active && active.id;
   const selStart = active && typeof active.selectionStart === "number" ? active.selectionStart : null;
@@ -223,7 +236,34 @@ function obsHasFilters() {
 /* جدول ملاحظات مهمة واحدة للقراءة فقط -- بدون فلاتر/بحث/قائمة إجراءات، بنفس
    أعمدة جدول الملاحظات الحقيقي بالضبط (موضوع/إدارة/تاريخ/تصنيف). تستخدمها
    جولة "عرض" بالمراسلات المشتركة لعرض نفس شكل صفحة الملاحظات بالضبط */
-function renderObsReadOnlyTable() {
+/* خلية عمود "الإجراءات" (قائمة ⋮: عرض/تعديل/حذف) -- مستخرجة بمعزل عشان تُعاد
+   استخدامها بالضبط من renderObsListMode() الأصلية وأيضًا من الجدول المضمَّن
+   بالتقرير النهائي (renderObsReadOnlyTable بـ withActions=true) -- تعديل/حذف
+   تختفيان تلقائيًا لو obsIsReadOnly() (دائمًا صحيحة بالتقرير النهائي بما إن
+   obsForceReadOnly تُجبر هناك) */
+function obsActionsCellHtml(obs) {
+  const readOnly = obsIsReadOnly();
+  const menuOpen = obsOpenMenuId === obs.id;
+  return `
+  <td class="obs-menu-cell">
+    <button class="obs-menu-btn" data-menu-toggle="${obs.id}"><i data-lucide="more-vertical"></i></button>
+    ${menuOpen ? `
+      <div class="obs-menu-dropdown">
+        <button class="obs-menu-item" data-view-obs="${obs.id}"><i data-lucide="eye"></i> عرض</button>
+        ${!readOnly ? `
+          <button class="obs-menu-item" data-edit-obs="${obs.id}"><i data-lucide="pencil"></i> تعديل</button>
+          <div class="obs-menu-sep"></div>
+          <button class="obs-menu-item danger" data-delete-obs="${obs.id}"><i data-lucide="trash-2"></i> حذف</button>
+        ` : ""}
+      </div>` : ""}
+  </td>`;
+}
+
+/* جدول قراءة فقط -- بدون قائمة إجراءات افتراضيًا (تستخدمه جولة "عرض"
+   بالمراسلات المشتركة)، ومع قائمة إجراءات (withActions=true) لمراحل الاعتماد
+   بالتقرير النهائي عشان يقدر المستخدم يفتح "عرض" لأي ملاحظة ويشوف تفاصيلها
+   كاملة بدل جدول ملخّص بس */
+function renderObsReadOnlyTable(withActions = false) {
   if (obsLoading) return `<div class="obs-empty"><p class="main">جارِ التحميل...</p></div>`;
   if (obsList.length === 0) {
     return `<div class="obs-empty"><i data-lucide="alert-circle"></i><p class="main">لا توجد ملاحظات مسجلة لهذه المهمة</p></div>`;
@@ -235,6 +275,7 @@ function renderObsReadOnlyTable() {
         <th>موضوع الملاحظة</th>
         <th style="width:160px;">الإدارة المعنية</th>
         <th style="width:110px;">التاريخ</th>
+        ${withActions ? '<th style="width:60px;">الإجراءات</th>' : ""}
       </tr></thead>
       <tbody>
         ${obsList.map((obs, i) => `
@@ -242,6 +283,7 @@ function renderObsReadOnlyTable() {
             <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
             <td><span class="obs-dept-cell">${escapeHtml(obs.dept || "—")}</span></td>
             <td><span class="obs-date-cell">${escapeHtml(obs.date || "—")}</span></td>
+            ${withActions ? obsActionsCellHtml(obs) : ""}
           </tr>`).join("")}
       </tbody>
     </table>
@@ -339,25 +381,12 @@ function renderObsListMode() {
               </tr></thead>
               <tbody>
                 ${filteredObs.map((obs, i) => {
-                  const menuOpen = obsOpenMenuId === obs.id;
                   return `
                   <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
                     <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
                     <td><span class="obs-dept-cell">${escapeHtml(obs.dept || "—")}</span></td>
                     <td><span class="obs-date-cell">${obs.date}</span></td>
-                    ${!isAuditHead ? `
-                    <td class="obs-menu-cell">
-                      <button class="obs-menu-btn" data-menu-toggle="${obs.id}"><i data-lucide="more-vertical"></i></button>
-                      ${menuOpen ? `
-                        <div class="obs-menu-dropdown">
-                          <button class="obs-menu-item" data-view-obs="${obs.id}"><i data-lucide="eye"></i> عرض</button>
-                          ${!readOnly ? `
-                            <button class="obs-menu-item" data-edit-obs="${obs.id}"><i data-lucide="pencil"></i> تعديل</button>
-                            <div class="obs-menu-sep"></div>
-                            <button class="obs-menu-item danger" data-delete-obs="${obs.id}"><i data-lucide="trash-2"></i> حذف</button>
-                          ` : ""}
-                        </div>` : ""}
-                    </td>` : ""}
+                    ${!isAuditHead ? obsActionsCellHtml(obs) : ""}
                   </tr>`;
                 }).join("")}
               </tbody>
@@ -712,54 +741,61 @@ function bindObsFormEvents() {
    وضع العرض (read-only)
    ============================================================ */
 function renderObsViewMode() {
+  return `
+  <div class="flex flex-col gap-4">
+    ${renderLinkedTaskSelector(obsSelectedTaskId, "obsTaskSelect")}
+    ${renderObsViewBody()}
+  </div>`;
+}
+
+/* بطاقة تفاصيل الملاحظة بمعزل عن منتقي المهمة -- تُستخدم من renderObsViewMode()
+   نفسها، وأيضًا مباشرة من finalreports.js لتضمين نفس بطاقة التفاصيل هذي داخل
+   خطوة "الملاحظات" بمراحل الاعتماد */
+function renderObsViewBody() {
   const v = obsViewTarget;
   const rc = OBS_RISK_COLORS[v.risk] || { bg: "#f3f4f6", text: "#4b5563", border: "#e5e7eb", dot: "#9ca3af" };
   const sc = OBS_STATUS_COLORS[v.status] || OBS_STATUS_COLORS["بانتظار الرد"];
   const readOnly = obsIsReadOnly();
 
   return `
-  <div class="flex flex-col gap-4">
-    ${renderLinkedTaskSelector(obsSelectedTaskId, "obsTaskSelect")}
+  <div class="obs-form-card">
+    <div class="obs-form-head">
+      <div class="obs-form-head-left">
+        <button class="obs-form-back" id="obsViewBack"><i data-lucide="chevron-right"></i></button>
+        <h3 class="obs-form-title">عرض الملاحظة</h3>
+      </div>
+      ${!readOnly ? `<button class="obs-form-save" id="obsViewEditBtn"><i data-lucide="pencil"></i></button>` : ""}
+    </div>
 
-    <div class="obs-form-card">
-      <div class="obs-form-head">
-        <div class="obs-form-head-left">
-          <button class="obs-form-back" id="obsViewBack"><i data-lucide="chevron-right"></i></button>
-          <h3 class="obs-form-title">عرض الملاحظة</h3>
+    <div class="obs-form-body">
+      <div class="obs-view-grid cols-4">
+        <div class="obs-view-field"><span class="lbl">الإدارة محل المراجعة</span><span class="val">${escapeHtml(v.dept || "—")}</span></div>
+        <div class="obs-view-field"><span class="lbl">عنوان الملاحظة</span><span class="val">${escapeHtml(v.title || "—")}</span></div>
+        <div class="obs-view-field"><span class="lbl">التاريخ</span><span class="val">${v.date}</span></div>
+        <div class="obs-view-field">
+          <span class="lbl">الحالة (الخطر)</span>
+          <span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(v.risk || "—")}</span>
         </div>
-        ${!readOnly ? `<button class="obs-form-save" id="obsViewEditBtn"><i data-lucide="pencil"></i></button>` : ""}
       </div>
 
-      <div class="obs-form-body">
-        <div class="obs-view-grid cols-4">
-          <div class="obs-view-field"><span class="lbl">الإدارة محل المراجعة</span><span class="val">${escapeHtml(v.dept || "—")}</span></div>
-          <div class="obs-view-field"><span class="lbl">عنوان الملاحظة</span><span class="val">${escapeHtml(v.title || "—")}</span></div>
-          <div class="obs-view-field"><span class="lbl">التاريخ</span><span class="val">${v.date}</span></div>
-          <div class="obs-view-field">
-            <span class="lbl">الحالة (الخطر)</span>
-            <span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(v.risk || "—")}</span>
-          </div>
+      <div class="obs-divider"></div>
+
+      <div class="obs-view-grid">
+        <div class="obs-view-box"><span class="lbl">الملاحظة</span><p>${escapeHtml(v.observation || "—")}</p></div>
+        <div class="obs-view-box"><span class="lbl">المعيار أو النظام</span><p>${escapeHtml(v.standard || "—")}</p></div>
+        <div class="obs-view-box"><span class="lbl">السبب</span><p>${escapeHtml(v.reason || "—")}</p></div>
+        <div class="obs-view-box"><span class="lbl">الأثر</span><p>${escapeHtml(v.impact || "—")}</p></div>
+        <div class="obs-view-box" style="grid-column:1/-1;"><span class="lbl">التوصيات</span><p>${escapeHtml(v.recommendations || "—")}</p></div>
+      </div>
+
+      <div class="obs-view-footer">
+        <div class="obs-view-field">
+          <span class="lbl">الحالة</span>
+          <span class="obs-pill" style="width:fit-content;background:${sc.bg};color:${sc.text};border:1px solid ${sc.border};"><span class="dot" style="background:${sc.dot};"></span>${v.status}</span>
         </div>
-
-        <div class="obs-divider"></div>
-
-        <div class="obs-view-grid">
-          <div class="obs-view-box"><span class="lbl">الملاحظة</span><p>${escapeHtml(v.observation || "—")}</p></div>
-          <div class="obs-view-box"><span class="lbl">المعيار أو النظام</span><p>${escapeHtml(v.standard || "—")}</p></div>
-          <div class="obs-view-box"><span class="lbl">السبب</span><p>${escapeHtml(v.reason || "—")}</p></div>
-          <div class="obs-view-box"><span class="lbl">الأثر</span><p>${escapeHtml(v.impact || "—")}</p></div>
-          <div class="obs-view-box" style="grid-column:1/-1;"><span class="lbl">التوصيات</span><p>${escapeHtml(v.recommendations || "—")}</p></div>
-        </div>
-
-        <div class="obs-view-footer">
-          <div class="obs-view-field">
-            <span class="lbl">الحالة</span>
-            <span class="obs-pill" style="width:fit-content;background:${sc.bg};color:${sc.text};border:1px solid ${sc.border};"><span class="dot" style="background:${sc.dot};"></span>${v.status}</span>
-          </div>
-          <div class="obs-view-field">
-            <span class="lbl">تضاف للتقرير</span>
-            <span class="val">${v.addToReport === true ? "نعم" : v.addToReport === false ? "لا" : "—"}</span>
-          </div>
+        <div class="obs-view-field">
+          <span class="lbl">تضاف للتقرير</span>
+          <span class="val">${v.addToReport === true ? "نعم" : v.addToReport === false ? "لا" : "—"}</span>
         </div>
       </div>
     </div>

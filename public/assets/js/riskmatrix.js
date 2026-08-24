@@ -12,6 +12,11 @@ let rmViewTarget = null;
 let rmLoading = false;
 let rmForceReadOnly = false; // تجبر القراءة فقط بغض النظر عن الدور (تستخدمها جولة "عرض" بالمراسلات المشتركة)
 let rmOpenMenuId = null;
+/* rmEmbedded: true لمّا يكون الجدول مضمَّنًا داخل "مراحل الاعتماد" بالتقرير
+   النهائي (finalreports.js) بدل صفحة مصفوفة المخاطر المستقلة -- يخلي
+   rerenderRMContent() يعيد رسم التقرير النهائي بدل ما "يقفز" المستخدم لصفحة
+   مصفوفة المخاطر المستقلة بعد فتح/إغلاق قائمة إجراء أو عرض تفاصيل خطر */
+let rmEmbedded = false;
 
 const rmIsReadOnly = () => rmForceReadOnly || isHrDept || isHrCoordinator || isAuditHead;
 
@@ -22,6 +27,12 @@ function autoGrowTextareaRM(el) {
 }
 
 function rerenderRMContent() {
+  if (rmEmbedded) {
+    // مضمَّن داخل "مراحل الاعتماد" بالتقرير النهائي -- الصفحة الفعلية اللي فيها
+    // الجدول هي "finalReports"، مو "riskMatrix" المستقلة
+    renderSidebar(); renderContent(); lucide.createIcons();
+    return;
+  }
   const active = document.activeElement;
   const activeId = active && active.id;
   const selStart = active && typeof active.selectionStart === "number" ? active.selectionStart : null;
@@ -71,11 +82,36 @@ async function rmPersist() {
   });
 }
 
+/* خلية عمود "الإجراءات" (قائمة ⋮: عرض/تعديل/حذف) -- مستخرجة بمعزل عشان تُعاد
+   استخدامها بالضبط من renderRmListMode() الأصلية وأيضًا من الجدول المضمَّن
+   بالتقرير النهائي (renderRmReadOnlyTable بـ withActions=true) -- تعديل/حذف
+   تختفيان تلقائيًا لو rmIsReadOnly() (دائمًا صحيحة بالتقرير النهائي بما إن
+   rmForceReadOnly تُجبر هناك) */
+function rmActionsCellHtml(row) {
+  const readOnly = rmIsReadOnly();
+  const menuOpen = String(rmOpenMenuId) === String(row.id);
+  return `
+  <td class="obs-menu-cell">
+    <button class="obs-menu-btn" data-menu-toggle="${row.id}"><i data-lucide="more-vertical"></i></button>
+    ${menuOpen ? `
+      <div class="obs-menu-dropdown">
+        <button class="obs-menu-item" data-view-rm="${row.id}"><i data-lucide="eye"></i> عرض</button>
+        ${!readOnly ? `
+          <button class="obs-menu-item" data-edit-rm="${row.id}"><i data-lucide="pencil"></i> تعديل</button>
+          <div class="obs-menu-sep"></div>
+          <button class="obs-menu-item danger" data-delete-rm="${row.id}"><i data-lucide="trash-2"></i> حذف</button>
+        ` : ""}
+      </div>` : ""}
+  </td>`;
+}
+
 /* ============================================================
-   جدول قراءة فقط بدون قائمة إجراءات -- تستخدمها جولة "عرض" بالمراسلات
-   المشتركة لعرض نفس شكل مصفوفة المخاطر بالضبط (نفس نمط renderObsReadOnlyTable)
+   جدول قراءة فقط -- تستخدمها جولة "عرض" بالمراسلات المشتركة (بدون قائمة
+   إجراءات) لعرض نفس شكل مصفوفة المخاطر بالضبط (نفس نمط renderObsReadOnlyTable)،
+   وأيضًا مراحل الاعتماد بالتقرير النهائي (withActions=true) عشان يقدر
+   المستخدم يفتح "عرض" لأي خطر ويشوف تفاصيله كاملة بدل جدول ملخّص بس
    ============================================================ */
-function renderRmReadOnlyTable() {
+function renderRmReadOnlyTable(withActions = false) {
   if (rmLoading) return `<div class="obs-empty"><p class="main">جارِ التحميل...</p></div>`;
   if (rmRows.length === 0) {
     return `<div class="obs-empty"><i data-lucide="shield-alert"></i><p class="main">لا توجد مخاطر مسجلة لهذه المهمة</p></div>`;
@@ -88,6 +124,7 @@ function renderRmReadOnlyTable() {
         <th>المخاطر</th>
         <th style="width:130px;">تقييم المخاطر</th>
         <th style="width:160px;">نوع النشاط</th>
+        ${withActions ? '<th style="width:60px;">الإجراءات</th>' : ""}
       </tr></thead>
       <tbody>
         ${rmRows.map((row, i) => {
@@ -98,6 +135,7 @@ function renderRmReadOnlyTable() {
             <td><span class="obs-title-cell">${escapeHtml(row.risk || "—")}</span></td>
             <td>${rc ? `<span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(row.riskRating)}</span>` : "—"}</td>
             <td><span class="obs-date-cell">${escapeHtml(row.activity || "—")}</span></td>
+            ${withActions ? rmActionsCellHtml(row) : ""}
           </tr>`;
         }).join("")}
       </tbody>
@@ -150,26 +188,13 @@ function renderRmListMode() {
               <tbody>
                 ${rmRows.map((row, i) => {
                   const rc = row.riskRating ? CLASS_COLORS[row.riskRating] : null;
-                  const menuOpen = String(rmOpenMenuId) === String(row.id);
                   return `
                   <tr style="background:${i % 2 === 0 ? "#fff" : "#f6fcfe"};">
                     <td style="text-align:center;">${i + 1}</td>
                     <td><span class="obs-title-cell">${escapeHtml(row.risk || "—")}</span></td>
                     <td>${rc ? `<span class="obs-pill" style="background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(row.riskRating)}</span>` : "—"}</td>
                     <td><span class="obs-date-cell">${escapeHtml(row.activity || "—")}</span></td>
-                    ${!isAuditHead ? `
-                    <td class="obs-menu-cell">
-                      <button class="obs-menu-btn" data-menu-toggle="${row.id}"><i data-lucide="more-vertical"></i></button>
-                      ${menuOpen ? `
-                        <div class="obs-menu-dropdown">
-                          <button class="obs-menu-item" data-view-rm="${row.id}"><i data-lucide="eye"></i> عرض</button>
-                          ${!readOnly ? `
-                            <button class="obs-menu-item" data-edit-rm="${row.id}"><i data-lucide="pencil"></i> تعديل</button>
-                            <div class="obs-menu-sep"></div>
-                            <button class="obs-menu-item danger" data-delete-rm="${row.id}"><i data-lucide="trash-2"></i> حذف</button>
-                          ` : ""}
-                        </div>` : ""}
-                    </td>` : ""}
+                    ${!isAuditHead ? rmActionsCellHtml(row) : ""}
                   </tr>`;
                 }).join("")}
               </tbody>
@@ -424,38 +449,45 @@ function bindRmFormEvents() {
    وضع العرض (read-only)
    ============================================================ */
 function renderRmViewMode() {
+  return `
+  <div class="flex flex-col gap-4">
+    ${renderLinkedTaskSelector(rmSelectedTaskId, "rmTaskSelect")}
+    ${renderRmViewBody()}
+  </div>`;
+}
+
+/* بطاقة تفاصيل الخطر بمعزل عن منتقي المهمة -- تُستخدم من renderRmViewMode()
+   نفسها، وأيضًا مباشرة من finalreports.js لتضمين نفس بطاقة التفاصيل هذي داخل
+   خطوة "مصفوفة المخاطر" بمراحل الاعتماد */
+function renderRmViewBody() {
   const v = rmViewTarget;
   const rc = v.riskRating ? CLASS_COLORS[v.riskRating] : null;
   const readOnly = rmIsReadOnly();
 
   return `
-  <div class="flex flex-col gap-4">
-    ${renderLinkedTaskSelector(rmSelectedTaskId, "rmTaskSelect")}
+  <div class="obs-form-card">
+    <div class="obs-form-head">
+      <div class="obs-form-head-left">
+        <button class="obs-form-back" id="rmViewBack"><i data-lucide="chevron-right"></i></button>
+        <h3 class="obs-form-title">عرض الخطر</h3>
+      </div>
+      ${!readOnly ? `<button class="obs-form-save" id="rmViewEditBtn"><i data-lucide="pencil"></i></button>` : ""}
+    </div>
 
-    <div class="obs-form-card">
-      <div class="obs-form-head">
-        <div class="obs-form-head-left">
-          <button class="obs-form-back" id="rmViewBack"><i data-lucide="chevron-right"></i></button>
-          <h3 class="obs-form-title">عرض الخطر</h3>
+    <div class="obs-form-body">
+      <div class="obs-view-box"><span class="lbl">المخاطر</span><p>${escapeHtml(v.risk || "—")}</p></div>
+
+      <div class="obs-divider"></div>
+
+      <div class="obs-view-grid">
+        <div class="obs-view-field">
+          <span class="lbl">تقييم المخاطر</span>
+          ${rc ? `<span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(v.riskRating)}</span>` : `<span class="val">—</span>`}
         </div>
-        ${!readOnly ? `<button class="obs-form-save" id="rmViewEditBtn"><i data-lucide="pencil"></i></button>` : ""}
+        <div class="obs-view-field"><span class="lbl">نوع النشاط</span><span class="val">${escapeHtml(v.activity || "—")}</span></div>
       </div>
 
-      <div class="obs-form-body">
-        <div class="obs-view-box"><span class="lbl">المخاطر</span><p>${escapeHtml(v.risk || "—")}</p></div>
-
-        <div class="obs-divider"></div>
-
-        <div class="obs-view-grid">
-          <div class="obs-view-field">
-            <span class="lbl">تقييم المخاطر</span>
-            ${rc ? `<span class="obs-pill" style="width:fit-content;background:${rc.bg};color:${rc.text};border:1px solid ${rc.border};"><span class="dot" style="background:${rc.dot};"></span>${escapeHtml(v.riskRating)}</span>` : `<span class="val">—</span>`}
-          </div>
-          <div class="obs-view-field"><span class="lbl">نوع النشاط</span><span class="val">${escapeHtml(v.activity || "—")}</span></div>
-        </div>
-
-        <div class="obs-view-box"><span class="lbl">وصف الضوابط</span><p>${escapeHtml(v.controls || "—")}</p></div>
-      </div>
+      <div class="obs-view-box"><span class="lbl">وصف الضوابط</span><p>${escapeHtml(v.controls || "—")}</p></div>
     </div>
   </div>`;
 }
