@@ -254,7 +254,6 @@ function renderFRTable(reports) {
         </tbody>
       </table>
     </div>
-    ${isAuditHead ? `<div class="fr-audithead-note"><i data-lucide="check"></i><p>بصفتك رئيس إدارة المراجعة الداخلية، يمكنك متابعة حالة اعتماد التقارير النهائية من هذه الصفحة.</p></div>` : ""}
   </div>
   `;
 }
