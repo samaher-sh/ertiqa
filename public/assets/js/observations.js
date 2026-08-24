@@ -96,8 +96,10 @@ function exportObservationToPDF(obs) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
 
-  const today = new Date().toLocaleDateString("ar-SA");
+  const today = new Date().toLocaleDateString("en-GB");
   const refLabel = obs.ref || "سيُحدَّد بعد الحفظ";
+  const linkedMission = missionsForSelector.find(m => String(m.id) === String(obsSelectedTaskId));
+  const missionCode = linkedMission ? linkedMission.mission_code : "";
 
   const fields = [
     ["عنوان الملاحظة", obs.title],
@@ -124,19 +126,12 @@ function exportObservationToPDF(obs) {
         <title>ملاحظة رقابية - ${escapeHtml(refLabel)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
-          .letterhead-brand { display:flex; align-items:center; gap:12px; }
-          .letterhead-brand img { height:40px; }
-          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
-          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
-          .letterhead-meta p { margin:2px 0; }
+          ${PDF_LETTERHEAD_STYLE}
           .header-info { display: flex; justify-content: space-between; margin-bottom: 30px; background: #f8fbfd; padding: 20px; border-radius: 8px; border: 1px solid #d8e6eb; }
           .header-info div { display: flex; flex-direction: column; gap: 5px; }
           .label { font-size: 12px; color: #6b8c95; font-weight: bold; }
           .value { font-size: 16px; font-weight: bold; color: #152c33; }
           table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #d8e6eb; padding-top: 15px; }
           @media print {
             body { padding: 0; }
             button { display: none; }
@@ -144,25 +139,14 @@ function exportObservationToPDF(obs) {
         </style>
       </head>
       <body>
-        <div class="letterhead">
-          <div class="letterhead-brand">
-            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
-            <div>
-              <h1>إدارة المراجعة الداخلية</h1>
-              <p class="sub">ملاحظة رقابية</p>
-            </div>
-          </div>
-          <div class="letterhead-meta">
-            <p>المرجع: <strong dir="ltr">${escapeHtml(refLabel)}</strong></p>
-            <p>تاريخ التصدير: ${today}</p>
-          </div>
-        </div>
+        ${pdfLetterheadHTML("ملاحظة رقابية" + (missionCode ? " — " + missionCode : ""), [
+          "المرجع: <strong dir=\"ltr\">" + escapeHtml(refLabel) + "</strong>",
+          "تاريخ التصدير: " + today,
+        ])}
 
         <table>${fieldsHTML}</table>
 
-        <div class="footer">
-          تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}
-        </div>
+        ${pdfFooterHTML(missionCode)}
         <script>
           window.onload = () => {
             window.print();

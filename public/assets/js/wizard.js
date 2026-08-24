@@ -391,35 +391,19 @@ function exportWizP1ToPDF() {
         <title>الخطاب الرسمي - ${escapeHtml(missionCode)}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.8; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
-          .letterhead-brand { display:flex; align-items:center; gap:12px; }
-          .letterhead-brand img { height:40px; }
-          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
-          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:12px; color:#4b5563; }
-          .letterhead-meta p { margin:2px 0; }
+          ${PDF_LETTERHEAD_STYLE}
           p { margin: 0 0 14px; font-size: 13px; }
           mark { background:#eaf4fa; color:#196b7f; padding:1px 6px; border-radius:4px; font-weight:700; }
           .procedure-box { background:#f8fbfd; border:1px solid #d8e6eb; border-radius:8px; padding:14px; margin-bottom:14px; }
           .procedure-box .head { font-weight:700; color:#196b7f; margin-bottom:6px; font-size:12px; }
-          .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #9ca3af; border-top:1px solid #d8e6eb; padding-top:15px; }
           @media print { body { padding: 0; } }
         </style>
       </head>
       <body>
-        <div class="letterhead">
-          <div class="letterhead-brand">
-            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
-            <div>
-              <h1>إدارة المراجعة الداخلية</h1>
-              <p class="sub">مدينة الملك عبدالله الطبية — نظام ارتقاء</p>
-            </div>
-          </div>
-          <div class="letterhead-meta">
-            <p>التاريخ: ${escapeHtml(todayD.toLocaleDateString("en-GB"))}</p>
-            <p>رقم المهمة: <strong dir="ltr">${escapeHtml(missionCode)}</strong></p>
-          </div>
-        </div>
+        ${pdfLetterheadHTML("الخطاب الرسمي", [
+          "التاريخ: " + escapeHtml(todayD.toLocaleDateString("en-GB")),
+          "رقم المهمة: <strong dir=\"ltr\">" + escapeHtml(missionCode) + "</strong>",
+        ])}
         <p style="font-weight:700;">سعادة المدير التنفيذي لـ${s.deptName ? `<mark>${escapeHtml(s.deptName)}</mark>` : ""} المحترم</p>
         <p style="font-weight:600;">السلام عليكم ورحمة الله وبركاته،،،</p>
         <p>نود الإفادة بأن إدارة المراجعة الداخلية بصدد القيام بزيارة <mark>${escapeHtml(s.targetName || "الإدارة المستهدفة")}</mark>، للقيام بعملية المراجعة الداخلية، وذلك وفق خطة المراجعة لعام <mark>${escapeHtml(s.year)}</mark>م المعتمدة من قبل المدير العام التنفيذي.</p>
@@ -434,7 +418,7 @@ function exportWizP1ToPDF() {
         <p style="font-weight:600;margin-top:20px;">وتقبلوا وافر تحياتي وتقديري،،،</p>
         <p style="font-weight:600;margin-top:4px;">مدير إدارة المراجعة الداخلية</p>
         ${s.director ? `<p style="font-weight:800;color:#196b7f;">${escapeHtml(s.director)}</p>` : ""}
-        <div class="footer">تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}</div>
+        ${pdfFooterHTML(missionCode)}
         <script>
           window.onload = () => {
             window.print();
@@ -661,13 +645,7 @@ function exportWizP2ToPDF() {
         <title>اتفاقية مستوى الخدمة</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #152c33; line-height: 1.6; }
-          .letterhead { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:2px solid #3185b3; padding-bottom:15px; margin-bottom:25px; }
-          .letterhead-brand { display:flex; align-items:center; gap:12px; }
-          .letterhead-brand img { height:40px; }
-          .letterhead h1 { font-size: 16px; color: #196b7f; margin:0; }
-          .letterhead .sub { font-size:11px; color:#6b8c95; margin:4px 0 0; }
-          .letterhead-meta { text-align:left; font-size:11px; color:#4b5563; }
-          .letterhead-meta p { margin:2px 0; }
+          ${PDF_LETTERHEAD_STYLE}
           .info-row { display:flex; gap:30px; margin-bottom:20px; }
           .info-row .field { flex:1; }
           .label { font-size:11px; color:#6b8c95; font-weight:bold; display:block; margin-bottom:4px; }
@@ -680,23 +658,13 @@ function exportWizP2ToPDF() {
           .disclosure { margin-top:24px; padding:14px 16px; border-radius:8px; background:#eaf4fa; border:1px solid #b3d4e5; }
           .disclosure .t { font-weight:800; color:#196b7f; margin:0 0 8px; font-size:13px; }
           .disclosure p { margin:0; font-size:12px; line-height:1.9; }
-          .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #9ca3af; border-top:1px solid #d8e6eb; padding-top:15px; }
           @media print { body { padding: 0; } }
         </style>
       </head>
       <body>
-        <div class="letterhead">
-          <div class="letterhead-brand">
-            <img src="${base}/assets/images/kamc.png" alt="مدينة الملك عبدالله الطبية">
-            <div>
-              <h1>إدارة المراجعة الداخلية</h1>
-              <p class="sub">اتفاقية مستوى الخدمة</p>
-            </div>
-          </div>
-          <div class="letterhead-meta">
-            <p>التاريخ: ${escapeHtml(new Date().toLocaleDateString("en-GB"))}</p>
-          </div>
-        </div>
+        ${pdfLetterheadHTML("اتفاقية مستوى الخدمة", [
+          "التاريخ: " + escapeHtml(new Date().toLocaleDateString("en-GB")),
+        ])}
         <div class="info-row">
           <div class="field"><span class="label">الإدارة الخاضعة للمراجعة</span><span class="value">${escapeHtml(s.subjectDept || "—")}</span></div>
           <div class="field"><span class="label">تاريخ الاتفاقية</span><span class="value">${escapeHtml(s.date || "—")}</span></div>
@@ -723,7 +691,7 @@ function exportWizP2ToPDF() {
           <p class="t">المسؤولية والإفصاح</p>
           <p>تؤكد إدارة المراجعة الداخلية، بأن جميع المعلومات المستلمة سوف تتعامل معها الإدارة بسرية عالية، وفقاً للمادة التاسعة عشرة من قرار مجلس الوزراء 129 بتاريخ 06/04/1428هـ اللائحة الموحدة لوحدات المراجعة الداخلية.</p>
         </div>
-        <div class="footer">تم إنشاء هذا المستند تلقائياً من نظام ارتقاء © ${new Date().getFullYear()}</div>
+        ${pdfFooterHTML()}
         <script>
           window.onload = () => {
             window.print();
