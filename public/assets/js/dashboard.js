@@ -19,6 +19,10 @@ let mobileOpen      = false;
 let profileOpen     = false;
 let activeContent   = "home";
 let activeStatCard  = null;
+/* آخر activeContent فعليًا اتعرض -- تستخدمها renderContent() لاكتشاف مغادرة
+   صفحة فيها أعلام "تضمين"/"قراءة فقط إجبارية" (التقرير النهائي، المراسلات
+   المشتركة) بغض النظر عن الزر اللي سبّب المغادرة (سايدبار مباشرة، KPI، إخطار...) */
+let prevActiveContent = null;
 
 /* بيانات الرئيسية الحقيقية - تُملأ بعد fetch */
 let homeStats    = { active_count: 0, review_count: 0, meetings_count: 0 };
@@ -198,6 +202,20 @@ function logout() {
    ============================================================ */
 async function renderContent() {
   const el = document.getElementById("contentArea");
+
+  // مغادرة "التقرير النهائي"/"المراسلات المشتركة" لأي صفحة ثانية -- بغض النظر
+  // عن الزر اللي سبّبها (سايدبار مباشرة، KPI بالرئيسية، فتح إخطار...) لازم تصفّر
+  // أعلام "التضمين"/"القراءة فقط الإجبارية" اللي تفتحها الصفحتين (rmForceReadOnly/
+  // rmEmbedded/obsForceReadOnly/obsEmbedded/mrEmbedded/msumForceReadOnly...) لمّا
+  // تعيدان استخدام صفحات مصفوفة المخاطر/الملاحظات/مراجعة المهمة الحقيقية بداخلهما
+  // -- كانت أزرار "رجوع" الداخلية فقط تصفّرها، فلو المستخدم غادر بطريقة ثانية
+  // تبقى "متسربة" على تلك الصفحات الحقيقية للأبد حتى لصاحب الصلاحية الفعلي
+  // (بالضبط سبب ظهور "عرض فقط" ثابتة واختفاء تعديل/حذف بقائمة إجراءات الملاحظات)
+  if (prevActiveContent !== activeContent) {
+    if (prevActiveContent === "finalReports" && typeof frResetStepLoadState === "function") frResetStepLoadState();
+    if (prevActiveContent === "sentTasks" && typeof stTourResetForceFlags === "function") stTourResetForceFlags();
+  }
+  prevActiveContent = activeContent;
 
   if (activeContent === "home") {
     await loadHomeData();
