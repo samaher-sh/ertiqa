@@ -206,10 +206,10 @@ async function renderContent() {
   // مغادرة "التقرير النهائي"/"المراسلات المشتركة" لأي صفحة ثانية -- بغض النظر
   // عن الزر اللي سبّبها (سايدبار مباشرة، KPI بالرئيسية، فتح إخطار...) لازم تصفّر
   // أعلام "التضمين"/"القراءة فقط الإجبارية" اللي تفتحها الصفحتين (rmForceReadOnly/
-  // rmEmbedded/mrEmbedded/msumForceReadOnly...) لمّا تعيدان استخدام صفحات مصفوفة
-  // المخاطر/مراجعة المهمة الحقيقية بداخلهما -- كانت أزرار "رجوع" الداخلية فقط
-  // تصفّرها، فلو المستخدم غادر بطريقة ثانية تبقى "متسربة" على تلك الصفحات
-  // الحقيقية للأبد حتى لصاحب الصلاحية الفعلي
+  // rmEmbedded/obsForceReadOnly/obsEmbedded/mrEmbedded/msumForceReadOnly...) لمّا
+  // تعيدان استخدام صفحات مصفوفة المخاطر/الملاحظات/مراجعة المهمة الحقيقية بداخلهما
+  // -- كانت أزرار "رجوع" الداخلية فقط تصفّرها، فلو المستخدم غادر بطريقة ثانية
+  // تبقى "متسربة" على تلك الصفحات الحقيقية للأبد حتى لصاحب الصلاحية الفعلي
   if (prevActiveContent !== activeContent) {
     if (prevActiveContent === "finalReports" && typeof frResetStepLoadState === "function") frResetStepLoadState();
     if (prevActiveContent === "sentTasks" && typeof stTourResetForceFlags === "function") stTourResetForceFlags();
