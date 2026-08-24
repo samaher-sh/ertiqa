@@ -23,16 +23,9 @@ let obsShowAdvanced = false;
 let obsAdvDateFrom = "";
 let obsAdvDateTo = "";
 let obsOpenMenuId = null;
-/* obsForceReadOnly: تجبر القراءة فقط بغض النظر عن الدور (تستخدمها مراحل
-   الاعتماد بالتقرير النهائي، عشان عضو المراجعة نفسه ما يقدر يعدّل/يحذف من
-   داخل مراجعة التقرير -- نفس نمط rmForceReadOnly/msumForceReadOnly).
-   obsEmbedded: مضمَّن داخل التقرير النهائي بدل صفحة الملاحظات المستقلة -- يخلي
-   rerenderObsContent() يعيد رسم التقرير النهائي بدل ما "يقفز" لصفحة الملاحظات */
-let obsForceReadOnly = false;
-let obsEmbedded = false;
 
 const isObsHrUser = () => isHrDept || isHrCoordinator;
-const obsIsReadOnly = () => obsForceReadOnly || isObsHrUser() || isAuditHead;
+const obsIsReadOnly = () => isObsHrUser() || isAuditHead;
 
 /* الإدارة محل المراجعة تُشتق دائمًا من المهمة المختارة حاليًا (target_department_id
    الحقيقي بالمهمة) — بدون اختيار يدوي منفصل بالنموذج */
@@ -43,12 +36,6 @@ function obsMissionDept() {
 
 
 function rerenderObsContent() {
-  if (obsEmbedded) {
-    // مضمَّن داخل "مراحل الاعتماد" بالتقرير النهائي -- الصفحة الفعلية اللي فيها
-    // الجدول هي "finalReports"، مو "observations" المستقلة
-    renderSidebar(); renderContent(); lucide.createIcons();
-    return;
-  }
   const active = document.activeElement;
   const activeId = active && active.id;
   const selStart = active && typeof active.selectionStart === "number" ? active.selectionStart : null;
@@ -235,35 +222,9 @@ function obsHasFilters() {
 
 /* جدول ملاحظات مهمة واحدة للقراءة فقط -- بدون فلاتر/بحث/قائمة إجراءات، بنفس
    أعمدة جدول الملاحظات الحقيقي بالضبط (موضوع/إدارة/تاريخ/تصنيف). تستخدمها
-   جولة "عرض" بالمراسلات المشتركة لعرض نفس شكل صفحة الملاحظات بالضبط */
-/* خلية عمود "الإجراءات" (قائمة ⋮: عرض/تعديل/حذف) -- مستخرجة بمعزل عشان تُعاد
-   استخدامها بالضبط من renderObsListMode() الأصلية وأيضًا من الجدول المضمَّن
-   بالتقرير النهائي (renderObsReadOnlyTable بـ withActions=true) -- تعديل/حذف
-   تختفيان تلقائيًا لو obsIsReadOnly() (دائمًا صحيحة بالتقرير النهائي بما إن
-   obsForceReadOnly تُجبر هناك) */
-function obsActionsCellHtml(obs) {
-  const readOnly = obsIsReadOnly();
-  const menuOpen = obsOpenMenuId === obs.id;
-  return `
-  <td class="obs-menu-cell">
-    <button class="obs-menu-btn" data-menu-toggle="${obs.id}"><i data-lucide="more-vertical"></i></button>
-    ${menuOpen ? `
-      <div class="obs-menu-dropdown">
-        <button class="obs-menu-item" data-view-obs="${obs.id}"><i data-lucide="eye"></i> عرض</button>
-        ${!readOnly ? `
-          <button class="obs-menu-item" data-edit-obs="${obs.id}"><i data-lucide="pencil"></i> تعديل</button>
-          <div class="obs-menu-sep"></div>
-          <button class="obs-menu-item danger" data-delete-obs="${obs.id}"><i data-lucide="trash-2"></i> حذف</button>
-        ` : ""}
-      </div>` : ""}
-  </td>`;
-}
-
-/* جدول قراءة فقط -- بدون قائمة إجراءات افتراضيًا (تستخدمه جولة "عرض"
-   بالمراسلات المشتركة)، ومع قائمة إجراءات (withActions=true) لمراحل الاعتماد
-   بالتقرير النهائي عشان يقدر المستخدم يفتح "عرض" لأي ملاحظة ويشوف تفاصيلها
-   كاملة بدل جدول ملخّص بس */
-function renderObsReadOnlyTable(withActions = false) {
+   جولة "عرض" بالمراسلات المشتركة، ومراحل الاعتماد بالتقرير النهائي، لعرض
+   نفس شكل صفحة الملاحظات بالضبط */
+function renderObsReadOnlyTable() {
   if (obsLoading) return `<div class="obs-empty"><p class="main">جارِ التحميل...</p></div>`;
   if (obsList.length === 0) {
     return `<div class="obs-empty"><i data-lucide="alert-circle"></i><p class="main">لا توجد ملاحظات مسجلة لهذه المهمة</p></div>`;
@@ -275,7 +236,6 @@ function renderObsReadOnlyTable(withActions = false) {
         <th>موضوع الملاحظة</th>
         <th style="width:160px;">الإدارة المعنية</th>
         <th style="width:110px;">التاريخ</th>
-        ${withActions ? '<th style="width:60px;">الإجراءات</th>' : ""}
       </tr></thead>
       <tbody>
         ${obsList.map((obs, i) => `
@@ -283,7 +243,6 @@ function renderObsReadOnlyTable(withActions = false) {
             <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
             <td><span class="obs-dept-cell">${escapeHtml(obs.dept || "—")}</span></td>
             <td><span class="obs-date-cell">${escapeHtml(obs.date || "—")}</span></td>
-            ${withActions ? obsActionsCellHtml(obs) : ""}
           </tr>`).join("")}
       </tbody>
     </table>
@@ -377,7 +336,6 @@ function renderObsListMode() {
                 <th>موضوع الملاحظة</th>
                 <th style="width:160px;">الإدارة المعنية</th>
                 <th style="width:110px;">التاريخ</th>
-                ${!isAuditHead ? '<th style="width:60px;">الإجراءات</th>' : ""}
               </tr></thead>
               <tbody>
                 ${filteredObs.map((obs, i) => {
@@ -386,7 +344,6 @@ function renderObsListMode() {
                     <td><span class="obs-title-cell">${escapeHtml(obs.title)}</span></td>
                     <td><span class="obs-dept-cell">${escapeHtml(obs.dept || "—")}</span></td>
                     <td><span class="obs-date-cell">${obs.date}</span></td>
-                    ${!isAuditHead ? obsActionsCellHtml(obs) : ""}
                   </tr>`;
                 }).join("")}
               </tbody>
