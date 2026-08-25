@@ -15,3 +15,8 @@
 }
 .rm-table-scroll::-webkit-scrollbar{ display: none; }
 .rm-table-scroll table.obs-table thead tr{ position: sticky; top: 0; z-index: 2; }
+
+/* ===== صفحة تعديل الجدول الحقيقية (نموذج صفوف قابلة للتعديل) ===== */
+.rm-edit-row{ border:1px solid #d8e6eb; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:14px; background:#fafcfd; }
+.rm-edit-row-head{ display:flex; align-items:center; justify-content:space-between; }
+.rm-edit-row-num{ font-size:12px; font-weight:800; color:var(--p); }

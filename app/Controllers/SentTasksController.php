@@ -7,6 +7,35 @@ use App\Models\MissionModel;
 
 class SentTasksController extends BaseController
 {
+    /* نفس ST_STAGE_TO_PAGE بـ senttasks.js بالضبط -- key = رابط الصفحة الحقيقية
+       المطابقة (كلها صفحات MVC حقيقية الآن، بما فيها استكمال الاتفاقية والمستندات
+       عبر MissionReviewController)، forRole يحدد مين عليه الدور الحالي:
+       "target" = الإدارة الخاضعة، "audit" = عضو المراجعة */
+    private const STAGE_TO_PAGE = [
+        2 => ['label' => 'استكمال الاتفاقية والمستندات', 'forRole' => 'target', 'url' => 'dashboard/target-mission'],
+        3 => ['label' => 'مصفوفة المخاطر',              'forRole' => 'audit',  'url' => 'dashboard/risk-matrix'],
+        4 => ['label' => 'ملخص الاجتماع',                'forRole' => 'audit',  'url' => 'dashboard/meetings'],
+        5 => ['label' => 'الملاحظات',                    'forRole' => 'audit',  'url' => 'dashboard/observations'],
+        7 => ['label' => 'التقرير النهائي',               'forRole' => 'audit',  'url' => null],
+    ];
+
+    private function isHrUser(): bool
+    {
+        return in_array(session()->get('role_code'), ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
+    }
+
+    private function stageBadge(int $nextStage): array
+    {
+        $info = self::STAGE_TO_PAGE[$nextStage] ?? null;
+        if (!$info) {
+            return ['text' => $nextStage === 7 ? 'التقرير النهائي' : 'المرحلة ' . $nextStage, 'myTurn' => false, 'info' => null];
+        }
+        $isHr = $this->isHrUser();
+        $myTurn = ($info['forRole'] === 'target' && $isHr) || ($info['forRole'] === 'audit' && !$isHr);
+        $text = ($myTurn ? 'بانتظارك — ' : 'بانتظار الطرف الآخر — ') . $info['label'];
+        return ['text' => $text, 'myTurn' => $myTurn, 'info' => $info];
+    }
+
     /** المهمة لو المستخدم الحالي فعليًا طرف فيها (مراجع أو الإدارة المستهدفة)، وإلا null */
     private function missionForParty(int $missionId): ?array
     {
@@ -24,6 +53,47 @@ class SentTasksController extends BaseController
         $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
 
         return ($isAuditSide || $isTargetSide) ? $mission : null;
+    }
+
+    /** GET /dashboard/sent-tasks — قائمة المهام الحقيقية (Server-Rendered) */
+    public function index()
+    {
+        $missions = $this->missionsForCurrentSession();
+        foreach ($missions as &$m) {
+            $m['stage_badge_text'] = $this->stageBadge((int) $m['next_stage'])['text'];
+        }
+        unset($m);
+
+        return view('dashboard/sent-tasks/index', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'sentTasks',
+            'currentUser'  => $this->sessionUserSummary(),
+            'missions'     => $missions,
+        ]);
+    }
+
+    /** GET /dashboard/sent-tasks/{id} — تفاصيل المهمة والسجل الزمني الحقيقي */
+    public function show(int $id)
+    {
+        $mission = $this->missionForParty($id);
+        if (!$mission) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
+        }
+
+        $missionModel = new MissionModel();
+        $nextStage = $missionModel->computeRealNextStage($id);
+        $events = (new AuditLogModel())->forMission($id);
+
+        return view('dashboard/sent-tasks/show', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'sentTasks',
+            'currentUser'  => $this->sessionUserSummary(),
+            'mission'      => $mission,
+            'events'       => $events,
+            'nextStage'    => $nextStage,
+        ]);
     }
 
     /**

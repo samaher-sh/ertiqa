@@ -101,5 +101,6 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
 
 <?php $this->section('scripts') ?>
 <script src="<?= av('assets/js/utils.js') ?>"></script>
+<script src="<?= av('assets/js/mvc-layout.js') ?>"></script>
 <script src="<?= av('assets/js/observations-page.js') ?>"></script>
 <?php $this->endSection() ?>

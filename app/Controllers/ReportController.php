@@ -17,6 +17,19 @@ use App\Models\MissionModel;
 
 class ReportController extends BaseController
 {
+    /* روابط الصفحات الحقيقية المطابقة لكل مرحلة (بُنيت بنفس الجلسة) — تُستخدم
+       بدل تضمين محتوى كل مرحلة داخل صفحة التقرير النهائي نفسها (كانت
+       finalreports.js تُعيد استخدام دوال عرض 4 ملفات جافاسكربت مختلفة لهذا،
+       غير ممكن هنا لأننا لا نُحمِّل observations.js/riskmatrix.js/meetingsummary.js
+       على هذي الصفحة أصلًا) -- القسم 2 وحده بلا صفحة حقيقية مخصصة فيُعرض ملخصه هنا مباشرة */
+    private const STEP_VIEW_URL = [
+        1 => null, // خطاب رسمي -- رابط PDF مباشر يُبنى بالكنترولر (يحتاج missionId)
+        3 => 'dashboard/document-requests',
+        4 => 'dashboard/risk-matrix',
+        5 => 'dashboard/meetings',
+        6 => 'dashboard/observations',
+    ];
+
     private const STEPS = [
         1 => 'طلب المراجعة الداخلية',
         2 => 'اتفاقية مستوى الخدمة',
@@ -55,6 +68,128 @@ class ReportController extends BaseController
         $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
 
         return ($isAuditSide || $isTargetSide) ? $mission : null;
+    }
+
+    private function isJsonRequest(): bool
+    {
+        return str_contains((string) $this->request->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    /** GET /dashboard/reports — قائمة التقارير الحقيقية (Server-Rendered) */
+    public function index()
+    {
+        $missionIdParam = (int) ($this->request->getGet('mission_id') ?: 0);
+        if ($missionIdParam) {
+            return redirect()->to(base_url('dashboard/reports/' . $missionIdParam));
+        }
+
+        $reportModel = new ReportModel();
+        $departmentId = (int) session()->get('department_id');
+        $roleCode = session()->get('role_code');
+        $isPresident = $roleCode === 'top_management';
+        $isAuditHead = $roleCode === 'audit_head';
+        $isHr = $this->isHrDept();
+
+        if ($isHr || $isPresident) {
+            $reports = $isHr
+                ? ($departmentId ? $reportModel->forTargetDepartment($departmentId) : [])
+                : ($departmentId ? $reportModel->forDepartment($departmentId) : []); // president: نفس نطاق إدارة المراجعة الكامل، سيُفلتَر لـ pending أدناه
+            if ($isPresident) $reports = array_values(array_filter($reports, fn($r) => $r['status'] === 'pending_signatures'));
+        } elseif ($isAuditHead) {
+            $reports = $departmentId ? $reportModel->forDepartment($departmentId) : [];
+            $statusFilter = (string) ($this->request->getGet('status') ?: '');
+            if ($statusFilter) $reports = array_values(array_filter($reports, fn($r) => $r['status'] === $statusFilter));
+        } else {
+            $reports = $reportModel->forUser((int) session()->get('user_id'));
+        }
+
+        $yearFilter = (string) ($this->request->getGet('year') ?: '');
+        if ($yearFilter) $reports = array_values(array_filter($reports, fn($r) => (string) $r['year'] === $yearFilter));
+
+        $canCreate = !$isHr && !$isPresident && !$isAuditHead;
+        $missions = $canCreate ? $this->missionsForCurrentSession() : [];
+
+        return view('dashboard/reports/index', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'finalReports',
+            'currentUser'  => $this->sessionUserSummary(),
+            'reports'      => $reports,
+            'isPresident'  => $isPresident,
+            'isReadOnlyViewer' => $isHr || $isPresident || $isAuditHead,
+            'canCreate'    => $canCreate,
+            'missions'     => $missions,
+            'yearFilter'   => $yearFilter,
+            'statusFilter' => (string) ($this->request->getGet('status') ?: ''),
+        ]);
+    }
+
+    /** GET /dashboard/reports/{missionId} — مراحل اعتماد تقرير مهمة معيّنة */
+    public function show(int $missionId)
+    {
+        $mission = $this->missionForParty($missionId);
+        if (!$mission) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
+        }
+
+        $userId = (int) session()->get('user_id');
+        $reportModel = new ReportModel();
+        $itemModel = new ReportChecklistItemModel();
+
+        $report = $reportModel->findOrCreateForMission($missionId, $userId);
+        $items = $itemModel->forReport($report['id']);
+        if (empty($items)) {
+            $now = date('Y-m-d H:i:s');
+            $rows = [];
+            $i = 0;
+            foreach (self::STEPS as $num => $title) {
+                $i++;
+                $rows[] = ['report_id' => $report['id'], 'section_number' => $num, 'section_title' => $title, 'item_text' => $title, 'is_checked' => 0, 'sort_order' => $i, 'created_at' => $now];
+            }
+            $itemModel->insertBatch($rows);
+            $items = $itemModel->forReport($report['id']);
+        }
+        foreach ($items as &$it) {
+            $it['section_number'] = (int) $it['section_number'];
+        }
+        unset($it);
+
+        $completion = $this->realCompletionStatus($missionId);
+
+        $roleCode = session()->get('role_code');
+        $readOnlyViewer = $this->isHrDept() || $roleCode === 'audit_head' || $roleCode === 'top_management';
+
+        $requestedStep = (int) ($this->request->getGet('step') ?: 0);
+        $firstUnchecked = null;
+        foreach ($items as $it) {
+            if ((int) $it['is_checked'] !== 1) { $firstUnchecked = (int) $it['section_number']; break; }
+        }
+        $expandedStep = ($requestedStep && isset(self::STEPS[$requestedStep])) ? $requestedStep : ($firstUnchecked ?? (int) end($items)['section_number']);
+
+        $section2Data = null;
+        if ($expandedStep === 2) {
+            $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+            $section2Data = [
+                'agreement' => $agreement,
+                'responses' => (new ServiceAgreementResponseModel())->forMission($missionId),
+            ];
+        }
+
+        return view('dashboard/reports/show', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'finalReports',
+            'currentUser'  => $this->sessionUserSummary(),
+            'mission'      => $mission,
+            'report'       => $report,
+            'items'        => $items,
+            'completion'   => $completion,
+            'readOnlyViewer' => $readOnlyViewer,
+            'isAuditHead'  => $roleCode === 'audit_head',
+            'expandedStep' => $expandedStep,
+            'stepUrl'      => self::STEP_VIEW_URL[$expandedStep] ?? null,
+            'section2Data' => $section2Data,
+        ]);
     }
 
     /**
@@ -132,30 +267,46 @@ class ReportController extends BaseController
     /** POST /dashboard/reports/api/toggle-check — اعتماد/إلغاء اعتماد مرحلة */
     public function toggleCheck()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $reportId = (int) ($data['report_id'] ?? 0);
         $section  = (int) ($data['section_number'] ?? 0);
-        $checked  = (bool) ($data['checked'] ?? false);
+        $checked  = $isJson ? (bool) ($data['checked'] ?? false) : true;
 
         if (!$reportId || !$section) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false]);
+            return $isJson ? $this->response->setStatusCode(422)->setJSON(['success' => false]) : redirect()->back();
         }
         if (!$this->canEditReport($reportId)) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية التعديل.');
         }
 
         (new ReportChecklistItemModel())->setChecked($reportId, $section, $checked);
-        return $this->response->setJSON(['success' => true]);
+
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        $missionId = (int) ($data['mission_id'] ?? 0);
+        $stepKeys = array_keys(self::STEPS);
+        $pos = array_search($section, $stepKeys, true);
+        $nextStep = ($pos !== false && isset($stepKeys[$pos + 1])) ? $stepKeys[$pos + 1] : $section;
+        return redirect()->to(base_url('dashboard/reports/' . $missionId . '?step=' . $nextStep));
     }
 
     /** POST /dashboard/reports/api/finalize — يعتمد التقرير نهائيًا (كل المراحل لازم تكون معتمدة) */
     public function finalize()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $reportId = (int) ($data['report_id'] ?? 0);
 
         if (!$this->canEditReport($reportId)) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية التعديل (عرض فقط).']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية التعديل.');
         }
 
         $itemModel = new ReportChecklistItemModel();
@@ -163,7 +314,10 @@ class ReportController extends BaseController
         $allChecked = count($items) > 0 && !in_array(0, array_column($items, 'is_checked'), true);
 
         if (!$allChecked) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب اعتماد كل المراحل أولاً.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب اعتماد كل المراحل أولاً.']);
+            }
+            return redirect()->back()->with('error', 'يجب اعتماد كل المراحل أولاً.');
         }
 
         $reportModel = new ReportModel();
@@ -174,7 +328,10 @@ class ReportController extends BaseController
             (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_finalized', 'report', $reportId, 'رقم التقرير: ' . $reportId);
         }
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/reports/' . (int) ($data['mission_id'] ?? $report['mission_id'] ?? 0)))->with('success', 'تم اعتماد التقرير وإرساله بنجاح.');
     }
 
     /** الاعتماد النهائي (pending_signatures → sent) مقصور على رئيس إدارة المراجعة
@@ -197,23 +354,33 @@ class ReportController extends BaseController
     /** POST /dashboard/reports/api/approve — اعتماد رئيس إدارة المراجعة الداخلية النهائي */
     public function approve()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $reportId = (int) ($data['report_id'] ?? 0);
 
         if (!$reportId || !$this->canApproveReport($reportId)) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية اعتماد هذا التقرير.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية اعتماد هذا التقرير.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية اعتماد هذا التقرير.');
         }
 
         $reportModel = new ReportModel();
         $report = $reportModel->find($reportId);
         if (!$report || $report['status'] !== 'pending_signatures') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'التقرير غير جاهز للاعتماد حاليًا.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'التقرير غير جاهز للاعتماد حاليًا.']);
+            }
+            return redirect()->back()->with('error', 'التقرير غير جاهز للاعتماد حاليًا.');
         }
 
         $reportModel->update($reportId, ['status' => 'sent']);
         (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_approved', 'report', $reportId, 'رقم التقرير: ' . $reportId);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/reports/' . (int) $report['mission_id']))->with('success', 'تم اعتماد التقرير بنجاح.');
     }
 
     /**

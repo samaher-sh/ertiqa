@@ -18,3 +18,7 @@
 }
 .dr-submit-btn:disabled{ opacity:.6; cursor:not-allowed; }
 .dr-submit-btn i{ width:14px; height:14px; }
+
+/* ===== صفحة "قائمة المستندات" الحقيقية: نموذج إضافة مستند (details/summary أصلي) ===== */
+.wiz-add-doc-details summary{ list-style:none; }
+.wiz-add-doc-details summary::-webkit-details-marker{ display:none; }

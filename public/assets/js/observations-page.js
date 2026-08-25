@@ -5,53 +5,22 @@
    الصفحة تشتغل بالكامل بدون هذا الملف: تصفّح، اختيار مهمة، إضافة/تعديل/حذف/عرض،
    وتصدير PDF للملاحظات المحفوظة -- كلها روابط/نماذج HTML عادية. هذا الملف يضيف
    فقط تحسينات لا تُغيّر أي سلوك أساسي:
-     - تبديل السايدبار بالموبايل + فتح/إغلاق قائمة الحساب (نفس دالتي renderSidebar/
-       renderProfile بـ dashboard.js، لكن هذي الصفحة لا تحمّل dashboard.js كاملًا
-       لتفادي إعادة تشغيل كل منطق الـ SPA على صفحة مُرندرة من السيرفر أصلًا)
      - فلاتر فورية بدون إعادة تحميل الصفحة (بحث/إدارة/خطورة/حالة/تاريخ) على
        صفوف الجدول المُرندرة من السيرفر أصلًا (data-* attributes)، بدل قوالب JS
      - تصدير PDF لمسودة نموذج الإضافة/التعديل قبل الحفظ (يقرأ القيم الحالية من
        حقول النموذج مباشرة، بنفس آلية exportObservationToPDF() بـ observations.js
        لكن بدون الاعتماد على obsDraft -- الصفحة هذي لا تحمّل observations.js)
+   تبديل السايدبار بالموبايل وقائمة الحساب مشتركان بكل الصفحات الحقيقية —
+   انتقلا لملف mvc-layout.js (يُحمَّل قبل هذا الملف بكل صفحة).
    ملاحظة: observations.js نفسه غير مُحمَّل هنا إطلاقًا ولا يُستخدم من هذا الملف --
    مستخدَم فقط من صفحات الـ SPA القديمة (senttasks.js/finalreports.js) اللي لسا
    تضمّن جدول/بطاقة الملاحظات بداخلها، بدون أي تغيير عليه.
    ============================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
-  bindChrome();
   bindObsFilters();
   bindDraftExport();
 });
-
-/* ---------- سايدبار الموبايل + قائمة الحساب ---------- */
-function bindChrome() {
-  const menuBtn = document.getElementById("mobileMenuBtn");
-  const overlay = document.getElementById("mobileOverlay");
-  const sidebar = document.getElementById("sidebar");
-  if (menuBtn && overlay && sidebar) {
-    menuBtn.addEventListener("click", () => {
-      sidebar.classList.add("mobile-open");
-      overlay.classList.add("show");
-    });
-    overlay.addEventListener("click", () => {
-      sidebar.classList.remove("mobile-open");
-      overlay.classList.remove("show");
-    });
-  }
-
-  const profileBtn = document.getElementById("profileBtn");
-  const profileWrap = document.getElementById("profileWrap");
-  if (profileBtn && profileWrap) {
-    profileBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      profileWrap.classList.toggle("open");
-    });
-    document.addEventListener("click", e => {
-      if (!profileWrap.contains(e.target)) profileWrap.classList.remove("open");
-    });
-  }
-}
 
 /* ---------- فلاتر قائمة الملاحظات ---------- */
 function bindObsFilters() {

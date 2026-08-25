@@ -40,6 +40,54 @@ class DocumentRequestController extends BaseController
         return ($isAuditSide || $isTargetSide) ? $mission : null;
     }
 
+    private function isJsonRequest(): bool
+    {
+        return str_contains((string) $this->request->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    /** GET /dashboard/document-requests — صفحة قائمة المستندات الحقيقية (Server-Rendered) */
+    public function index()
+    {
+        $missions = $this->missionsForCurrentSession();
+        $requestedId = (int) ($this->request->getGet('mission_id') ?: 0);
+        $missionId = $requestedId ?: (int) ($missions[0]['id'] ?? 0);
+
+        $requests = [];
+        if ($missionId) {
+            $mission = $this->missionForCurrentUser($missionId);
+            if (!$mission) {
+                throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
+            }
+            $requestModel = new DocumentRequestModel();
+            $requests = $requestModel->forMissionWithResponses($missionId);
+
+            $docModel = new DocumentModel();
+            $requests = array_map(function ($r) use ($docModel) {
+                $r['file'] = $docModel->forRelated('document_request', (int) $r['id'])[0] ?? null;
+                return $r;
+            }, $requests);
+        }
+
+        $userId = (int) session()->get('user_id');
+        $allowedIds = array_map('intval', array_column((new MissionModel())->activeMissionsForUser($userId), 'id'));
+        $canAdd = $missionId && in_array($missionId, $allowedIds, true);
+
+        $departmentId = (int) session()->get('department_id');
+        $canSubmit = $missionId && $departmentId && (int) ($mission['target_department_id'] ?? 0) === $departmentId;
+
+        return view('dashboard/document-requests/index', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'documentRequests',
+            'currentUser'  => $this->sessionUserSummary(),
+            'missions'          => $missions,
+            'selectedMissionId' => $missionId,
+            'requests'          => $requests,
+            'canAdd'            => $canAdd,
+            'canSubmit'         => $canSubmit,
+        ]);
+    }
+
     /**
      * GET /dashboard/document-requests/api/list?mission_id=X — قائمة المستندات المطلوبة
      * لمهمة، مع حالة الرد عليها إن وُجد. يظهر لطرفي المهمة (المراجع يشوفها للمتابعة،
@@ -76,24 +124,34 @@ class DocumentRequestController extends BaseController
      */
     public function add()
     {
-        $data      = $this->request->getJSON(true) ?? [];
+        $isJson = $this->isJsonRequest();
+        $data      = $isJson ? ($this->request->getJSON(true) ?? []) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $docName   = trim((string) ($data['doc_name'] ?? ''));
 
         $missionModel = new MissionModel();
         $mission = $missionId ? $missionModel->find($missionId) : null;
         if (!$mission) {
-            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'المهمة غير موجودة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'المهمة غير موجودة.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('المهمة غير موجودة.');
         }
 
         $userId = (int) session()->get('user_id');
         $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         if (!in_array($missionId, $allowedIds, true)) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'إضافة طلبات مستندات جديدة متاحة فقط لفريق المراجعة المسؤول عن المهمة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'إضافة طلبات مستندات جديدة متاحة فقط لفريق المراجعة المسؤول عن المهمة.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('إضافة طلبات مستندات جديدة متاحة فقط لفريق المراجعة المسؤول عن المهمة.');
         }
 
         if ($docName === '') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يرجى إدخال اسم المستند.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يرجى إدخال اسم المستند.']);
+            }
+            return redirect()->to(base_url('dashboard/document-requests?mission_id=' . $missionId))->with('error', 'يرجى إدخال اسم المستند.');
         }
 
         $requestModel = new DocumentRequestModel();
@@ -109,7 +167,10 @@ class DocumentRequestController extends BaseController
 
         (new AuditLogModel())->log($missionId, $userId, 'document_request_added', 'document_request', $id, $docName);
 
-        return $this->response->setJSON(['success' => true, 'id' => $id]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true, 'id' => $id]);
+        }
+        return redirect()->to(base_url('dashboard/document-requests?mission_id=' . $missionId))->with('success', 'تمت إضافة المستند بنجاح.');
     }
 
     /**
@@ -120,21 +181,35 @@ class DocumentRequestController extends BaseController
      */
     public function submit()
     {
+        // الطلب دائمًا multipart/form-data (يحتمل ملفات)، حتى من نداء JS القديم
+        // (apiPostFile) -- الميّز الحقيقي هنا هو ?ajax=1 اللي يضيفه استدعاء JS
+        // فقط، عشان يفرّق بين استجابة JSON (JS) واستجابة redirect (نموذج عادي)
+        $isJson = (bool) $this->request->getGet('ajax');
+
         $missionId = (int) $this->request->getPost('mission_id');
         $mission = $missionId ? $this->missionForCurrentUser($missionId) : null;
         if (!$mission) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
         }
 
         $userId = (int) session()->get('user_id');
         $departmentId = (int) session()->get('department_id');
         if (!$departmentId || (int) $mission['target_department_id'] !== $departmentId) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'رفع المستندات متاح فقط لمستخدمي الإدارة الخاضعة للمراجعة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'رفع المستندات متاح فقط لمستخدمي الإدارة الخاضعة للمراجعة.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('رفع المستندات متاح فقط لمستخدمي الإدارة الخاضعة للمراجعة.');
         }
 
         $responses = $this->request->getPost('responses') ?? [];
         if (!is_array($responses) || empty($responses)) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا يوجد أي رد لإرساله.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا يوجد أي رد لإرساله.']);
+            }
+            return redirect()->to(base_url('dashboard/document-requests?mission_id=' . $missionId))->with('error', 'لا يوجد أي رد لإرساله.');
         }
 
         $requestModel = new DocumentRequestModel();
@@ -218,11 +293,17 @@ class DocumentRequestController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'حدث خطأ أثناء حفظ المستندات. حاول مرة أخرى.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'حدث خطأ أثناء حفظ المستندات. حاول مرة أخرى.']);
+            }
+            return redirect()->to(base_url('dashboard/document-requests?mission_id=' . $missionId))->with('error', 'حدث خطأ أثناء حفظ المستندات. حاول مرة أخرى.');
         }
 
         (new MissionModel())->syncCurrentStage($missionId);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/document-requests?mission_id=' . $missionId))->with('success', 'تم إرسال المستندات بنجاح.');
     }
 }

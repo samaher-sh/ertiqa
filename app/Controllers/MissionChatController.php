@@ -8,6 +8,54 @@ use App\Models\AuditLogModel;
 
 class MissionChatController extends BaseController
 {
+    private function isJsonRequest(): bool
+    {
+        return str_contains((string) $this->request->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    private function assertMissionAccess(int $missionId): array
+    {
+        $mission = (new \App\Models\MissionModel())->find($missionId);
+        if (!$mission) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('المهمة غير موجودة.');
+        }
+        $allowedIds = array_map('intval', array_column($this->missionsForCurrentSession(), 'id'));
+        if (!in_array($missionId, $allowedIds, true)) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
+        }
+        return $mission;
+    }
+
+    /** GET /dashboard/meeting-schedule — صفحة جدولة الاجتماع الحقيقية (Server-Rendered) */
+    public function index()
+    {
+        $missions = $this->missionsForCurrentSession();
+        $requestedId = (int) ($this->request->getGet('mission_id') ?: 0);
+        $missionId = $requestedId ?: (int) ($missions[0]['id'] ?? 0);
+
+        $messages = [];
+        $meeting = null;
+        if ($missionId) {
+            $this->assertMissionAccess($missionId);
+            $chatModel = new MissionChatMessageModel();
+            $meetingModel = new MeetingModel();
+            $messages = $chatModel->forMission($missionId);
+            $meeting = $meetingModel->firstForMission($missionId);
+        }
+
+        return view('dashboard/meeting-schedule/index', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'meetingSchedule',
+            'currentUser'  => $this->sessionUserSummary(),
+            'missions'          => $missions,
+            'selectedMissionId' => $missionId,
+            'messages'          => $messages,
+            'meeting'           => $meeting,
+            'myUserId'          => (int) session()->get('user_id'),
+        ]);
+    }
+
     /** GET /dashboard/meeting-schedule/api/messages?mission_id=X */
     public function messages()
     {
@@ -30,12 +78,19 @@ class MissionChatController extends BaseController
     /** POST /dashboard/meeting-schedule/api/send — رسالة نصية عادية */
     public function send()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $message   = trim($data['message'] ?? '');
 
         if (!$missionId || $message === '') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الرسالة فارغة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الرسالة فارغة.']);
+            }
+            return redirect()->back()->with('error', 'الرسالة فارغة.');
+        }
+        if (!$isJson) {
+            $this->assertMissionAccess($missionId);
         }
 
         $userId = (int) session()->get('user_id');
@@ -50,20 +105,30 @@ class MissionChatController extends BaseController
 
         (new AuditLogModel())->log($missionId, $userId, 'chat_message', 'mission_chat_message', null, mb_substr($message, 0, 100));
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }
 
     /** POST /dashboard/meeting-schedule/api/propose — اقتراح موعد اجتماع */
     public function propose()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $date = $data['date'] ?? null;
         $time = $data['time'] ?? null;
         $location = trim($data['location'] ?? '');
 
         if (!$missionId || !$date || !$time) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يرجى تحديد التاريخ والوقت.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يرجى تحديد التاريخ والوقت.']);
+            }
+            return redirect()->back()->with('error', 'يرجى تحديد التاريخ والوقت.');
+        }
+        if (!$isJson) {
+            $this->assertMissionAccess($missionId);
         }
 
         $chatModel = new MissionChatMessageModel();
@@ -81,27 +146,40 @@ class MissionChatController extends BaseController
         $detail = 'التاريخ: ' . $date . ' — الوقت: ' . $time . ($location ? ' — ' . $location : '');
         (new AuditLogModel())->log($missionId, (int) session()->get('user_id'), 'meeting_proposed', 'meeting', null, $detail);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }
 
     /** POST /dashboard/meeting-schedule/api/confirm — تأكيد موعد مُقترح مسبقًا (بالطرف التاني) */
     public function confirm()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $messageId = (int) ($data['message_id'] ?? 0);
         $userId    = (int) session()->get('user_id');
+        if (!$isJson && $missionId) {
+            $this->assertMissionAccess($missionId);
+        }
 
         $chatModel = new MissionChatMessageModel();
         $proposal  = $chatModel->find($messageId);
 
         if (!$proposal || (int) $proposal['mission_id'] !== $missionId || $proposal['type'] !== 'proposal') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الاقتراح غير موجود.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الاقتراح غير موجود.']);
+            }
+            return redirect()->back()->with('error', 'الاقتراح غير موجود.');
         }
 
         // لا يجوز إن نفس الشخص اللي اقترح يأكد اقتراحه هو (لازم الطرف الثاني)
         if ((int) $proposal['sender_id'] === $userId) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'لا يمكنك تأكيد اقتراحك الخاص — بانتظار تأكيد الطرف الآخر.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'لا يمكنك تأكيد اقتراحك الخاص — بانتظار تأكيد الطرف الآخر.']);
+            }
+            return redirect()->back()->with('error', 'لا يمكنك تأكيد اقتراحك الخاص — بانتظار تأكيد الطرف الآخر.');
         }
 
         $meetingModel = new MeetingModel();
@@ -131,26 +209,39 @@ class MissionChatController extends BaseController
         $detail = 'التاريخ: ' . $proposal['proposed_date'] . ' — الوقت: ' . $proposal['proposed_time'];
         (new AuditLogModel())->log($missionId, $userId, 'meeting_confirmed', 'meeting', $meeting['id'], $detail);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }
 
     /** POST /dashboard/meeting-schedule/api/cancel — إلغاء اقتراح موعد لم يُؤكَّد بعد (بالطرف الثاني) */
     public function cancel()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $messageId = (int) ($data['message_id'] ?? 0);
         $userId    = (int) session()->get('user_id');
+        if (!$isJson && $missionId) {
+            $this->assertMissionAccess($missionId);
+        }
 
         $chatModel = new MissionChatMessageModel();
         $proposal  = $chatModel->find($messageId);
 
         if (!$proposal || (int) $proposal['mission_id'] !== $missionId || $proposal['type'] !== 'proposal') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الاقتراح غير موجود أو تم الرد عليه مسبقًا.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'الاقتراح غير موجود أو تم الرد عليه مسبقًا.']);
+            }
+            return redirect()->back()->with('error', 'الاقتراح غير موجود أو تم الرد عليه مسبقًا.');
         }
 
         if ((int) $proposal['sender_id'] === $userId) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'لا يمكنك إلغاء اقتراحك الخاص.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'لا يمكنك إلغاء اقتراحك الخاص.']);
+            }
+            return redirect()->back()->with('error', 'لا يمكنك إلغاء اقتراحك الخاص.');
         }
 
         $chatModel->update($messageId, ['type' => 'cancelled']);
@@ -166,7 +257,10 @@ class MissionChatController extends BaseController
         $detail = 'التاريخ: ' . $proposal['proposed_date'] . ' — الوقت: ' . $proposal['proposed_time'];
         (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', null, $detail);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }
 
     /** POST /dashboard/meeting-schedule/api/cancel-confirmed — إلغاء موعد مؤكَّد فعليًا (بعد الاتفاق عليه من الطرفين) --
@@ -174,15 +268,22 @@ class MissionChatController extends BaseController
      *  وأي طرف بالمهمة يقدر يبدأه (ما يحتاج يكون الطرف الثاني تحديدًا زي إلغاء الاقتراح) */
     public function cancelConfirmed()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $userId    = (int) session()->get('user_id');
+        if (!$isJson && $missionId) {
+            $this->assertMissionAccess($missionId);
+        }
 
         $meetingModel = new MeetingModel();
         $meeting = $meetingModel->firstForMission($missionId);
 
         if (!$meeting || $meeting['status'] !== 'scheduled') {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا يوجد موعد مؤكَّد لإلغائه.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا يوجد موعد مؤكَّد لإلغائه.']);
+            }
+            return redirect()->back()->with('error', 'لا يوجد موعد مؤكَّد لإلغائه.');
         }
 
         $meetingModel->update($meeting['id'], ['status' => 'cancelled']);
@@ -199,6 +300,9 @@ class MissionChatController extends BaseController
         $detail = 'التاريخ: ' . $meeting['meeting_date'] . ' — الوقت: ' . $meeting['meeting_time'];
         (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', $meeting['id'], $detail);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }
 }
