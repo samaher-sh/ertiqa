@@ -245,7 +245,7 @@ function renderFRTable(reports) {
                 <td>
                   <div style="display:flex;align-items:center;gap:8px;">
                     <button class="fr-action-view-btn" data-fr-view="${r.mission_id}">عرض</button>
-                    ${isAuditHead && approved ? `<button class="fr-action-pdf-btn" data-fr-pdf="${r.mission_id}" title="تصدير PDF"><i data-lucide="file-down"></i></button>` : ""}
+                    ${approved ? `<button class="fr-action-pdf-btn" data-fr-pdf="${r.mission_id}" title="تصدير PDF"><i data-lucide="file-down"></i></button>` : ""}
                   </div>
                 </td>
               </tr>`;
@@ -472,23 +472,20 @@ function renderApprovalStepper() {
     </div>` : ""}
 
     <div class="fr-phases-footer">
-      ${isAuditHead ? frRenderAuditHeadApproveBtn() : readOnlyViewer ? `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(frCurrentReport ? frCurrentReport.status : "draft")}</span>` : frRenderStepperActionBtn(items, expandedNum)}
+      ${frCurrentReport && frCurrentReport.status === "sent" ? frRenderApprovedFooter()
+        : isAuditHead ? frRenderAuditHeadApproveBtn()
+        : readOnlyViewer ? `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(frCurrentReport ? frCurrentReport.status : "draft")}</span>`
+        : frRenderStepperActionBtn(items, expandedNum)}
     </div>
   </div>`;
 }
 
 /* رئيس إدارة المراجعة الداخلية: زر "اعتماد التقرير" يظهر فقط لمّا يكون التقرير
    فعليًا بانتظار اعتماده (pending_signatures) -- لسا تحت الإعداد من عضو
-   المراجعة (draft) أو معتمد أصلًا (sent) يعرضان حالة نصية بس بدون أي إجراء */
+   المراجعة (draft) يعرض حالة نصية بس بدون أي إجراء (حالة "sent" المعتمدة
+   يتكفّل بها frRenderApprovedFooter() قبل الوصول هنا أصلًا) */
 function frRenderAuditHeadApproveBtn() {
   const status = frCurrentReport ? frCurrentReport.status : "draft";
-  if (status === "sent") {
-    return `
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:12px;color:#6b7280;">${frStatusLabel(status)}</span>
-      <button class="fr-action-pdf-btn" id="frExportPdfBtn" data-fr-pdf="${frCreateSelectedTask}" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</button>
-    </div>`;
-  }
   if (status !== "pending_signatures") {
     return `<span style="font-size:12px;color:#6b7280;">${frStatusLabel(status)}</span>`;
   }
@@ -496,6 +493,20 @@ function frRenderAuditHeadApproveBtn() {
   <button class="fr-submit-btn" id="frApproveReportBtn" ${frApproving ? "disabled" : ""}>
     <i data-lucide="check-check"></i> ${frApproving ? "جارِ الاعتماد..." : "اعتماد التقرير"}
   </button>`;
+}
+
+/* تذييل تقرير معتمد (status = sent) -- موحّد لكل من يقدر يشوف التقرير أصلًا
+   (رئيس إدارة المراجعة الداخلية، عضو المراجعة، منسّق/مدير الإدارة الخاضعة
+   للمراجعة، الرئيس التنفيذي)، بدل ما كان زر "تصدير PDF" مقصورًا على رئيس
+   إدارة المراجعة الداخلية فقط رغم إن باقي الأطراف يقدرون يشوفوا نفس التقرير
+   المعتمد أصلًا -- التصدير نفسه مقصور فعليًا على حالة "sent" وحدها (نفس
+   الشرط اللي يستدعي هذي الدالة بالأساس بـ renderApprovalStepper) */
+function frRenderApprovedFooter() {
+  return `
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-size:12px;color:#6b7280;">معتمد</span>
+    <button class="fr-action-pdf-btn" id="frExportPdfBtn" data-fr-pdf="${frCreateSelectedTask}" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</button>
+  </div>`;
 }
 
 /* ما فيه تأشير/checkbox منفصل لاعتماد المرحلة -- زر "التالي" نفسه هو اللي

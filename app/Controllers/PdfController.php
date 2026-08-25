@@ -115,11 +115,17 @@ class PdfController extends BaseController
         }
 
         $userId = (int) session()->get('user_id');
+        $departmentId = (int) session()->get('department_id');
         $missionModel = new MissionModel();
         $allowed = $missionModel->activeMissionsForUser($userId);
         $ids = array_map('intval', array_column($allowed, 'id'));
 
-        if ((int) $mission['mission_head_id'] !== $userId && !in_array((int) $mission['id'], $ids, true)) {
+        // منسّق/مدير الإدارة الخاضعة للمراجعة طرف بالمهمة أيضًا (target_department_id)
+        // حتى لو مو رئيسها ولا عضو فريقها -- نفس نمط ReportController::missionForParty،
+        // مطلوب هنا عشان يقدر يصدّر تقريرًا نهائيًا معتمدًا يشاهده أصلًا
+        $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
+
+        if ((int) $mission['mission_head_id'] !== $userId && !in_array((int) $mission['id'], $ids, true) && !$isTargetSide) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
         }
     }
