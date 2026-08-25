@@ -19,6 +19,8 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('api/active-missions',   'DashboardController::activeMissions');
     $routes->get('api/scheduled-meetings','DashboardController::scheduledMeetings');
     $routes->post('new-task', 'MissionController::store');
+    $routes->get('risk-matrix',            'RiskMatrixController::index');
+    $routes->get('risk-matrix/edit',       'RiskMatrixController::edit');
     $routes->get('risk-matrix/api/items',  'RiskMatrixController::items');
     $routes->post('risk-matrix/api/save',  'RiskMatrixController::save');
     $routes->get('pdf/mission-letter/(:num)',   'PdfController::missionLetter/$1');
