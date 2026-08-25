@@ -45,6 +45,7 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('document-requests/api/submit', 'DocumentRequestController::submit');
     $routes->get('target-mission/api/data',          'MissionReviewController::data');
     $routes->post('target-mission/api/save-agreement', 'MissionReviewController::saveAgreement');
+    $routes->get('meeting-schedule',              'MissionChatController::index');
     $routes->get('meeting-schedule/api/messages', 'MissionChatController::messages');
     $routes->post('meeting-schedule/api/send',    'MissionChatController::send');
     $routes->post('meeting-schedule/api/propose', 'MissionChatController::propose');
