@@ -11,13 +11,40 @@ use App\Models\AuditLogModel;
 
 class MissionController extends BaseController
 {
+    private function isJsonRequest(): bool
+    {
+        return str_contains((string) $this->request->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    /** GET /dashboard/new-task — نموذج بدء مهمة جديدة (Server-Rendered) */
+    public function create()
+    {
+        $deptModel = new DepartmentModel();
+        $mainDepts = $deptModel->mainDepartments();
+
+        $selectedDeptId = (int) ($this->request->getGet('main_dept_id') ?: 0);
+        $subDepts = $selectedDeptId ? $deptModel->subDepartments($selectedDeptId) : [];
+
+        return view('dashboard/new-task/create', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'newTask',
+            'currentUser'  => $this->sessionUserSummary(),
+            'mainDepts'      => $mainDepts,
+            'subDepts'       => $subDepts,
+            'selectedDeptId' => $selectedDeptId,
+            'years'          => ['2024', '2025', '2026', '2027'],
+        ]);
+    }
+
     /**
      * POST /dashboard/new-task — إنشاء المهمة كاملة (الخطوات الثلاث دفعة وحدة،
      * لأن الإرسال الفعلي يصير مرة وحدة بعد آخر خطوة فقط - نفس سلوك الواجهة الأصلية)
      */
     public function store()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->formPostToStoreData();
 
         $rules = [
             'main_dept_id'   => 'required|integer',
@@ -31,36 +58,48 @@ class MissionController extends BaseController
         ];
 
         if (!$this->validateData($data ?? [], $rules)) {
-            return $this->response->setStatusCode(422)->setJSON([
-                'success' => false,
-                'errors'  => $this->validator->getErrors(),
-            ]);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'errors'  => $this->validator->getErrors(),
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', implode(' - ', $this->validator->getErrors()));
         }
 
         $deptModel = new DepartmentModel();
         $targetDept = $deptModel->find((int) $data['target_dept_id']);
 
         if (!$targetDept) {
-            return $this->response->setStatusCode(422)->setJSON([
-                'success' => false,
-                'message' => 'الإدارة المستهدفة غير صحيحة.',
-            ]);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'الإدارة المستهدفة غير صحيحة.',
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', 'الإدارة المستهدفة غير صحيحة.');
         }
 
         $mainDept = $deptModel->find((int) $data['main_dept_id']);
         if (!$mainDept) {
-            return $this->response->setStatusCode(422)->setJSON([
-                'success' => false,
-                'message' => 'الإدارة غير صحيحة.',
-            ]);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'الإدارة غير صحيحة.',
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', 'الإدارة غير صحيحة.');
         }
 
         $auditDept = $deptModel->findByNameAr('المراجعة الداخلية');
         if (!$auditDept) {
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'تعذّر تحديد إدارة المراجعة الداخلية بالنظام. تواصل مع الدعم الفني.',
-            ]);
+            if ($isJson) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => 'تعذّر تحديد إدارة المراجعة الداخلية بالنظام. تواصل مع الدعم الفني.',
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', 'تعذّر تحديد إدارة المراجعة الداخلية بالنظام. تواصل مع الدعم الفني.');
         }
 
         $userId = (int) session()->get('user_id');
@@ -133,19 +172,41 @@ class MissionController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return $this->response->setStatusCode(500)->setJSON([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.',
-            ]);
+            if ($isJson) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.',
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.');
         }
 
         $missionModel->syncCurrentStage($missionId);
 
-        return $this->response->setJSON([
-            'success'      => true,
-            'mission_code' => $missionCode,
-            'redirect'     => base_url('dashboard'),
-        ]);
+        if ($isJson) {
+            return $this->response->setJSON([
+                'success'      => true,
+                'mission_code' => $missionCode,
+                'redirect'     => base_url('dashboard'),
+            ]);
+        }
+        return redirect()->to(base_url('dashboard/sent-tasks/' . $missionId))->with('success', 'تم إنشاء المهمة بنجاح — رقمها: ' . $missionCode);
+    }
+
+    /** يحوّل حقول نموذج HTML عادي (channel_email_active, channel_email_value, ...)
+     *  لنفس شكل $data المتوقَّع من الفرع JSON الأصلي (channels: {email: {active, value}, ...}) */
+    private function formPostToStoreData(): array
+    {
+        $post = $this->request->getPost();
+        $channels = [];
+        foreach (['email', 'memo', 'phone'] as $ch) {
+            $channels[$ch] = [
+                'active' => !empty($post['channel_' . $ch . '_active']),
+                'value'  => $post['channel_' . $ch . '_value'] ?? '',
+            ];
+        }
+        $post['channels'] = $channels;
+        return $post;
     }
 
     /**

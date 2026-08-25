@@ -20,8 +20,10 @@ $stageInfo = [
 $info = $stageInfo[$nextStage] ?? null;
 $myTurn = $info ? (($info['forRole'] === 'target' && $isHrUser) || ($info['forRole'] === 'audit' && !$isHrUser)) : false;
 $badgeText = $info ? (($myTurn ? 'بانتظارك — ' : 'بانتظار الطرف الآخر — ') . $info['label']) : ($nextStage === 7 ? 'التقرير النهائي' : 'المرحلة ' . $nextStage);
+$flashSuccess = session()->getFlashdata('success');
 ?>
 <div class="flex flex-col gap-5" dir="rtl">
+  <?php if ($flashSuccess): ?><div class="obs-alert obs-alert-success"><?= esc($flashSuccess) ?></div><?php endif; ?>
   <div class="st-detail-header">
     <a class="st-detail-back" style="text-decoration:none;" href="<?= base_url('dashboard/sent-tasks') ?>"><i data-lucide="chevron-right"></i></a>
     <div class="st-detail-icon"><i data-lucide="history"></i></div>
