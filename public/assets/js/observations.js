@@ -199,7 +199,12 @@ function obsHasFilters() {
    obsForceReadOnly تُجبر هناك) */
 function obsActionsCellHtml(obs) {
   const readOnly = obsIsReadOnly();
-  const menuOpen = obsOpenMenuId === obs.id;
+  // String() على الطرفين إلزامي هنا: obsOpenMenuId يُضبط كرقم دائمًا (parseInt
+  // بمستمع data-menu-toggle أدناه)، لكن obs.id قد يوصل كنص من الـ API حسب
+  // إعدادات قاعدة البيانات/السائق المستخدم (نفس الاحتياط المطبَّق أصلًا
+  // بمصفوفة المخاطر rmOpenMenuId) -- بدونه تفشل المقارنة بصمت (menuOpen تبقى
+  // false للأبد) والقائمة ما تنفتح إطلاقًا رغم إن الضغطة والتحديث يشتغلان صح
+  const menuOpen = String(obsOpenMenuId) === String(obs.id);
   return `
   <td class="obs-menu-cell">
     <button class="obs-menu-btn" data-menu-toggle="${obs.id}"><i data-lucide="more-vertical"></i></button>
@@ -473,7 +478,7 @@ function obsOpenNew() {
   rerenderObsContent();
 }
 function obsOpenView(id) {
-  const obs = obsList.find(o => o.id === id);
+  const obs = obsList.find(o => String(o.id) === String(id));
   if (!obs) return;
   obsViewTarget = obs;
   obsOpenMenuId = null;
@@ -481,7 +486,7 @@ function obsOpenView(id) {
   rerenderObsContent();
 }
 function obsOpenEdit(id) {
-  const obs = obsList.find(o => o.id === id);
+  const obs = obsList.find(o => String(o.id) === String(id));
   if (!obs) return;
   obsDraft = { ...obs, attachments: [] };
   obsOpenMenuId = null;
