@@ -146,6 +146,102 @@ class PdfController extends BaseController
         $this->streamPdf($mpdf, $html, 'خطاب-' . $mission['mission_code'] . '.pdf');
     }
 
+    /**
+     * POST /dashboard/pdf/wizard-letter-preview — معاينة "نموذج الخطاب الرسمي" أثناء
+     * تعبئة معالج بدء مهمة، قبل حفظ المهمة فعليًا (لا يوجد mission_id بعد) --
+     * يبني المستند بنفس قالب mission-letter الحقيقي المستخدم لخطاب مهمة محفوظة
+     * فعلًا، لكن من بيانات النموذج المُرسلة مباشرة (POST JSON) بدل قراءتها من
+     * قاعدة البيانات، عشان يطلع بنفس شكل خطاب المهمة الرسمي بالضبط (بدون تكرار
+     * قالب منفصل)
+     */
+    public function wizardLetterPreview()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $mission = [
+            'year'            => $data['year'] ?? '',
+            'mission_code'    => $data['mission_code'] ?? '',
+            'procedure_note'  => $data['procedure_note'] ?? '',
+            'reviewer_name'   => $data['reviewer_name'] ?? '',
+            'reviewer_email'  => $data['reviewer_email'] ?? '',
+            'reviewer_phone'  => $data['reviewer_phone'] ?? '',
+            'director_name'   => $data['director_name'] ?? '',
+        ];
+        $mainDept   = ['name_ar' => $data['main_dept_name'] ?? ''];
+        $targetDept = ['name_ar' => $data['target_dept_name'] ?? ''];
+
+        $html = view('pdf/mission-letter', compact('mission', 'mainDept', 'targetDept'));
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningFooter($mpdf, (string) $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'خطاب-معاينة-' . ($mission['mission_code'] ?: 'مسودة') . '.pdf');
+    }
+
+    /**
+     * POST /dashboard/pdf/service-agreement-preview — تصدير اتفاقية مستوى الخدمة
+     * (صفحة 2 بمعالج بدء مهمة)، قبل حفظها فعليًا -- بنود الاتفاقية (SLA_SECTIONS)
+     * تُرسل من الواجهة مباشرة ضمن الطلب بدل تكرارها بالباك-إند (المصدر الوحيد
+     * لها هو dashboard-data.js أصلًا)
+     */
+    public function serviceAgreementPreview()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $channelLabels = ['email' => 'البريد الإلكتروني', 'memo' => 'المذكرات الداخلية', 'phone' => 'الهاتف الداخلي'];
+        $channelValues = (array) ($data['channel_values'] ?? []);
+        $activeChannels = [];
+        foreach ((array) ($data['channels'] ?? []) as $key => $on) {
+            if ($on && isset($channelLabels[$key])) {
+                $activeChannels[] = ['label' => $channelLabels[$key], 'value' => $channelValues[$key] ?? ''];
+            }
+        }
+
+        $html = view('pdf/service-agreement', [
+            'subjectDept'    => $data['subject_dept'] ?? '',
+            'date'           => $data['date'] ?? '',
+            'desc'           => $data['desc'] ?? '',
+            'activeChannels' => $activeChannels,
+            'sections'       => (array) ($data['sections'] ?? []),
+            'sigName'        => $data['sig_name'] ?? '',
+            'sigDate'        => $data['sig_date'] ?? '',
+            'sigSignature'   => $data['sig_signature'] ?? '',
+        ]);
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'اتفاقية مستوى الخدمة', '', $data['subject_dept'] ?? '');
+        $this->applyRunningFooter($mpdf, '');
+        $this->streamPdf($mpdf, $html, 'اتفاقية-مستوى-الخدمة.pdf');
+    }
+
+    /**
+     * POST /dashboard/pdf/observation-preview — تصدير ملاحظة رقابية واحدة (من
+     * صفحة الملاحظات، سواء محفوظة فعلًا أو لسا مسودة تحت التعبئة) -- POST
+     * دائمًا (بدل GET بمعرّف) عشان يشتغل حتى قبل حفظ الملاحظة
+     */
+    public function observationPreview()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+
+        $html = view('pdf/observation', [
+            'ref'             => $data['ref'] ?? '',
+            'missionCode'     => $data['mission_code'] ?? '',
+            'title'           => $data['title'] ?? '',
+            'dept'            => $data['dept'] ?? '',
+            'date'            => $data['date'] ?? '',
+            'risk'            => $data['risk'] ?? '',
+            'observation'     => $data['observation'] ?? '',
+            'standard'        => $data['standard'] ?? '',
+            'reason'          => $data['reason'] ?? '',
+            'impact'          => $data['impact'] ?? '',
+            'recommendations' => $data['recommendations'] ?? '',
+        ]);
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'ملاحظة رقابية', (string) ($data['mission_code'] ?? ''), $data['dept'] ?? '');
+        $this->applyRunningFooter($mpdf, (string) ($data['mission_code'] ?? ''));
+        $this->streamPdf($mpdf, $html, 'ملاحظة-' . ($data['ref'] ?: 'رقابية') . '.pdf');
+    }
+
     public function riskMatrix(int $missionId)
     {
         $missionModel = new MissionModel();

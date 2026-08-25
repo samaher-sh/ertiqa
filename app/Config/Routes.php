@@ -25,6 +25,9 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('pdf/risk-matrix/(:num)',      'PdfController::riskMatrix/$1');
     $routes->get('pdf/meeting-summary/(:num)',  'PdfController::meetingSummary/$1');
     $routes->get('pdf/final-report/(:num)',     'PdfController::finalReport/$1');
+    $routes->post('pdf/wizard-letter-preview',      'PdfController::wizardLetterPreview');
+    $routes->post('pdf/service-agreement-preview',  'PdfController::serviceAgreementPreview');
+    $routes->post('pdf/observation-preview',        'PdfController::observationPreview');
     $routes->get('meetings/api/data',           'MeetingSummaryController::data');
     $routes->post('meetings/api/save',          'MeetingSummaryController::save');
     $routes->post('meetings/api/upload',        'DocumentController::uploadMeetingAttachment');
