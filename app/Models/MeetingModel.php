@@ -33,6 +33,7 @@ class MeetingModel extends Model
         $id = $this->insert([
             'mission_id'   => $missionId,
             'meeting_code' => $code,
+            'title'        => '',
             'meeting_date' => null,
             'meeting_time' => null,
             'location'     => null,

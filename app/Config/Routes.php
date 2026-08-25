@@ -33,6 +33,7 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('pdf/observations-list-preview',  'PdfController::observationsListPreview');
     $routes->get('pdf/observation/(:num)',          'PdfController::observation/$1');
     $routes->get('pdf/observations/(:num)',         'PdfController::observationsList/$1');
+    $routes->get('meetings',                    'MeetingSummaryController::index');
     $routes->get('meetings/api/data',           'MeetingSummaryController::data');
     $routes->post('meetings/api/save',          'MeetingSummaryController::save');
     $routes->post('meetings/api/upload',        'DocumentController::uploadMeetingAttachment');
