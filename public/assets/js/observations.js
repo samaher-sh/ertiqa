@@ -109,6 +109,31 @@ async function exportObservationToPDF(obs) {
   }
 }
 
+/* تصدير PDF لكل ملاحظات المهمة المختارة دفعة وحدة (زر "تصدير PDF" العلوي
+   بقائمة الملاحظات) -- كان هذا الزر يستخدم window.print() على الجدول
+   المعروض بالشاشة (عناوين مختصرة بس)، فيطلع شكله مختلف تمامًا عن باقي
+   التصديرات بالنظام. الآن يبني نفس تفاصيل كل ملاحظة الكاملة (اللي تُعبَّى
+   بفورمها) بنفس نمط تصدير مصفوفة المخاطر/ملخص الاجتماع (ملف PDF حقيقي من
+   mPDF ينزّل مباشرة) -- يصدّر الملاحظات المفلترة المعروضة حاليًا فقط
+   (obsFullyFiltered)، مطابقةً لما يشوفه المستخدم بالجدول */
+async function exportObservationsListToPDF() {
+  const linkedMission = missionsForSelector.find(m => String(m.id) === String(obsSelectedTaskId));
+  const missionCode = linkedMission ? linkedMission.mission_code : "";
+  const observations = obsFullyFiltered().map(obs => ({
+    ref: obs.ref, title: obs.title, dept: obs.dept, date: obs.date, risk: obs.risk,
+    observation: obs.observation, standard: obs.standard, reason: obs.reason,
+    impact: obs.impact, recommendations: obs.recommendations,
+  }));
+
+  try {
+    await postForPdfDownload(base + "/dashboard/pdf/observations-list-preview", {
+      mission_code: missionCode, observations,
+    }, "ملاحظات-" + (missionCode || "رقابية") + ".pdf");
+  } catch (e) {
+    showToast(e.message || "تعذّر تصدير المستند", "error");
+  }
+}
+
 /* ============================================================
    شريط اختيار المهمة المرتبطة (LinkedTaskSelector) — مشترك مع باقي الصفحات
    ============================================================ */
@@ -343,7 +368,7 @@ function bindObsListEvents() {
   if (newBtn) newBtn.addEventListener("click", obsOpenNew);
 
   const exportBtn = document.getElementById("obsExportBtn");
-  if (exportBtn) exportBtn.addEventListener("click", () => window.print());
+  if (exportBtn) exportBtn.addEventListener("click", exportObservationsListToPDF);
 
   const searchInput = document.getElementById("obsSearchInput");
   if (searchInput) searchInput.addEventListener("input", e => { obsSearchQuery = e.target.value; rerenderObsContent(); });
