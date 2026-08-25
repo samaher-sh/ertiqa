@@ -9,6 +9,20 @@
    صف بالمتصفح مباشرة)، وزر "حفظ مصفوفة المخاطر" يبقى submit عادي حقيقي زي ما هو.
    ============================================================ */
 
+/* نفس autoGrowTextareaRM() بـ riskmatrix.js القديم -- الحقول تكبر تلقائيًا
+   حسب المحتوى بدل شريط تمرير داخلي ثابت الارتفاع */
+function autoGrowRmTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+function bindRmAutoGrow(scope) {
+  scope.querySelectorAll(".wiz-textarea.plain").forEach(el => {
+    autoGrowRmTextarea(el);
+    el.addEventListener("input", () => autoGrowRmTextarea(el));
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("rmEditForm");
   if (!form) return;
@@ -16,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrap = document.getElementById("rmRowsWrap");
   const addBtn = document.getElementById("rmAddRowBtn");
   if (!wrap || !addBtn) return;
+
+  bindRmAutoGrow(wrap);
 
   addBtn.addEventListener("click", e => {
     e.preventDefault();
@@ -69,7 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const index = wrap.querySelectorAll("[data-rm-row]").length;
     const div = document.createElement("div");
     div.innerHTML = rowTemplate(index).trim();
-    wrap.appendChild(div.firstChild);
+    const rowEl = div.firstChild;
+    wrap.appendChild(rowEl);
+    bindRmAutoGrow(rowEl);
     if (window.lucide) lucide.createIcons();
   }
 

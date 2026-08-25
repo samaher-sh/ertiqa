@@ -44,7 +44,7 @@ $deptName = $mission['target_department_name'] ?? '';
           <div><h2>ملخص الاجتماع</h2></div>
           <?php if ($allReadOnly): ?><span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span><?php endif; ?>
           <div style="display:flex;gap:8px;margin-right:auto;">
-            <span id="msumAttachMount"></span>
+            <?php if (!$allReadOnly): ?><span id="msumAttachMount"></span><?php endif; ?>
             <?php if ($selectedMissionId): ?><a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/meeting-summary/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a><?php endif; ?>
           </div>
         </div>

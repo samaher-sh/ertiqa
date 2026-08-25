@@ -186,14 +186,13 @@ function bindDraftExport() {
 
   btn.addEventListener("click", async () => {
     const val = id => (document.getElementById(id) ? document.getElementById(id).value : "");
-    const checked = document.querySelector('input[name="add_to_report"]:checked');
-    const refInput = form.querySelector('input[name="id"]');
     const deptField = form.querySelector(".obs-auto-field .val");
+    const refLabel = form.dataset.refCode || "سيُحدَّد بعد الحفظ";
 
     try {
       await postForPdfDownload(base + "/dashboard/pdf/observation-preview", {
-        ref: "",
-        mission_code: "",
+        ref: form.dataset.refCode || "",
+        mission_code: form.dataset.missionCode || "",
         title: val("obsTitle"),
         dept: deptField ? deptField.textContent.trim() : "",
         date: val("obsDate"),
@@ -203,7 +202,7 @@ function bindDraftExport() {
         reason: val("obsReason"),
         impact: val("obsImpact"),
         recommendations: val("obsRecommendations"),
-      }, "ملاحظة-مسودة.pdf");
+      }, "ملاحظة-" + refLabel + ".pdf");
     } catch (e) {
       alert(e.message || "تعذّر تصدير المستند");
     }

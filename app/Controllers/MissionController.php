@@ -33,6 +33,7 @@ class MissionController extends BaseController
             'mainDepts'      => $mainDepts,
             'subDepts'       => $subDepts,
             'selectedDeptId' => $selectedDeptId,
+            'slaSections'    => $this->slaSectionsSnapshot(),
             'years'          => ['2024', '2025', '2026', '2027'],
         ]);
     }

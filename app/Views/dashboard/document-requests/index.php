@@ -30,21 +30,20 @@ $locked = !$selectedMissionId;
           <i data-lucide="folder-check"></i>
           <div><h2>قائمة المستندات المطلوبة</h2></div>
         </div>
+        <?php if ($canAdd): ?>
+        <details class="wiz-add-doc-details" id="drAddDetails" style="position:relative;">
+          <summary class="wiz-add-doc-btn" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);width:fit-content;list-style:none;cursor:pointer;"><i data-lucide="plus"></i> إضافة مستند</summary>
+          <form method="post" action="<?= base_url('dashboard/document-requests/api/add') ?>" id="drAddForm" style="position:absolute;left:0;top:100%;margin-top:8px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.08);z-index:20;min-width:280px;">
+            <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+            <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
+            <div style="display:flex;gap:8px;">
+              <input type="text" name="doc_name" class="wiz-doc-name-input" placeholder="أدخل اسم المستند الجديد..." style="flex:1;">
+              <button type="submit" class="wiz-doc-del-btn" style="color:var(--p);" title="حفظ"><i data-lucide="check"></i></button>
+            </div>
+          </form>
+        </details>
+        <?php endif; ?>
       </div>
-
-      <?php if ($canAdd): ?>
-      <details class="wiz-add-doc-details" id="drAddDetails" style="padding:12px 20px 0;">
-        <summary class="wiz-add-doc-btn" style="background:rgba(255,255,255,.2);color:var(--p);border:1px solid var(--pb);width:fit-content;list-style:none;cursor:pointer;"><i data-lucide="plus"></i> إضافة مستند</summary>
-        <form method="post" action="<?= base_url('dashboard/document-requests/api/add') ?>" id="drAddForm" style="padding-top:10px;">
-          <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-          <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
-          <div style="display:flex;gap:8px;">
-            <input type="text" name="doc_name" class="wiz-doc-name-input" placeholder="أدخل اسم المستند الجديد..." style="flex:1;">
-            <button type="submit" class="wiz-doc-del-btn" style="color:var(--p);" title="حفظ"><i data-lucide="check"></i></button>
-          </div>
-        </form>
-      </details>
-      <?php endif; ?>
 
       <?php if ($canSubmit && !empty($requests)): ?>
       <form method="post" action="<?= base_url('dashboard/document-requests/api/submit') ?>" enctype="multipart/form-data" id="drSubmitForm">

@@ -38,7 +38,7 @@ if ($meeting && ($meeting['status'] ?? '') === 'scheduled') {
         <div><h2>جدولة اجتماع</h2></div>
       </div>
 
-      <div class="mc-chat-body" id="mcChatBody">
+      <div class="mc-chat-body" id="mcChatBody" data-mission-id="<?= (int) $selectedMissionId ?>" data-my-user-id="<?= (int) $myUserId ?>">
         <?php if (empty($messages)): ?>
           <p class="mc-empty">لا توجد رسائل بعد — ابدأ المحادثة لتحديد موعد الاجتماع</p>
         <?php else: ?>
@@ -112,22 +112,22 @@ if ($meeting && ($meeting['status'] ?? '') === 'scheduled') {
       </div>
 
       <div class="mc-compose">
-        <details id="mcProposeDetails" class="mc-propose-details">
-          <summary class="mc-propose-btn" title="اقترح موعد" style="list-style:none;cursor:pointer;display:inline-flex;"><i data-lucide="calendar-plus"></i> اقترح موعدًا</summary>
-          <form method="post" action="<?= base_url('dashboard/meeting-schedule/api/propose') ?>" class="mc-propose-form">
-            <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-            <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
-            <div class="mc-propose-row">
-              <input name="date" type="date" class="wiz-input plain">
-              <input name="time" type="time" class="wiz-input plain">
-            </div>
-            <input name="location" type="text" class="wiz-input plain" placeholder="مكان الاجتماع (اختياري)">
-            <div class="mc-propose-actions">
-              <button type="submit" class="mc-propose-submit"><i data-lucide="send"></i> اقترح هذا الموعد</button>
-            </div>
-          </form>
-        </details>
         <div class="mc-compose-row">
+          <details id="mcProposeDetails" class="mc-propose-details">
+            <summary class="mc-propose-btn" title="اقترح موعد"><i data-lucide="calendar-plus"></i></summary>
+            <form method="post" action="<?= base_url('dashboard/meeting-schedule/api/propose') ?>" class="mc-propose-form">
+              <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+              <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
+              <div class="mc-propose-row">
+                <input name="date" type="date" class="wiz-input plain">
+                <input name="time" type="time" class="wiz-input plain">
+              </div>
+              <input name="location" type="text" class="wiz-input plain" placeholder="مكان الاجتماع (اختياري)">
+              <div class="mc-propose-actions">
+                <button type="submit" class="mc-propose-submit"><i data-lucide="send"></i> اقترح هذا الموعد</button>
+              </div>
+            </form>
+          </details>
           <form method="post" action="<?= base_url('dashboard/meeting-schedule/api/send') ?>" style="display:flex;flex:1;gap:8px;">
             <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
             <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">

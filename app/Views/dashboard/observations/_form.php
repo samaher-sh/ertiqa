@@ -34,12 +34,15 @@ $errorMsg = session()->getFlashdata('error');
       <a class="obs-form-back" href="<?= esc($backUrl) ?>"><i data-lucide="chevron-right"></i></a>
       <h3 class="obs-form-title"><?= $isEdit ? 'تعديل الملاحظة' : 'إضافة ملاحظة جديدة' ?></h3>
     </div>
+    <div style="display:flex;gap:8px;">
+      <button type="submit" form="obsForm" class="obs-form-save"><i data-lucide="check"></i> حفظ واعتماد</button>
+    </div>
   </div>
 
   <div class="obs-form-body">
     <?php if ($errorMsg): ?><div class="obs-alert obs-alert-error"><?= esc($errorMsg) ?></div><?php endif; ?>
 
-    <form method="post" action="<?= base_url('dashboard/observations/api/save') ?>">
+    <form method="post" action="<?= base_url('dashboard/observations/api/save') ?>" id="obsForm" data-ref-code="<?= esc($observation['ref_code'] ?? '') ?>" data-mission-code="<?= esc($mission['mission_code'] ?? '') ?>">
       <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
       <?php if ($isEdit): ?><input type="hidden" name="id" value="<?= (int) $observation['id'] ?>"><?php endif; ?>
       <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
@@ -101,12 +104,6 @@ $errorMsg = session()->getFlashdata('error');
         </div>
       </div>
 
-      <div class="obs-divider"></div>
-
-      <div style="display:flex;justify-content:flex-end;gap:10px;">
-        <a class="wiz-btn wiz-btn-outline" style="text-decoration:none;" href="<?= esc($backUrl) ?>">إلغاء</a>
-        <button type="submit" class="wiz-btn wiz-btn-primary"><i data-lucide="check"></i> حفظ واعتماد</button>
-      </div>
     </form>
   </div>
 </div>

@@ -19,41 +19,42 @@
       </div>
       <span class="fr-count-badge"><?= count($reports) ?> تقرير</span>
       <div class="fr-header-actions">
+        <details class="wiz-add-doc-details" style="margin:0;position:relative;">
+          <summary class="fr-filters-icon-btn" style="list-style:none;cursor:pointer;" title="الفلاتر"><i data-lucide="filter"></i></summary>
+          <form method="get" action="<?= base_url('dashboard/reports') ?>" class="fr-filters-body" style="display:flex;gap:10px;flex-wrap:wrap;position:absolute;left:0;top:100%;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.08);z-index:20;min-width:220px;">
+            <select name="year" class="wiz-select<?= $yearFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
+              <option value="">جميع السنوات</option>
+              <?php $curYear = (int) date('Y'); for ($y = $curYear; $y <= max(2030, $curYear + 3); $y++): ?>
+                <option value="<?= $y ?>" <?= $yearFilter === (string) $y ? 'selected' : '' ?>><?= $y ?></option>
+              <?php endfor; ?>
+            </select>
+            <?php if (!$canCreate): ?>
+            <select name="status" class="wiz-select<?= $statusFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
+              <option value="">كل الحالات</option>
+              <option value="draft" <?= $statusFilter === 'draft' ? 'selected' : '' ?>>تحت الإعداد</option>
+              <option value="pending_signatures" <?= $statusFilter === 'pending_signatures' ? 'selected' : '' ?>>تحت المراجعة</option>
+              <option value="sent" <?= $statusFilter === 'sent' ? 'selected' : '' ?>>معتمد</option>
+            </select>
+            <?php endif; ?>
+            <noscript><button type="submit" class="wiz-btn wiz-btn-outline">تصفية</button></noscript>
+          </form>
+        </details>
+        <?php if ($canCreate): ?>
+          <details class="wiz-add-doc-details" style="margin:0;position:relative;">
+            <summary class="fr-create-btn" style="list-style:none;cursor:pointer;"><i data-lucide="plus"></i> إنشاء تقرير</summary>
+            <div style="position:absolute;left:0;top:100%;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.08);z-index:20;min-width:280px;">
+              <?= view('dashboard/observations/_linked_task_selector', [
+                  'missions'          => $missions,
+                  'selectedMissionId' => '',
+                  'formAction'        => base_url('dashboard/reports'),
+              ]) ?>
+            </div>
+          </details>
+        <?php endif; ?>
         <?php if ($isReadOnlyViewer): ?><span class="fr-readonly-badge"><i data-lucide="lock" style="width:9px;height:9px;"></i> عرض فقط</span><?php endif; ?>
       </div>
     </div>
   </div>
-
-  <form method="get" action="<?= base_url('dashboard/reports') ?>" style="display:flex;gap:10px;flex-wrap:wrap;">
-    <select name="year" class="wiz-select<?= $yearFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
-      <option value="">جميع السنوات</option>
-      <?php $curYear = (int) date('Y'); for ($y = $curYear; $y <= max(2030, $curYear + 3); $y++): ?>
-        <option value="<?= $y ?>" <?= $yearFilter === (string) $y ? 'selected' : '' ?>><?= $y ?></option>
-      <?php endfor; ?>
-    </select>
-    <?php if (!$canCreate): ?>
-    <select name="status" class="wiz-select<?= $statusFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
-      <option value="">كل الحالات</option>
-      <option value="draft" <?= $statusFilter === 'draft' ? 'selected' : '' ?>>تحت الإعداد</option>
-      <option value="pending_signatures" <?= $statusFilter === 'pending_signatures' ? 'selected' : '' ?>>تحت المراجعة</option>
-      <option value="sent" <?= $statusFilter === 'sent' ? 'selected' : '' ?>>معتمد</option>
-    </select>
-    <?php endif; ?>
-    <noscript><button type="submit" class="wiz-btn wiz-btn-outline">تصفية</button></noscript>
-  </form>
-
-  <?php if ($canCreate): ?>
-  <details class="wiz-add-doc-details">
-    <summary class="obs-btn-add" style="width:fit-content;list-style:none;cursor:pointer;"><i data-lucide="plus"></i> إنشاء / متابعة تقرير</summary>
-    <div style="padding-top:10px;">
-      <?= view('dashboard/observations/_linked_task_selector', [
-          'missions'          => $missions,
-          'selectedMissionId' => '',
-          'formAction'        => base_url('dashboard/reports'),
-      ]) ?>
-    </div>
-  </details>
-  <?php endif; ?>
 
   <div class="fr-table-card">
     <table class="fr-table">

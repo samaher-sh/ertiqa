@@ -15,10 +15,13 @@
 <div class="app-shell">
   <div class="mobile-overlay" id="mobileOverlay"></div>
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo-row" id="sidebarLogoRow"><?php if (isset($navItems)): ?><div class="logo-info"><div class="logo-box"><img src="<?= base_url('assets/images/kamc.png') ?>" alt="KAMC"></div><div class="logo-title"><p class="t1">ارتقاء</p><p class="t2">مدينة الملك عبدالله الطبية</p></div></div><?php endif; ?></div>
-    <nav class="sidebar-nav" id="sidebarNav"><?php if (isset($navItems)): ?><?php foreach ($navItems as $item): ?><?php $isMigrated = in_array($item['key'], $migratedKeys ?? [], true); ?><a class="nav-item<?= (($activeNavKey ?? '') === $item['key']) ? ' active' : '' ?>" href="<?= esc($isMigrated ? $item['url'] : base_url('dashboard')) ?>"><div class="nav-icon-box"><i data-lucide="<?= esc($item['icon']) ?>"></i></div><div class="nav-text"><span class="nav-label"><?= esc($item['label']) ?></span></div></a><?php endforeach; ?><?php endif; ?></nav>
+    <div class="sidebar-logo-row" id="sidebarLogoRow"><?php if (isset($navItems)): ?><div class="logo-info"><div class="logo-box"><img src="<?= base_url('assets/images/kamc.png') ?>" alt="KAMC"></div><div class="logo-title"><p class="t1">ارتقاء</p><p class="t2">مدينة الملك عبدالله الطبية</p></div></div><button class="sidebar-toggle-btn" id="toggleNavBtn" title="طي القائمة"><i data-lucide="panel-left-close"></i></button><button class="sidebar-toggle-collapsed" id="toggleNavBtnCollapsed" title="فتح القائمة"><img src="<?= base_url('assets/images/kamc.png') ?>" alt="KAMC"></button><?php endif; ?></div>
+    <nav class="sidebar-nav" id="sidebarNav"><?php if (isset($navItems)): ?><?php foreach ($navItems as $item): ?><?php $isMigrated = in_array($item['key'], $migratedKeys ?? [], true); ?><a class="nav-item<?= (($activeNavKey ?? '') === $item['key']) ? ' active' : '' ?>" href="<?= esc($isMigrated ? $item['url'] : base_url('dashboard')) ?>"><div class="nav-icon-box"><i data-lucide="<?= esc($item['icon']) ?>"></i></div><div class="nav-text"><span class="nav-label"><?= esc($item['label']) ?></span></div><span class="nav-tooltip"><?= esc($item['label']) ?></span></a><?php endforeach; ?><?php endif; ?></nav>
     <div class="sidebar-bottom" id="sidebarBottom"><?php if (isset($navItems)): ?><a class="sidebar-logout-btn" id="sidebarLogoutBtn" href="<?= base_url('auth/logout') ?>" title="تسجيل الخروج"><i data-lucide="log-out"></i><span>تسجيل الخروج</span></a><?php endif; ?></div>
   </aside>
+  <script>
+    try { if (localStorage.getItem('sidebarCollapsed') === '1') document.getElementById('sidebar').classList.add('collapsed'); } catch (e) {}
+  </script>
   <div class="main-col">
     <header class="topbar">
       <button class="mobile-menu-btn" id="mobileMenuBtn"><i data-lucide="menu"></i></button>
