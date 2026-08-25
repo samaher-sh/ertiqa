@@ -248,6 +248,29 @@ class PdfController extends BaseController
         $this->streamPdf($mpdf, $html, 'ملاحظة-' . ($data['ref'] ?: 'رقابية') . '.pdf');
     }
 
+    /**
+     * POST /dashboard/pdf/observations-list-preview — تصدير كل ملاحظات مهمة
+     * معيّنة دفعة وحدة من صفحة الملاحظات (زر "تصدير PDF" العلوي بالقائمة) --
+     * كل ملاحظة بتفاصيلها الكاملة (نفس حقول observation-preview)، بنفس نمط
+     * قسم "6. الملاحظات" بالتقرير النهائي بالضبط، بدل جدول ملخّص بأعمدة قليلة
+     * فقط زي الجدول المعروض على الشاشة
+     */
+    public function observationsListPreview()
+    {
+        $data = $this->request->getJSON(true) ?? [];
+        $missionCode = (string) ($data['mission_code'] ?? '');
+
+        $html = view('pdf/observations-list', [
+            'missionCode'  => $missionCode,
+            'observations' => (array) ($data['observations'] ?? []),
+        ]);
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'الملاحظات', $missionCode, '');
+        $this->applyRunningFooter($mpdf, $missionCode);
+        $this->streamPdf($mpdf, $html, 'ملاحظات-' . ($missionCode ?: 'رقابية') . '.pdf');
+    }
+
     public function riskMatrix(int $missionId)
     {
         $missionModel = new MissionModel();

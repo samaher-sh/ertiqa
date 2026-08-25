@@ -28,6 +28,7 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('pdf/wizard-letter-preview',      'PdfController::wizardLetterPreview');
     $routes->post('pdf/service-agreement-preview',  'PdfController::serviceAgreementPreview');
     $routes->post('pdf/observation-preview',        'PdfController::observationPreview');
+    $routes->post('pdf/observations-list-preview',  'PdfController::observationsListPreview');
     $routes->get('meetings/api/data',           'MeetingSummaryController::data');
     $routes->post('meetings/api/save',          'MeetingSummaryController::save');
     $routes->post('meetings/api/upload',        'DocumentController::uploadMeetingAttachment');
