@@ -110,7 +110,7 @@ abstract class BaseController extends Controller
      */
     protected function migratedPageKeys(): array
     {
-        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask'];
+        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'home'];
     }
 
     /**

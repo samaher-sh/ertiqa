@@ -23,18 +23,50 @@ class DashboardController extends BaseController
     ];
 
     /**
-     * GET /dashboard — يعرض هيكل لوحة التحكم (SPA shell)
-     * بيانات البروفايل والقائمة الجانبية تُجلب من /api/session و /api/nav-items
+     * GET /dashboard — الصفحة الرئيسية الحقيقية (Server-Rendered). آخر صفحة تُحوَّل
+     * بالمشروع -- بعدها ما عاد فيه أي مسار يخدّم dashboard/shell.php، فتصير كل
+     * ملفات جافاسكربت SPA القديمة (dashboard.js وبقية *.js) كود ميت فعليًا (لا
+     * يُحمَّل من أي صفحة حقيقية بعد اليوم). لم تُحذف هذي الملفات بهذا الكومِت --
+     * قرار حذفها منفصل ومقصود لاحقًا، مو تبعية لتحويل الصفحة الرئيسية.
      */
     public function index()
     {
-        return view('dashboard/shell');
+        $session = session();
+        $roleCode = $session->get('role_code');
+        $isHrDept = in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
+        $isAuditHead = $roleCode === 'audit_head';
+        $isAuditMember = $roleCode === 'audit_member';
+
+        $stats = $this->homeStatsData();
+        $missions = $isHrDept ? $this->targetMissionsData() : $this->activeMissionsData();
+        $meetings = $this->scheduledMeetingsData();
+
+        return view('dashboard/home/index', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'home',
+            'currentUser'  => $this->sessionUserSummary(),
+            'stats'          => $stats,
+            'missions'       => $missions,
+            'meetings'       => $meetings,
+            'notifications'  => $stats['notifications'] ?? [],
+            'isHrDept'       => $isHrDept,
+            'isAuditHead'    => $isAuditHead,
+            'isAuditMember'  => $isAuditMember,
+            'showNotifications' => $isHrDept || $isAuditMember || $isAuditHead,
+            'panel'          => (string) ($this->request->getGet('panel') ?: ''),
+        ]);
     }
 
     /**
      * GET /dashboard/api/home-stats — إحصائيات الصفحة الرئيسية (JSON)
      */
     public function homeStats()
+    {
+        return $this->response->setJSON($this->homeStatsData());
+    }
+
+    private function homeStatsData(): array
     {
         $userId   = (int) session()->get('user_id');
         $roleCode = session()->get('role_code');
@@ -144,7 +176,7 @@ class DashboardController extends BaseController
         usort($notifications, fn($a, $b) => strcmp($b['updated_at'], $a['updated_at']));
         $data['notifications'] = array_map(fn($n) => array_diff_key($n, ['updated_at' => '']), $notifications);
 
-        return $this->response->setJSON($data);
+        return $data;
     }
 
     /**
@@ -153,23 +185,29 @@ class DashboardController extends BaseController
      */
     public function targetMissions()
     {
-        $departmentId = session()->get('department_id');
+        return $this->response->setJSON(['success' => true, 'missions' => $this->targetMissionsData()]);
+    }
 
+    private function targetMissionsData(): array
+    {
+        $departmentId = session()->get('department_id');
         if (!$departmentId) {
-            return $this->response->setJSON(['success' => true, 'missions' => []]);
+            return [];
         }
 
         $missionModel = new MissionModel();
-        return $this->response->setJSON([
-            'success'  => true,
-            'missions' => $this->withRealStage($missionModel, $missionModel->missionsForTargetDepartment((int) $departmentId)),
-        ]);
+        return $this->withRealStage($missionModel, $missionModel->missionsForTargetDepartment((int) $departmentId));
     }
 
     /**
      * GET /dashboard/api/active-missions — قائمة المهام النشطة (JSON)
      */
     public function activeMissions()
+    {
+        return $this->response->setJSON(['missions' => $this->activeMissionsData()]);
+    }
+
+    private function activeMissionsData(): array
     {
         $missionModel = new MissionModel();
 
@@ -181,9 +219,7 @@ class DashboardController extends BaseController
             $missions = $missionModel->activeMissionsForUser($userId);
         }
 
-        return $this->response->setJSON([
-            'missions' => $this->withRealStage($missionModel, $missions),
-        ]);
+        return $this->withRealStage($missionModel, $missions);
     }
 
     /**
@@ -205,6 +241,11 @@ class DashboardController extends BaseController
      */
     public function scheduledMeetings()
     {
+        return $this->response->setJSON(['meetings' => $this->scheduledMeetingsData()]);
+    }
+
+    private function scheduledMeetingsData(): array
+    {
         $userId   = (int) session()->get('user_id');
         $roleCode = session()->get('role_code');
         $isHrDept = in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
@@ -218,11 +259,8 @@ class DashboardController extends BaseController
             $departmentId = (int) session()->get('department_id');
             $missionModel = new MissionModel();
             $missionIds   = $departmentId ? array_column($missionModel->missionsForTargetDepartment($departmentId), 'id') : [];
-            $meetings     = $meetingModel->scheduledMeetingsForMissions($missionIds);
-        } else {
-            $meetings = $meetingModel->scheduledMeetingsForUser($userId);
+            return $meetingModel->scheduledMeetingsForMissions($missionIds);
         }
-
-        return $this->response->setJSON(['meetings' => $meetings]);
+        return $meetingModel->scheduledMeetingsForUser($userId);
     }
 }

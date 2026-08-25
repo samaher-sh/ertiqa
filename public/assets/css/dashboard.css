@@ -336,6 +336,9 @@ img{ max-width:100%; }
 
 /* Home top notification banner */
 .home-banner{ border-radius:16px; overflow:hidden; background:#fff; box-shadow:0 4px 20px rgba(13,132,181,.08); border:1px solid #d8e6eb; margin-bottom:16px; }
+details.home-banner > summary{ list-style:none; }
+details.home-banner > summary::-webkit-details-marker{ display:none; }
+details.home-banner[open] .notif-trigger-chevron{ transform:rotate(180deg); }
 .home-banner-head{ display:flex; align-items:center; gap:12px; padding:16px 24px; background:var(--p); }.home-banner-head i, .home-banner-head svg{ width:18px; height:18px; color:rgba(255,255,255,.85); flex-shrink:0; }
 .home-banner-head-icon{ width:16px; height:16px; color:rgba(255,255,255,.8); flex-shrink:0; }
 .home-banner-head-text{ flex:1; min-width:0; }

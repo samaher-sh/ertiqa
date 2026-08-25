@@ -11,7 +11,7 @@
 <?php
 $isHrUser = in_array(session()->get('role_code'), ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
 $stageInfo = [
-    2 => ['label' => 'استكمال الاتفاقية والمستندات', 'forRole' => 'target', 'url' => null],
+    2 => ['label' => 'استكمال الاتفاقية والمستندات', 'forRole' => 'target', 'url' => base_url('dashboard/target-mission')],
     3 => ['label' => 'مصفوفة المخاطر',              'forRole' => 'audit',  'url' => base_url('dashboard/risk-matrix')],
     4 => ['label' => 'ملخص الاجتماع',                'forRole' => 'audit',  'url' => base_url('dashboard/meetings')],
     5 => ['label' => 'الملاحظات',                    'forRole' => 'audit',  'url' => base_url('dashboard/observations')],

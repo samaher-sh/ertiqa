@@ -8,10 +8,11 @@ use App\Models\MissionModel;
 class SentTasksController extends BaseController
 {
     /* نفس ST_STAGE_TO_PAGE بـ senttasks.js بالضبط -- key = رابط الصفحة الحقيقية
-       المطابقة (كلها صفحات MVC حقيقية الآن ما عدا missionReview)، forRole يحدد
-       مين عليه الدور الحالي: "target" = الإدارة الخاضعة، "audit" = عضو المراجعة */
+       المطابقة (كلها صفحات MVC حقيقية الآن، بما فيها استكمال الاتفاقية والمستندات
+       عبر MissionReviewController)، forRole يحدد مين عليه الدور الحالي:
+       "target" = الإدارة الخاضعة، "audit" = عضو المراجعة */
     private const STAGE_TO_PAGE = [
-        2 => ['label' => 'استكمال الاتفاقية والمستندات', 'forRole' => 'target', 'url' => null],
+        2 => ['label' => 'استكمال الاتفاقية والمستندات', 'forRole' => 'target', 'url' => 'dashboard/target-mission'],
         3 => ['label' => 'مصفوفة المخاطر',              'forRole' => 'audit',  'url' => 'dashboard/risk-matrix'],
         4 => ['label' => 'ملخص الاجتماع',                'forRole' => 'audit',  'url' => 'dashboard/meetings'],
         5 => ['label' => 'الملاحظات',                    'forRole' => 'audit',  'url' => 'dashboard/observations'],

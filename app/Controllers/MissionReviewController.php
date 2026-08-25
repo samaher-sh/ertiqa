@@ -58,6 +58,54 @@ class MissionReviewController extends BaseController
         return ($isAuditSide || $isTargetSide) ? $mission : null;
     }
 
+    private function isJsonRequest(): bool
+    {
+        return str_contains((string) $this->request->getHeaderLine('Content-Type'), 'application/json');
+    }
+
+    /** GET /dashboard/target-mission — صفحة "استكمال الاتفاقية والمستندات" الحقيقية
+     *  (Server-Rendered). خطوة "قائمة المستندات" أصبحت رابطًا مباشرًا لصفحة قائمة
+     *  المستندات المستقلة (DocumentRequestController) بدل تكرارها هنا -- تلك الصفحة
+     *  صارت تدعم رد الإدارة المستهدفة فعليًا (راجع canSubmit هناك) */
+    public function index()
+    {
+        $missions = $this->missionsForCurrentSession();
+        $requestedId = (int) ($this->request->getGet('mission_id') ?: 0);
+        $missionId = $requestedId ?: (int) ($missions[0]['id'] ?? 0);
+
+        $mission = null;
+        $agreement = null;
+        $rowsBySection = [];
+        $canEdit = false;
+
+        if ($missionId) {
+            $mission = $this->missionForParty($missionId);
+            if (!$mission) {
+                throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
+            }
+            $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
+            $rows = $agreement ? (new ServiceAgreementResponseModel())->forMission($missionId) : [];
+            foreach ($rows as $r) {
+                $rowsBySection[$r['section_title']][] = $r;
+            }
+            $departmentId = (int) session()->get('department_id');
+            $canEdit = (bool) ($departmentId && (int) $mission['target_department_id'] === $departmentId);
+        }
+
+        return view('dashboard/mission-review/index', [
+            'navItems'     => $this->navItemsForCurrentSession(),
+            'migratedKeys' => $this->migratedPageKeys(),
+            'activeNavKey' => 'sentTasks',
+            'currentUser'  => $this->sessionUserSummary(),
+            'missions'          => $missions,
+            'selectedMissionId' => $missionId,
+            'mission'           => $mission,
+            'agreement'         => $agreement,
+            'rowsBySection'     => $rowsBySection,
+            'canEdit'           => $canEdit,
+        ]);
+    }
+
     /** GET /dashboard/target-mission/api/data?mission_id=X — قراءة متاحة لطرفي المهمة، الكتابة (saveAgreement) للإدارة المستهدفة فقط */
     public function data()
     {
@@ -78,20 +126,51 @@ class MissionReviewController extends BaseController
         ]);
     }
 
+    /** يحوّل حقول نموذج HTML عادي (rows[id][answer], rows[id][note], ...) لنفس
+     *  بنية $data المتوقَّعة من الفرع JSON الأصلي (rows: [{id, agree, disagree, note}]) */
+    private function formPostToSaveData(): array
+    {
+        $post = $this->request->getPost();
+        $rows = [];
+        foreach (($post['rows'] ?? []) as $id => $r) {
+            $answer = $r['answer'] ?? '';
+            $rows[] = [
+                'id'       => $id,
+                'agree'    => $answer === 'agree' ? 1 : 0,
+                'disagree' => $answer === 'disagree' ? 1 : 0,
+                'note'     => $r['note'] ?? '',
+            ];
+        }
+        return [
+            'mission_id'        => $post['mission_id'] ?? null,
+            'coordinator_name'  => $post['coordinator_name'] ?? '',
+            'coordinator_email' => $post['coordinator_email'] ?? '',
+            'coordinator_phone' => $post['coordinator_phone'] ?? '',
+            'rows'              => $rows,
+        ];
+    }
+
     /** POST /dashboard/target-mission/api/save-agreement — يحفظ ردود بنود الاتفاقية + بيانات المنسّق دفعة وحدة */
     public function saveAgreement()
     {
-        $data = $this->request->getJSON(true);
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->formPostToSaveData();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $mission = $missionId ? $this->missionForTargetUser($missionId) : null;
         if (!$mission) {
-            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه المهمة.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية الوصول لهذه المهمة.');
         }
 
         $agreementModel = new ServiceAgreementModel();
         $agreement = $agreementModel->where('mission_id', $missionId)->first();
         if (!$agreement) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا توجد اتفاقية مستوى خدمة لهذه المهمة.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لا توجد اتفاقية مستوى خدمة لهذه المهمة.']);
+            }
+            return redirect()->to(base_url('dashboard/target-mission?mission_id=' . $missionId))->with('error', 'لا توجد اتفاقية مستوى خدمة لهذه المهمة.');
         }
 
         // نبني ردود الطلب بمصفوفة id => row أول شي، ونتحقق قبل أي حفظ إن كل بند
@@ -119,10 +198,13 @@ class MissionReviewController extends BaseController
             return !$row || (empty($row['agree']) && empty($row['disagree']));
         });
         if (!empty($unanswered)) {
-            return $this->response->setStatusCode(422)->setJSON([
-                'success' => false,
-                'message' => 'يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.',
-            ]);
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.',
+                ]);
+            }
+            return redirect()->to(base_url('dashboard/target-mission?mission_id=' . $missionId))->withInput()->with('error', 'يرجى الرد (موافق أو غير موافق) على كل بند بالاتفاقية قبل الإرسال.');
         }
 
         $userId = (int) session()->get('user_id');
@@ -165,11 +247,17 @@ class MissionReviewController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'حدث خطأ أثناء حفظ الاتفاقية. حاول مرة أخرى.']);
+            if ($isJson) {
+                return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'حدث خطأ أثناء حفظ الاتفاقية. حاول مرة أخرى.']);
+            }
+            return redirect()->to(base_url('dashboard/target-mission?mission_id=' . $missionId))->with('error', 'حدث خطأ أثناء حفظ الاتفاقية. حاول مرة أخرى.');
         }
 
         (new MissionModel())->syncCurrentStage($missionId);
 
-        return $this->response->setJSON(['success' => true]);
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/target-mission?mission_id=' . $missionId))->with('success', 'تم حفظ اتفاقية مستوى الخدمة بنجاح.');
     }
 }
