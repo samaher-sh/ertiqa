@@ -75,54 +75,32 @@ async function apiPostFile(path, formData) {
   return res.json();
 }
 
-/* ============================================================
-   نافذة طباعة "بنفس شكل النموذج الحقيقي بالضبط" -- تُستخدم لتصدير المستندات
-   اللي عندها معاينة مصمَّمة جاهزة على الشاشة (نموذج الخطاب الرسمي بالمعالج،
-   بطاقة عرض الملاحظة) بدل إعادة بناء تصميم مبسّط يختلف شكله عن الأصل: تربط
-   ملفات CSS الحقيقية للتطبيق (بدل تكرارها بنسخة مصغّرة) وتحقن HTML العنصر
-   المعروض فعليًا على الشاشة (outerHTML) كما هو -- فيطلع المستند المُصدَّر
-   نسخة طبق الأصل من النموذج اللي يشوفه المستخدم، بنفس الخط (Cairo) ونفس
-   الألوان والتنسيق تمامًا، بدل نسخة "شبيهة" بألوان مقاربة فقط
-   ============================================================ */
-function printDocumentHTML({ title, cssFiles, bodyHtml, missionCode, maxWidth }) {
-  const cssLinks = (cssFiles || []).map(f => `<link rel="stylesheet" href="${base}/assets/css/${f}">`).join("\n");
-  const mw = maxWidth || 820;
-  return `
-    <html dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <title>${escapeHtml(title || "مستند")}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-        <script src="https://unpkg.com/lucide@latest"></script>
-        ${cssLinks}
-        <style>
-          body{ background:#eef4f7; padding:32px 16px; display:flex; justify-content:center; }
-          .print-doc-wrap{ width:100%; max-width:${mw}px; }
-          .wiz-paper{ min-height:auto !important; }
-          .obs-form-back, #obsViewEditBtn{ display:none !important; }
-          .fr-print-section-title{ font-size:16px; font-weight:800; color:#196b7f; border-bottom:2px solid #3185b3; padding-bottom:8px; margin:0 0 16px; }
-          .fr-print-section + .fr-print-section{ margin-top:32px; }
-          .print-doc-footer{ margin:16px auto 0; max-width:${mw}px; padding-top:8px; border-top:1px solid #d8e6eb; font-size:9px; color:#9ca3af; text-align:center; }
-          @media print {
-            body{ background:#fff; padding:0; display:block; }
-            .print-doc-wrap{ max-width:none; }
-            .wiz-paper, .obs-form-card{ border:none !important; box-shadow:none !important; border-radius:0 !important; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="print-doc-wrap">${bodyHtml}</div>
-        <div class="print-doc-footer">مستند صادر من نظام ارتقاء — إدارة المراجعة الداخلية${missionCode ? "، سرّي وخاص بالمهمة " + escapeHtml(missionCode) : ""}</div>
-        <script>
-          window.onload = () => {
-            // تحويل أي أيقونات data-lucide متبقية (مثلاً ببطاقات مُعاد بناؤها من
-            // الحالة بدل استنساخ DOM جاهز أصلاً محوَّل) قبل الطباعة -- لا تأثير
-            // لها لو ما فيه عناصر data-lucide أصلاً
-            try { window.lucide && window.lucide.createIcons(); } catch (e) {}
-            window.print();
-            setTimeout(() => window.close(), 500);
-          }
-        </script>
-      </body>
-    </html>`;
+/**
+ * طلب POST يرجّع ملف PDF حقيقي (مولَّد من السيرفر بـ mPDF) ويبدأ تحميله مباشرة
+ * -- نفس تجربة تصدير مصفوفة المخاطر/ملخص الاجتماع بالضبط (ملف واحد ينزّل
+ * فورًا بلا نافذة طباعة/حوار "حفظ كـ PDF" وسيط)، تستخدمها المستندات اللي ما
+ * عندها mission_id محفوظ بعد (خطاب/اتفاقية المعالج، ملاحظة قيد التعبئة) فما
+ * تقدر تعتمد رابط GET بمعرّف زي باقي مستندات PdfController
+ */
+async function postForPdfDownload(path, body, filename) {
+  const csrf = getCsrfMeta();
+  const payload = { ...(body || {}) };
+  if (csrf.name && csrf.value) payload[csrf.name] = csrf.value;
+
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("تعذّر إنشاء ملف PDF (خطأ " + res.status + ")");
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename || "مستند.pdf";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

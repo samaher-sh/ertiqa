@@ -89,33 +89,24 @@ async function obsLoadList(missionId) {
   obsLoading = false;
 }
 
-/* تصدير PDF لملاحظة واحدة بعينها عبر نافذة طباعة (لا يوجد endpoint حقيقي بالباك-إند
-   لتوليد PDF مباشرة، فنستخدم نافذة طباعة كما بباقي الصفحات) — يستخدم بيانات نفس
-   الملاحظة المفتوحة بالنموذج فقط، وليس قائمة الملاحظات كاملة.
-   يبني المستند بنفس تصميم بطاقة "عرض الملاحظة" الحقيقية (renderObsViewBody())
-   بدل جدول مبسّط منفصل التصميم، عشان يطلع نفس الشكل اللي يشوفه المستخدم فعليًا
-   بالضبط (نفس الألوان/الشارات/التخطيط) -- نبدّل obsViewTarget مؤقتًا فقط لبناء
-   الـ HTML، بدون أي تأثير على الصفحة الحية (bindObsViewEvents/rerender ما تُستدعى) */
-function exportObservationToPDF(obs) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) { showToast("يرجى السماح بالنوافذ المنبثقة للتصدير", "error"); return; }
-
+/* تصدير PDF لملاحظة واحدة بعينها -- يستخدم بيانات نفس الملاحظة المفتوحة
+   بالنموذج فقط، وليس قائمة الملاحظات كاملة. نفس آلية تصدير مصفوفة
+   المخاطر/ملخص الاجتماع بالضبط (ملف PDF حقيقي من mPDF ينزّل مباشرة) --
+   POST بدل GET بمعرّف لأنها تشتغل حتى للملاحظة قيد الإنشاء (لسا ما اتحفظت) */
+async function exportObservationToPDF(obs) {
   const refLabel = obs.ref || "سيُحدَّد بعد الحفظ";
   const linkedMission = missionsForSelector.find(m => String(m.id) === String(obsSelectedTaskId));
   const missionCode = linkedMission ? linkedMission.mission_code : "";
 
-  const savedViewTarget = obsViewTarget;
-  obsViewTarget = obs;
-  const bodyHtml = renderObsViewBody();
-  obsViewTarget = savedViewTarget;
-
-  printWindow.document.write(printDocumentHTML({
-    title: "ملاحظة رقابية - " + refLabel,
-    cssFiles: ["dashboard.css", "observations.css"],
-    bodyHtml,
-    missionCode,
-  }));
-  printWindow.document.close();
+  try {
+    await postForPdfDownload(base + "/dashboard/pdf/observation-preview", {
+      ref: obs.ref, mission_code: missionCode, title: obs.title, dept: obs.dept, date: obs.date,
+      risk: obs.risk, observation: obs.observation, standard: obs.standard, reason: obs.reason,
+      impact: obs.impact, recommendations: obs.recommendations,
+    }, "ملاحظة-" + refLabel + ".pdf");
+  } catch (e) {
+    showToast(e.message || "تعذّر تصدير المستند", "error");
+  }
 }
 
 /* ============================================================
