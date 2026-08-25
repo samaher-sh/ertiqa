@@ -104,11 +104,15 @@
 }
 
 /* ===== صفحة جدولة الاجتماع الحقيقية: <details>/<summary> أصلي لاقتراح موعد ===== */
-.mc-propose-details{ margin-bottom:8px; }
+.mc-propose-details{ position:relative; flex-shrink:0; }
 .mc-propose-details > summary::-webkit-details-marker{ display:none; }
-.mc-propose-details > summary.mc-propose-btn{ width:fit-content; height:auto; border-radius:12px; padding:8px 14px; gap:8px; font-size:12px; font-weight:700; }
+.mc-propose-details > summary.mc-propose-btn{ list-style:none; cursor:pointer; }
 .mc-propose-details[open] > summary.mc-propose-btn{ background:var(--p); color:#fff; }
-.mc-propose-details .mc-propose-form{ padding:12px; border:1px solid var(--pb); border-radius:12px; margin-top:8px; background:#f8fbfd; }
+.mc-propose-details .mc-propose-form{
+  position:absolute; bottom:calc(100% + 10px); right:0; width:280px; z-index:20;
+  padding:12px; border:1px solid var(--pb); border-radius:12px; background:#f8fbfd;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
 .mc-propose-submit{
   display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; border:none;
   background:var(--p); color:#fff; font-size:12px; font-weight:700; cursor:pointer;

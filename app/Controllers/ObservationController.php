@@ -62,12 +62,16 @@ class ObservationController extends BaseController
             $items = (new AuditNoteModel())->forMission($missionId);
         }
 
+        $roleCode = session()->get('role_code');
+
         return view('dashboard/observations/index', $this->pageViewData([
             'missions'          => $missions,
             'selectedMissionId' => $missionId,
             'mission'           => $mission,
             'items'             => $items,
             'readOnly'          => $this->roleFlags()['obsReadOnly'],
+            'isAuditMember'     => $roleCode === 'audit_member',
+            'isAuditHead'       => $roleCode === 'audit_head',
         ]));
     }
 

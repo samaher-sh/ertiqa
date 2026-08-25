@@ -83,6 +83,8 @@ img{ max-width:100%; }
   display:flex;align-items:center;justify-content:center;
 }
 .sidebar-toggle-collapsed img{ width:32px;height:32px;object-fit:cover;object-position:right; border-radius:6px; }
+.sidebar:not(.collapsed) .sidebar-toggle-collapsed{ display:none; }
+.sidebar.collapsed .logo-info, .sidebar.collapsed .sidebar-toggle-btn{ display:none; }
 
 .sidebar-nav{
   flex:1; overflow-y:auto;

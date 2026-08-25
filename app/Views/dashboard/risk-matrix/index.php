@@ -39,7 +39,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
           <?php else: ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
           <?php endif; ?>
-          <?php if ($selectedMissionId && !empty($rows)): ?>
+          <?php if ($selectedMissionId): ?>
             <a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/risk-matrix/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a>
           <?php endif; ?>
         </div>
@@ -59,6 +59,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
               <th>المخاطر</th>
               <th style="width:130px;">تقييم المخاطر</th>
               <th style="width:160px;">نوع النشاط</th>
+              <th>وصف الضوابط</th>
             </tr></thead>
             <tbody>
               <?php foreach ($rows as $i => $row): ?>
@@ -68,6 +69,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
                   <td><span class="obs-title-cell"><?= esc($row['risk'] ?: '—') ?></span></td>
                   <td><?php if ($rc): ?><span class="obs-pill" style="background:<?= $rc['bg'] ?>;color:<?= $rc['text'] ?>;border:1px solid <?= $rc['border'] ?>;"><span class="dot" style="background:<?= $rc['dot'] ?>;"></span><?= esc($row['risk_rating']) ?></span><?php else: ?>—<?php endif; ?></td>
                   <td><span class="obs-date-cell"><?= esc($row['activity_type'] ?: '—') ?></span></td>
+                  <td><span class="obs-date-cell"><?= esc($row['controls'] ?: '—') ?></span></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>

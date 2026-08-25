@@ -36,4 +36,21 @@ function bindMvcChrome() {
       if (!profileWrap.contains(e.target)) profileWrap.classList.remove("open");
     });
   }
+
+  /* طي/فتح السايدبار (وضع الأيقونات فقط) -- الحالة تُحفظ بـ localStorage عشان
+     تبقى ثابتة بين تنقّلات الصفحات الحقيقية (كل تنقّل هنا إعادة تحميل كاملة
+     للصفحة، عكس السايدبار الافتراضي بالـ SPA القديمة اللي كانت تحتفظ بمتغيّر
+     JS واحد طول الجلسة). القيمة الابتدائية تُطبَّق فورًا بسكربت inline
+     بـ layouts/app.php نفسه (راجع تعليقه) عشان ما يصير "ومضة" سايدبار مفتوح
+     قبل ما يتطبّق الطي. */
+  const toggleBtn = document.getElementById("toggleNavBtn");
+  const toggleBtnCollapsed = document.getElementById("toggleNavBtnCollapsed");
+  if (sidebar && (toggleBtn || toggleBtnCollapsed)) {
+    const setCollapsed = (collapsed) => {
+      sidebar.classList.toggle("collapsed", collapsed);
+      try { localStorage.setItem("sidebarCollapsed", collapsed ? "1" : "0"); } catch (e) {}
+    };
+    if (toggleBtn) toggleBtn.addEventListener("click", () => setCollapsed(true));
+    if (toggleBtnCollapsed) toggleBtnCollapsed.addEventListener("click", () => setCollapsed(false));
+  }
 }

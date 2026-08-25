@@ -35,13 +35,13 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
           <?php else: ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
           <?php endif; ?>
-          <?php if ($selectedMissionId && !empty($items)): ?>
+          <?php if ($selectedMissionId): ?>
             <a class="obs-btn-pdf" id="obsExportBtn" href="<?= base_url('dashboard/pdf/observations/' . $selectedMissionId) ?>" style="text-decoration:none;"><i data-lucide="file-text"></i> تصدير PDF</a>
           <?php endif; ?>
         </div>
       </div>
 
-      <div id="obsFiltersMount"></div>
+      <?php if (!$isAuditMember): ?><div id="obsFiltersMount"></div><?php endif; ?>
 
       <?php if (empty($items)): ?>
         <div class="obs-empty" id="obsEmptyState">
@@ -56,7 +56,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
               <th>موضوع الملاحظة</th>
               <th style="width:160px;">الإدارة المعنية</th>
               <th style="width:110px;">التاريخ</th>
-              <th style="width:60px;">الإجراءات</th>
+              <?php if (!$isAuditHead): ?><th style="width:60px;">الإجراءات</th><?php endif; ?>
             </tr></thead>
             <tbody>
               <?php foreach ($items as $i => $obs): ?>
@@ -71,6 +71,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
                   <td><span class="obs-title-cell"><?= esc($obs['title']) ?></span></td>
                   <td><span class="obs-dept-cell"><?= esc($obs['department_name'] ?? '—') ?></span></td>
                   <td><span class="obs-date-cell"><?= esc($obs['observation_date'] ?? '—') ?></span></td>
+                  <?php if (!$isAuditHead): ?>
                   <td class="obs-menu-cell">
                     <details class="obs-menu-native">
                       <summary class="obs-menu-btn"><i data-lucide="more-vertical"></i></summary>
@@ -88,6 +89,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
                       </div>
                     </details>
                   </td>
+                  <?php endif; ?>
                 </tr>
               <?php endforeach; ?>
             </tbody>

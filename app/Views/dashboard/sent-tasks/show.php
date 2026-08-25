@@ -21,6 +21,22 @@ $info = $stageInfo[$nextStage] ?? null;
 $myTurn = $info ? (($info['forRole'] === 'target' && $isHrUser) || ($info['forRole'] === 'audit' && !$isHrUser)) : false;
 $badgeText = $info ? (($myTurn ? 'بانتظارك — ' : 'بانتظار الطرف الآخر — ') . $info['label']) : ($nextStage === 7 ? 'التقرير النهائي' : 'المرحلة ' . $nextStage);
 $flashSuccess = session()->getFlashdata('success');
+
+/* المراحل اللي فعليًا وصلتها المهمة (نفس ST_TOUR_STAGES بـ senttasks.js
+   بالضبط) -- كل مرحلة تظهر هنا كرابط حقيقي لصفحتها المخصصة المكتملة (بدل
+   "جولة" مضمَّنة خطوة-بخطوة كانت بالـ SPA القديمة)، عشان الطرف المنتظِر
+   يقدر يراجع أي مرحلة سابقة أُنجزت، مو بس المرحلة القادمة التي عليه دوره فيها */
+$tourStages = [
+    ['label' => 'الخطاب الرسمي',          'always' => true, 'actions' => [], 'url' => base_url('dashboard/pdf/mission-letter/' . $mission['id'])],
+    ['label' => 'اتفاقية مستوى الخدمة',    'always' => false, 'actions' => ['sla_submitted'], 'url' => base_url('dashboard/target-mission') . '?mission_id=' . $mission['id']],
+    ['label' => 'قائمة المستندات المرسلة', 'always' => false, 'actions' => ['documents_submitted'], 'url' => base_url('dashboard/document-requests') . '?mission_id=' . $mission['id']],
+    ['label' => 'مصفوفة المخاطر',         'always' => false, 'actions' => ['risk_matrix_saved'], 'url' => base_url('dashboard/risk-matrix') . '?mission_id=' . $mission['id']],
+    ['label' => 'الاجتماع',               'always' => false, 'actions' => ['meeting_confirmed', 'meeting_summary_saved'], 'url' => base_url('dashboard/meetings') . '?mission_id=' . $mission['id']],
+    ['label' => 'الملاحظات',              'always' => false, 'actions' => ['observation_added'], 'url' => base_url('dashboard/observations') . '?mission_id=' . $mission['id']],
+    ['label' => 'التقرير النهائي',         'always' => false, 'actions' => ['report_finalized', 'report_approved'], 'url' => base_url('dashboard/reports/' . $mission['id'])],
+];
+$eventActions = array_column($events, 'action');
+$reachedStages = array_values(array_filter($tourStages, fn($s) => $s['always'] || array_intersect($s['actions'], $eventActions)));
 ?>
 <div class="flex flex-col gap-5" dir="rtl">
   <?php if ($flashSuccess): ?><div class="obs-alert obs-alert-success"><?= esc($flashSuccess) ?></div><?php endif; ?>
@@ -64,6 +80,23 @@ $flashSuccess = session()->getFlashdata('success');
           <div class="st-complete-hint"><i data-lucide="eye"></i><span>بانتظار الطرف الآخر لإكمال "<?= esc($info['label']) ?>"</span></div>
         <?php endif; ?>
       </div>
+
+      <?php if (!empty($reachedStages)): ?>
+      <div class="st-phase-card">
+        <div class="st-phase-head">
+          <div class="st-phase-icon"><i data-lucide="list-checks"></i></div>
+          <span>المراحل المنجزة</span>
+        </div>
+        <div class="st-phase-fields">
+          <?php foreach ($reachedStages as $stage): ?>
+            <div class="st-phase-field">
+              <span class="lbl"><?= esc($stage['label']) ?></span>
+              <a class="val" style="color:var(--p);text-decoration:underline;" href="<?= esc($stage['url']) ?>" target="_blank"><i data-lucide="eye" style="width:12px;height:12px;vertical-align:middle;"></i> عرض</a>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
 
     <div class="st-log-card">
