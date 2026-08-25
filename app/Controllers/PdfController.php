@@ -271,6 +271,74 @@ class PdfController extends BaseController
         $this->streamPdf($mpdf, $html, 'ملاحظات-' . ($missionCode ?: 'رقابية') . '.pdf');
     }
 
+    /**
+     * GET /dashboard/pdf/observation/{id} — تصدير ملاحظة محفوظة فعليًا بمعرّفها
+     * (خلاف observationPreview() اللي POST بيانات مسودّة غير محفوظة بعد) --
+     * رابط <a href> عادي بدون أي جافاسكربت، لصفحة الملاحظات الحقيقية (MVC)
+     * الجديدة، بنفس نمط GET بمعرّف المستخدَم أصلًا لمصفوفة المخاطر/الخطاب الرسمي
+     */
+    public function observation(int $id)
+    {
+        $note = (new AuditNoteModel())->findWithDepartment($id);
+        if (!$note) throw new \CodeIgniter\Exceptions\PageNotFoundException('الملاحظة غير موجودة');
+
+        $missionModel = new MissionModel();
+        $mission = $missionModel->find($note['mission_id']);
+        if (!$mission) throw new \CodeIgniter\Exceptions\PageNotFoundException('المهمة غير موجودة');
+        $this->assertMissionAccess($mission);
+
+        $html = view('pdf/observation', [
+            'ref'             => $note['ref_code'],
+            'missionCode'     => $mission['mission_code'],
+            'title'           => $note['title'],
+            'dept'            => $note['department_name'] ?? '',
+            'date'            => $note['observation_date'],
+            'risk'            => $note['risk_severity'],
+            'observation'     => $note['observation_text'],
+            'standard'        => $note['standard_text'],
+            'reason'          => $note['reason_text'],
+            'impact'          => $note['impact_text'],
+            'recommendations' => $note['recommendations_text'],
+        ]);
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'ملاحظة رقابية', $mission['mission_code'], $note['department_name'] ?? '');
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'ملاحظة-' . ($note['ref_code'] ?: 'رقابية') . '.pdf');
+    }
+
+    /**
+     * GET /dashboard/pdf/observations/{missionId} — تصدير كل ملاحظات مهمة
+     * محفوظة فعليًا دفعة وحدة (رابط عادي بدون جافاسكربت لصفحة الملاحظات الحقيقية)،
+     * خلاف observationsListPreview() اللي POST قائمة مفلترة من الواجهة
+     */
+    public function observationsList(int $missionId)
+    {
+        $missionModel = new MissionModel();
+        $mission = $missionModel->find($missionId);
+        if (!$mission) throw new \CodeIgniter\Exceptions\PageNotFoundException('المهمة غير موجودة');
+        $this->assertMissionAccess($mission);
+
+        $notes = (new AuditNoteModel())->forMission($missionId);
+        $observations = array_map(fn($n) => [
+            'ref' => $n['ref_code'], 'title' => $n['title'], 'dept' => $n['department_name'] ?? '',
+            'date' => $n['observation_date'], 'risk' => $n['risk_severity'],
+            'observation' => $n['observation_text'], 'standard' => $n['standard_text'],
+            'reason' => $n['reason_text'], 'impact' => $n['impact_text'],
+            'recommendations' => $n['recommendations_text'],
+        ], $notes);
+
+        $html = view('pdf/observations-list', [
+            'missionCode'  => $mission['mission_code'],
+            'observations' => $observations,
+        ]);
+
+        $mpdf = $this->makeMpdf();
+        $this->applyRunningHeader($mpdf, 'الملاحظات', $mission['mission_code'], '');
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        $this->streamPdf($mpdf, $html, 'ملاحظات-' . ($mission['mission_code'] ?: 'رقابية') . '.pdf');
+    }
+
     public function riskMatrix(int $missionId)
     {
         $missionModel = new MissionModel();

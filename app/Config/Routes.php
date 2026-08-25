@@ -29,6 +29,8 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('pdf/service-agreement-preview',  'PdfController::serviceAgreementPreview');
     $routes->post('pdf/observation-preview',        'PdfController::observationPreview');
     $routes->post('pdf/observations-list-preview',  'PdfController::observationsListPreview');
+    $routes->get('pdf/observation/(:num)',          'PdfController::observation/$1');
+    $routes->get('pdf/observations/(:num)',         'PdfController::observationsList/$1');
     $routes->get('meetings/api/data',           'MeetingSummaryController::data');
     $routes->post('meetings/api/save',          'MeetingSummaryController::save');
     $routes->post('meetings/api/upload',        'DocumentController::uploadMeetingAttachment');
@@ -46,6 +48,10 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('meeting-schedule/api/cancel',  'MissionChatController::cancel');
     $routes->post('meeting-schedule/api/cancel-confirmed', 'MissionChatController::cancelConfirmed');
     $routes->post('documents/delete/(:num)',    'DocumentController::delete/$1');
+    $routes->get('observations',                'ObservationController::index');
+    $routes->get('observations/create',         'ObservationController::create');
+    $routes->get('observations/(:num)/edit',    'ObservationController::edit/$1');
+    $routes->get('observations/(:num)',         'ObservationController::show/$1');
     $routes->get('observations/api/list',       'ObservationController::list');
     $routes->post('observations/api/save',      'ObservationController::save');
     $routes->post('observations/api/delete/(:num)', 'ObservationController::delete/$1');

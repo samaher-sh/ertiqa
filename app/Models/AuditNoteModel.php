@@ -28,6 +28,14 @@ class AuditNoteModel extends Model
             ->findAll();
     }
 
+    public function findWithDepartment(int $id): ?array
+    {
+        return $this->select('audit_notes.*, departments.name_ar as department_name')
+            ->join('departments', 'departments.id = audit_notes.department_id', 'left')
+            ->where('audit_notes.id', $id)
+            ->first();
+    }
+
     public function generateRefCode(): string
     {
         $count = $this->countAllResults();
