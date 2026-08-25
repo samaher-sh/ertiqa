@@ -65,7 +65,7 @@ class MissionController extends BaseController
                     'errors'  => $this->validator->getErrors(),
                 ]);
             }
-            return redirect()->back()->withInput()->with('error', implode(' - ', $this->validator->getErrors()));
+            return redirect()->back()->withInput()->with('error', 'يرجى تعبئة كل الحقول المطلوبة بشكل صحيح.');
         }
 
         $deptModel = new DepartmentModel();

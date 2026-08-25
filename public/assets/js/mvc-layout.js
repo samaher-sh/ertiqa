@@ -11,6 +11,18 @@
 document.addEventListener("DOMContentLoaded", bindMvcChrome);
 
 function bindMvcChrome() {
+  /* مكتبة الأيقونات (lucide) تحتاج استدعاء صريح createIcons() عشان تستبدل
+     كل <i data-lucide="..."> بالـ SVG المقابل -- ما فيه استدعاء غير مشروط
+     لها بأي مكان مشترك بكل الصفحات، وسكربت المكتبة نفسه بـ layouts/app.php
+     محمَّل بـ <head> (يشتغل قبل ما يُرسَم السايدبار/الهيدر بالـ body إطلاقًا)
+     فما فيه تهيئة تلقائية لأيقوناتهم. كل ملف *-page.js يستدعيها بس كتأثير
+     جانبي لبناء محتوى إضافي (فلاتر، صفوف جدول، ...)، وبعض المسارات (لا توجد
+     مهمة مختارة، قائمة فارغة، دور بدون فلاتر...) ما توصل لذاك الاستدعاء
+     إطلاقًا -- فتختفي كل الأيقونات (بما فيها أيقونات السايدبار الثابتة) لحد
+     ما تصفّح لصفحة فيها استدعاء غير مشروط (بدء مهمة). هذا الاستدعاء هنا
+     يضمن ظهورها بكل صفحة دائمًا، بغض النظر عن حالة بيانات تلك الصفحة. */
+  if (window.lucide) lucide.createIcons();
+
   const menuBtn = document.getElementById("mobileMenuBtn");
   const overlay = document.getElementById("mobileOverlay");
   const sidebar = document.getElementById("sidebar");
