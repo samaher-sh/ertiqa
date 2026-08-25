@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Models\DepartmentModel;
+use App\Models\MissionModel;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -99,5 +101,83 @@ abstract class BaseController extends Controller
             in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true),
             $roleCode === 'audit_head'
         );
+    }
+
+    /**
+     * مفاتيح صفحات القائمة الجانبية اللي عندها View حقيقي مُهاجَر مِن الـ SPA
+     * فعليًا (Server-Rendered). باقي المفاتيح لسا تُخدَّم من shell.php (SPA) —
+     * روابطها بالقائمة تُوجَّه لـ dashboard/ (الرئيسية) مؤقتًا لحد ما تُهاجر.
+     */
+    protected function migratedPageKeys(): array
+    {
+        return ['observations'];
+    }
+
+    /**
+     * نفس منطق فروع isHrDept/audit_head/افتراضي المستخدَم بـ
+     * DashboardController::targetMissions()/activeMissions() ودالة
+     * loadMissionsForSelector() بالجافاسكربت بالضبط — قائمة "المهمة المرتبطة"
+     * الموحّدة المستخدَمة بكل صفحة فيها منتقي مهمة (مصفوفة المخاطر، الملاحظات، ...)
+     */
+    protected function missionsForCurrentSession(): array
+    {
+        $session      = session();
+        $roleCode     = $session->get('role_code');
+        $isHrDept     = in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true);
+        $missionModel = new MissionModel();
+
+        if ($isHrDept) {
+            $departmentId = $session->get('department_id');
+            $missions     = $departmentId ? $missionModel->missionsForTargetDepartment((int) $departmentId) : [];
+        } elseif ($roleCode === 'audit_head') {
+            $departmentId = $session->get('department_id');
+            $missions     = $departmentId ? $missionModel->activeMissionsForAuditDepartment((int) $departmentId) : [];
+        } else {
+            $userId   = (int) $session->get('user_id');
+            $missions = $missionModel->activeMissionsForUser($userId);
+        }
+
+        foreach ($missions as &$m) {
+            $m['next_stage'] = $missionModel->computeRealNextStage((int) $m['id']);
+        }
+
+        return $missions;
+    }
+
+    /**
+     * نفس شكل استجابة ApiController::session() بالضبط، لكن كمصفوفة PHP جاهزة
+     * للتمرير مباشرة لـ View بدل استدعاء JSON من الجافاسكربت — يُرجع null لو
+     * ما فيه جلسة دخول نشطة (المفروض ما يصير أصلًا خلف فلتر auth، لكن للأمان)
+     */
+    protected function sessionUserSummary(): ?array
+    {
+        $session = session();
+
+        if (!$session->get('isLoggedIn')) {
+            return null;
+        }
+
+        $departmentParentName = null;
+        $departmentId         = $session->get('department_id');
+        if ($departmentId) {
+            $dept = (new DepartmentModel())->find((int) $departmentId);
+            if ($dept && !empty($dept['parent_id'])) {
+                $parent                = (new DepartmentModel())->find((int) $dept['parent_id']);
+                $departmentParentName = $parent['name_ar'] ?? null;
+            }
+        }
+
+        return [
+            'user_id'                => $session->get('user_id'),
+            'full_name'              => $session->get('full_name'),
+            'national_id'            => $session->get('national_id'),
+            'email'                  => $session->get('email'),
+            'phone'                  => $session->get('phone'),
+            'role_code'              => $session->get('role_code'),
+            'role_name'              => $session->get('role_name'),
+            'department_id'          => $departmentId,
+            'department_name'        => $session->get('department_name'),
+            'department_parent_name' => $departmentParentName,
+        ];
     }
 }
