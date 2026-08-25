@@ -352,6 +352,7 @@ class PdfController extends BaseController
 
         $deptModel = new DepartmentModel();
         $targetDept = $deptModel->find($mission['target_department_id']);
+        $mainDept   = $deptModel->find($mission['audit_department_id']);
 
         $agreement    = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
         $slaResponses = (new ServiceAgreementResponseModel())->forMission($missionId);
@@ -368,6 +369,7 @@ class PdfController extends BaseController
         $html = view('pdf/final-report', [
             'mission'      => $mission,
             'targetDept'   => $targetDept,
+            'mainDept'     => $mainDept,
             'report'       => $report,
             'agreement'    => $agreement,
             'slaResponses' => $slaResponses,
