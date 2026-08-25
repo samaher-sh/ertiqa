@@ -48,6 +48,14 @@ $channelsMeta = [
     </div>
   </div>
 
+  <!-- نموذج GET مستقل (غير متداخل داخل newTaskForm) لتحديث قائمة الإدارات
+       الفرعية عند تغيير الإدارة -- <select id="mainDeptSelect"> بالأسفل
+       مرتبط به عبر form="deptCascadeForm" رغم إنه فعليًا متمركز بصريًا
+       داخل newTaskForm (تعشيش <form> داخل <form> HTML غير صالح: لو كان
+       مباشرة متداخل، المتصفح يربط عناصره بالنموذج الخارجي POST بدل الداخلي
+       GET، فيرسل newTaskForm فارغًا عند أي تغيير للإدارة) -->
+  <form method="get" action="<?= base_url('dashboard/new-task') ?>" id="deptCascadeForm"></form>
+
   <form method="post" action="<?= base_url('dashboard/new-task') ?>" id="newTaskForm" style="display:flex;flex-direction:column;gap:20px;">
     <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
     <input type="hidden" name="main_dept_id" value="<?= $selectedDeptId ?>">
@@ -64,18 +72,16 @@ $channelsMeta = [
             <div class="wiz-card-body">
               <div class="wiz-section">
                 <p class="wiz-section-title">بيانات الإدارة</p>
-                <form method="get" action="<?= base_url('dashboard/new-task') ?>" id="deptCascadeForm" style="display:contents;">
-                  <div class="wiz-field">
-                    <label class="wiz-label">الإدارة <span class="wiz-req">*</span></label>
-                    <select name="main_dept_id" id="mainDeptSelect" class="wiz-select<?= $selectedDeptId ? ' filled' : '' ?>" onchange="this.form.submit()">
-                      <option value="">— اختر —</option>
-                      <?php foreach ($mainDepts as $d): ?>
-                        <option value="<?= (int) $d['id'] ?>" <?= $selectedDeptId === (int) $d['id'] ? 'selected' : '' ?>><?= esc($d['name_ar']) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                    <noscript><button type="submit" class="wiz-btn wiz-btn-outline" style="margin-top:8px;">تحديث قائمة الإدارات الفرعية</button></noscript>
-                  </div>
-                </form>
+                <div class="wiz-field">
+                  <label class="wiz-label">الإدارة <span class="wiz-req">*</span></label>
+                  <select name="main_dept_id" form="deptCascadeForm" id="mainDeptSelect" class="wiz-select<?= $selectedDeptId ? ' filled' : '' ?>" onchange="this.form.submit()">
+                    <option value="">— اختر —</option>
+                    <?php foreach ($mainDepts as $d): ?>
+                      <option value="<?= (int) $d['id'] ?>" <?= $selectedDeptId === (int) $d['id'] ? 'selected' : '' ?>><?= esc($d['name_ar']) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                  <noscript><button type="submit" form="deptCascadeForm" class="wiz-btn wiz-btn-outline" style="margin-top:8px;">تحديث قائمة الإدارات الفرعية</button></noscript>
+                </div>
                 <div class="wiz-field">
                   <label class="wiz-label">الإدارة المستهدفة <span class="wiz-req">*</span></label>
                   <select id="p1Target" name="target_dept_id" class="wiz-select" <?= $selectedDeptId ? '' : 'disabled' ?>>

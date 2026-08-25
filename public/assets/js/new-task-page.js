@@ -62,6 +62,12 @@ function bindStepNav() {
     prevBtn.style.display = page === 1 ? "none" : "";
     nextBtn.style.display = page === 2 ? "none" : "";
     sendBtn.style.display = page === 2 ? "" : "none";
+    /* sendBtn هو زر type="submit" الوحيد بالنموذج، فلو بقي مفعّلاً وهو مخفي
+       بخطوة 1 يصير "الزر الافتراضي" لأي إرسال ضمني (ضغط Enter بأي حقل نصي)،
+       فيرسل النموذج فارغًا بدون المرور على isPage1Valid() -- تعطيله هنا يمنع
+       هذا الإرسال العرَضي، وما يأثّر على النسخة بدون جافاسكربت (الزر هناك
+       يبقى مفعّلاً افتراضيًا لأنه ما فيه JS يشغّل هذا السطر أصلاً) */
+    sendBtn.disabled = page !== 2;
 
     if (window.lucide) lucide.createIcons();
     window.scrollTo({ top: 0, behavior: "smooth" });
