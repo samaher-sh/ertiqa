@@ -31,15 +31,20 @@ function openStagePreviewModal(url, title) {
   document.body.appendChild(overlay);
   if (window.lucide) lucide.createIcons();
 
-  /* المستخدم أصلًا داخل سياق هذي المهمة (فتح المعاينة من صفحتها) -- بطاقة
-     "المهمة / الإدارة المرتبطة" اللي تظهر أعلى كل صفحة (نفس iframe.obs-linked-card
-     المشتركة) زائدة وتاخذ مساحة بدون فايدة هنا، فتُخفى بعد تحميل iframe (نفس
-     الأصل، فالوصول لمحتواها الداخلي مسموح) عشان يبين المحتوى المطلوب مباشرة */
+  /* الصفحة المعروضة بالـ iframe صفحة كاملة (layouts/app.php بسايدبار وهيدر
+     خاصين فيها)، والمستخدم أصلًا داخل سياق هذي المهمة وشغّال بنفس السايدبار/
+     الهيدر الحقيقيين خارج المعاينة -- فتكرارهما جوّا iframe زائد بدون فايدة.
+     بما إنه نفس الأصل (same-origin)، بعد تحميل iframe نخفي: السايدبار، الهيدر
+     العلوي، وبطاقة "المهمة / الإدارة المرتبطة" (نفس .obs-linked-card
+     المشتركة)، عشان يبين محتوى الصفحة المطلوب فقط */
   const iframe = overlay.querySelector("iframe");
   iframe.addEventListener("load", () => {
     try {
-      const card = iframe.contentDocument.querySelector(".obs-linked-card");
-      if (card) card.style.display = "none";
+      const doc = iframe.contentDocument;
+      ["#sidebar", ".topbar", ".mobile-overlay", ".obs-linked-card"].forEach(sel => {
+        const el = doc.querySelector(sel);
+        if (el) el.style.display = "none";
+      });
     } catch (e) {}
   });
 
