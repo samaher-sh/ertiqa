@@ -39,7 +39,11 @@ class PdfController extends BaseController
     private function streamPdf(Mpdf $mpdf, string $html, string $filename)
     {
         $mpdf->WriteHTML($html);
-        $mpdf->Output($filename, 'D'); // D = تحميل مباشر (Download)
+        // ?inline=1 يُستخدم فقط من نافذة المعاينة المنبثقة بـ "المراحل المنجزة"
+        // (المراسلات المشتركة) -- تعرض المستند داخل iframe بدل تحميله؛ كل
+        // استدعاء آخر (أزرار "تصدير PDF" بباقي الصفحات) يبقى تحميل مباشر كما هو
+        $inline = $this->request->getGet('inline') === '1';
+        $mpdf->Output($filename, $inline ? 'I' : 'D');
         exit;
     }
 

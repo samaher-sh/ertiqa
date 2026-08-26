@@ -40,7 +40,7 @@ class SentTasksController extends BaseController
     private function missionForParty(int $missionId): ?array
     {
         $missionModel = new MissionModel();
-        $mission = $missionModel->find($missionId);
+        $mission = $missionModel->findWithDetails($missionId);
         if (!$mission) {
             return null;
         }
