@@ -31,6 +31,18 @@ function openStagePreviewModal(url, title) {
   document.body.appendChild(overlay);
   if (window.lucide) lucide.createIcons();
 
+  /* المستخدم أصلًا داخل سياق هذي المهمة (فتح المعاينة من صفحتها) -- بطاقة
+     "المهمة / الإدارة المرتبطة" اللي تظهر أعلى كل صفحة (نفس iframe.obs-linked-card
+     المشتركة) زائدة وتاخذ مساحة بدون فايدة هنا، فتُخفى بعد تحميل iframe (نفس
+     الأصل، فالوصول لمحتواها الداخلي مسموح) عشان يبين المحتوى المطلوب مباشرة */
+  const iframe = overlay.querySelector("iframe");
+  iframe.addEventListener("load", () => {
+    try {
+      const card = iframe.contentDocument.querySelector(".obs-linked-card");
+      if (card) card.style.display = "none";
+    } catch (e) {}
+  });
+
   const close = () => overlay.remove();
   overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
   overlay.querySelector(".st-preview-modal-close").addEventListener("click", close);
