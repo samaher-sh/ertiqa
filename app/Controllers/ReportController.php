@@ -103,8 +103,22 @@ class ReportController extends BaseController
             $reports = $reportModel->forUser((int) session()->get('user_id'));
         }
 
+        // قائمة الإدارات المستهدفة لخيارات فلتر "الإدارة" -- تُبنى من التقارير
+        // كاملة قبل أي فلترة (نفس منطق فلتر السنة: يعرض كل الإدارات المتاحة
+        // بغض النظر عن الفلاتر النشطة حاليًا، مو بس اللي طلعت بالنتيجة المفلترة)
+        $deptOptions = [];
+        foreach ($reports as $r) {
+            if (!empty($r['target_department_id'])) {
+                $deptOptions[(int) $r['target_department_id']] = $r['target_dept_name'];
+            }
+        }
+        asort($deptOptions);
+
         $yearFilter = (string) ($this->request->getGet('year') ?: '');
         if ($yearFilter) $reports = array_values(array_filter($reports, fn($r) => (string) $r['year'] === $yearFilter));
+
+        $deptFilter = (string) ($this->request->getGet('dept') ?: '');
+        if ($deptFilter) $reports = array_values(array_filter($reports, fn($r) => (string) $r['target_department_id'] === $deptFilter));
 
         $canCreate = !$isHr && !$isPresident && !$isAuditHead;
         $missions = $canCreate ? $this->missionsForCurrentSession() : [];
@@ -120,6 +134,8 @@ class ReportController extends BaseController
             'canCreate'    => $canCreate,
             'missions'     => $missions,
             'yearFilter'   => $yearFilter,
+            'deptOptions'  => $deptOptions,
+            'deptFilter'   => $deptFilter,
             'statusFilter' => (string) ($this->request->getGet('status') ?: ''),
         ]);
     }
