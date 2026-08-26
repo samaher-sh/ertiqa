@@ -44,13 +44,9 @@ $deptName = $mission['target_department_name'] ?? '';
           <div><h2>ملخص الاجتماع</h2></div>
           <?php if ($allReadOnly): ?><span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span><?php endif; ?>
           <div style="display:flex;gap:8px;margin-right:auto;">
-            <?php if (!$allReadOnly): ?><span id="msumAttachMount"></span><?php endif; ?>
             <?php if ($selectedMissionId): ?><a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/meeting-summary/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a><?php endif; ?>
           </div>
         </div>
-        <?php if (!empty($attachments)): ?>
-          <div style="padding:8px 24px 0;"><span class="msum-attach-empty"><?php foreach ($attachments as $i => $d): ?><?= $i ? '، ' : '' ?><a href="<?= base_url('dashboard/documents/download/' . $d['id']) ?>" target="_blank" style="color:var(--p);text-decoration:underline;"><?= esc($d['file_name']) ?></a><?php endforeach; ?></span></div>
-        <?php endif; ?>
         <?php if ($isHrUser): ?><div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div><?php endif; ?>
 
         <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -188,6 +184,21 @@ $deptName = $mission['target_department_name'] ?? '';
         </div>
       </div>
       <?php endif; ?>
+
+      <!-- 5. المرفقات -->
+      <div class="wiz-card">
+        <div class="wiz-card-head" style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="paperclip"></i><span style="color:#fff;font-weight:700;font-size:14px;">المرفقات</span></div>
+          <?php if (!$allReadOnly): ?><span id="msumAttachMount"></span><?php endif; ?>
+        </div>
+        <div style="padding:16px 24px;">
+          <?php if (!empty($attachments)): ?>
+            <span class="msum-attach-empty" style="margin-right:0;"><?php foreach ($attachments as $i => $d): ?><?= $i ? '، ' : '' ?><a href="<?= base_url('dashboard/documents/download/' . $d['id']) ?>" target="_blank" style="color:var(--p);text-decoration:underline;"><?= esc($d['file_name']) ?></a><?php endforeach; ?></span>
+          <?php else: ?>
+            <span class="msum-attach-empty" style="margin-right:0;">لا توجد مرفقات</span>
+          <?php endif; ?>
+        </div>
+      </div>
 
     </div>
 

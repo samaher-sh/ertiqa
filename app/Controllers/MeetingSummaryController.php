@@ -29,7 +29,7 @@ class MeetingSummaryController extends BaseController
 
     private function assertMissionAccess(int $missionId): array
     {
-        $mission = (new MissionModel())->find($missionId);
+        $mission = (new MissionModel())->findWithDetails($missionId);
         if (!$mission) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('المهمة غير موجودة.');
         }

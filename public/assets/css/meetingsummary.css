@@ -58,7 +58,7 @@ table.msum-table td:not(:last-child){ border-left:1px solid #d8e6eb; }
 .msum-attach-empty{ font-size:11px; color:#9ca3af; margin-right:12px; }
 .msum-approve-meta{ text-align:left; font-size:11px; font-weight:600; color:#6b7280; line-height:1.6; }
 
-.msum-bottom-row{ display:flex; align-items:center; justify-content:flex-end; padding-top:4px; flex-wrap:wrap; gap:12px; }
+.msum-bottom-row{ display:flex; align-items:center; justify-content:flex-end; padding-top:22px; flex-wrap:wrap; gap:12px; }
 .msum-export-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:var(--p); border:none; }
 .msum-submit-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
 .msum-submit-btn{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#d1d5db; border:none; cursor:not-allowed; }

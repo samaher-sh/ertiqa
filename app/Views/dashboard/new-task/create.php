@@ -109,15 +109,15 @@ $channelsMeta = [
                 <p class="wiz-section-title">بيانات المراجع</p>
                 <div class="wiz-field">
                   <label class="wiz-label">اسم المراجع الرئيسي <span class="wiz-req">*</span></label>
-                  <input id="p1Reviewer" name="reviewer_name" type="text" class="wiz-input plain" placeholder="الاسم كاملاً" value="<?= esc($reviewerName) ?>">
+                  <input id="p1Reviewer" name="reviewer_name" type="text" data-mask="letters" class="wiz-input plain" placeholder="الاسم كاملاً" value="<?= esc($reviewerName) ?>">
                 </div>
                 <div class="wiz-field">
                   <label class="wiz-label">البريد الإلكتروني <span class="wiz-req">*</span></label>
-                  <input id="p1Email" name="reviewer_email" type="email" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="example@kamc.med.sa" value="<?= esc($reviewerEmail) ?>">
+                  <input id="p1Email" name="reviewer_email" type="email" dir="ltr" style="text-align:left;" data-mask="email" class="wiz-input plain" placeholder="example@kamc.med.sa" value="<?= esc($reviewerEmail) ?>">
                 </div>
                 <div class="wiz-field">
                   <label class="wiz-label">رقم الجوال <span class="wiz-req">*</span></label>
-                  <input id="p1Phone" name="reviewer_phone" type="tel" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="05XXXXXXXX" value="<?= esc($reviewerPhone) ?>">
+                  <input id="p1Phone" name="reviewer_phone" type="tel" inputmode="numeric" maxlength="10" dir="ltr" style="text-align:left;" data-mask="phone" class="wiz-input plain" placeholder="05XXXXXXXX" value="<?= esc($reviewerPhone) ?>">
                 </div>
               </div>
 
@@ -125,7 +125,7 @@ $channelsMeta = [
                 <p class="wiz-section-title">بيانات المدير</p>
                 <div class="wiz-field">
                   <label class="wiz-label">اسم المدير</label>
-                  <input id="p1Director" name="director_name" type="text" class="wiz-input plain" placeholder="الاسم كاملاً" value="<?= esc($directorName) ?>">
+                  <input id="p1Director" name="director_name" type="text" data-mask="letters" class="wiz-input plain" placeholder="الاسم كاملاً" value="<?= esc($directorName) ?>">
                 </div>
               </div>
             </div>
@@ -222,7 +222,7 @@ $channelsMeta = [
                   <?php if ($chType === 'textarea'): ?>
                     <textarea name="channel_<?= $chKey ?>_value" rows="3" class="wiz-textarea plain" placeholder="<?= esc($chPh) ?>"><?= esc($v('channel_' . $chKey . '_value')) ?></textarea>
                   <?php else: ?>
-                    <input type="<?= $chType ?>" class="wiz-input plain" <?= $chType === 'email' || $chType === 'tel' ? 'dir="ltr" style="text-align:left;"' : '' ?> name="channel_<?= $chKey ?>_value" placeholder="<?= esc($chPh) ?>" value="<?= esc($v('channel_' . $chKey . '_value')) ?>">
+                    <input type="<?= $chType ?>" class="wiz-input plain" <?= $chType === 'email' || $chType === 'tel' ? 'dir="ltr" style="text-align:left;"' : '' ?> <?= $chType === 'tel' ? 'inputmode="numeric" maxlength="10" data-mask="phone"' : ($chType === 'email' ? 'data-mask="email"' : '') ?> name="channel_<?= $chKey ?>_value" placeholder="<?= esc($chPh) ?>" value="<?= esc($v('channel_' . $chKey . '_value')) ?>">
                   <?php endif; ?>
                 </div>
               </div>

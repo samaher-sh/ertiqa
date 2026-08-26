@@ -104,3 +104,29 @@ async function postForPdfDownload(path, body, filename) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/**
+ * تحديد نوع القيمة أثناء الكتابة لحقول name/phone/email (نفس فلاتر p1Reviewer/
+ * p1Phone/p1Email بـ wizard.js ومرادفاتها بـ missionreview.js الأصليتين بالضبط)
+ * -- يشتغل تلقائيًا على أي حقل عليه data-mask بأي صفحة حقيقية (mvc-layout.js
+ * يحمّل هذا الملف أول شي بكل صفحة)، بدون حاجة لتكرار المنطق بكل *-page.js
+ *   data-mask="letters" -> يمنع الأرقام (عربي/إنجليزي) — أسماء الأشخاص
+ *   data-mask="phone"   -> أرقام فقط، بحد أقصى 10 خانات
+ *   data-mask="email"   -> يمنع أي حرف غير إنجليزي/رقم/رموز البريد القياسية
+ */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("[data-mask]").forEach(el => {
+    const kind = el.dataset.mask;
+    el.addEventListener("input", () => {
+      const pos = el.selectionEnd;
+      let v = el.value;
+      if (kind === "letters") v = v.replace(/[0-9٠-٩]/g, "");
+      else if (kind === "phone") v = v.replace(/[^0-9]/g, "").slice(0, 10);
+      else if (kind === "email") v = v.replace(/[^A-Za-z0-9@._+-]/g, "");
+      if (v !== el.value) {
+        el.value = v;
+        try { el.setSelectionRange(pos, pos); } catch (e) {}
+      }
+    });
+  });
+});
