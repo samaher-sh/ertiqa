@@ -230,8 +230,11 @@
     <table class="info">
         <tr>
             <td class="label">الاسم</td><td><?= esc($report['head_name'] ?? '') ?: '—' ?></td>
+            <td class="label">التاريخ</td><td><?= esc($report['head_approved_at'] ?? '') ?: '—' ?></td>
+        </tr>
+        <tr>
             <td class="label">التوقيع</td>
-            <td><?php if (!empty($report['head_signature'])): ?><img class="sig-img" src="<?= esc($report['head_signature']) ?>"><?php else: ?>—<?php endif; ?></td>
+            <td colspan="3"><?php if (!empty($report['head_signature'])): ?><img class="sig-img" src="<?= esc($report['head_signature']) ?>"><?php else: ?>—<?php endif; ?></td>
         </tr>
     </table>
 </body>

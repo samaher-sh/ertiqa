@@ -92,6 +92,84 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
               </table>
             </div>
           <?php endif; ?>
+        <?php elseif ($expandedStep === 3 && $section3Data): ?>
+          <div class="obs-table-wrap">
+            <table class="obs-table">
+              <thead><tr><th style="width:30px;">م</th><th>المستند</th><th style="width:90px;">يوجد</th><th>ملاحظات</th></tr></thead>
+              <tbody>
+                <?php if (empty($section3Data['docRequests'])): ?>
+                  <tr><td colspan="4" style="text-align:center;color:#9ca3af;">لا توجد مستندات مطلوبة</td></tr>
+                <?php else: foreach ($section3Data['docRequests'] as $i => $d): ?>
+                  <tr>
+                    <td><?= $i + 1 ?></td>
+                    <td><?= esc($d['doc_name']) ?></td>
+                    <td><?= $d['exists_flag'] === null ? '—' : ((int) $d['exists_flag'] === 1 ? 'يوجد' : 'لا يوجد') ?></td>
+                    <td><?= esc($d['response_note'] ?: '—') ?></td>
+                  </tr>
+                <?php endforeach; endif; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php elseif ($expandedStep === 4 && $section4Data): ?>
+          <div class="obs-table-wrap">
+            <table class="obs-table">
+              <thead><tr><th style="width:30px;">م</th><th>المخاطر</th><th style="width:80px;">التقييم</th><th>وصف الضوابط</th><th style="width:110px;">نوع النشاط</th></tr></thead>
+              <tbody>
+                <?php if (empty($section4Data['riskItems'])): ?>
+                  <tr><td colspan="5" style="text-align:center;color:#9ca3af;">لا توجد مخاطر مسجّلة</td></tr>
+                <?php else: foreach ($section4Data['riskItems'] as $i => $it): ?>
+                  <tr>
+                    <td><?= $i + 1 ?></td>
+                    <td><?= esc($it['risk']) ?></td>
+                    <td><?= esc($it['risk_rating'] ?: '—') ?></td>
+                    <td><?= esc($it['controls']) ?></td>
+                    <td><?= esc($it['activity_type']) ?></td>
+                  </tr>
+                <?php endforeach; endif; ?>
+              </tbody>
+            </table>
+          </div>
+        <?php elseif ($expandedStep === 5 && $section5Data): ?>
+          <div class="fr-preview-grid">
+            <div class="fr-preview-field"><span class="lbl">تاريخ الاجتماع</span><span class="val"><?= esc($section5Data['meeting']['meeting_date'] ?? '—') ?></span></div>
+            <div class="fr-preview-field"><span class="lbl">مكان الاجتماع</span><span class="val"><?= esc($section5Data['meeting']['location'] ?? '—') ?></span></div>
+          </div>
+          <div class="obs-table-wrap" style="margin-top:12px;">
+            <table class="obs-table">
+              <thead><tr><th style="width:30px;">م</th><th>الاسم</th><th>الإدارة</th><th>الوظيفة</th></tr></thead>
+              <tbody>
+                <?php if (empty($section5Data['attendees'])): ?>
+                  <tr><td colspan="4" style="text-align:center;color:#9ca3af;">لا يوجد حضور مسجّل</td></tr>
+                <?php else: foreach ($section5Data['attendees'] as $i => $a): ?>
+                  <tr><td><?= $i + 1 ?></td><td><?= esc($a['external_name']) ?></td><td><?= esc($a['attendee_dept']) ?></td><td><?= esc($a['attendee_position']) ?></td></tr>
+                <?php endforeach; endif; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php if (!empty($section5Data['points'])): ?>
+          <div class="obs-table-wrap" style="margin-top:12px;">
+            <table class="obs-table">
+              <thead><tr><th>النقطة</th><th>الرأي</th><th>السبب / التوضيح</th></tr></thead>
+              <tbody>
+                <?php foreach ($section5Data['points'] as $p): ?>
+                  <tr><td><?= esc($p['point_text']) ?></td><td><?= esc($p['opinion'] ?: '—') ?></td><td><?= esc($p['reason'] ?: '—') ?></td></tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php endif; ?>
+        <?php elseif ($expandedStep === 6 && $section6Data): ?>
+          <?php if (empty($section6Data['observations'])): ?>
+            <p style="text-align:center;color:#9ca3af;">لا توجد ملاحظات مسجّلة</p>
+          <?php else: foreach ($section6Data['observations'] as $i => $o): ?>
+            <div class="fr-preview-grid" style="margin-bottom:12px;">
+              <div class="fr-preview-field span2"><span class="lbl"><?= ($i + 1) . '. ' . esc($o['title']) ?></span></div>
+              <div class="fr-preview-field"><span class="lbl">الإدارة المعنية</span><span class="val"><?= esc($o['department_name'] ?? '—') ?></span></div>
+              <div class="fr-preview-field"><span class="lbl">التاريخ</span><span class="val"><?= esc($o['observation_date']) ?></span></div>
+              <div class="fr-preview-field span2"><span class="lbl">الملاحظة</span><span class="val"><?= esc($o['observation_text'] ?: '—') ?></span></div>
+              <div class="fr-preview-field span2"><span class="lbl">التوصيات</span><span class="val"><?= esc($o['recommendations_text'] ?: '—') ?></span></div>
+            </div>
+          <?php endforeach; endif; ?>
         <?php elseif ($stepUrl): ?>
           <div class="fr-preview-grid"><div class="fr-preview-field span2">
             <span class="lbl"><?= esc($expandedItem['section_title']) ?></span>
@@ -100,13 +178,25 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
         <?php endif; ?>
       </div>
       <?php if (!$expandedIsDone): ?><p class="fr-step-hint">لم تكتمل بيانات هذه المرحلة بعد</p><?php endif; ?>
+
+      <?php if ($isAuditHead || $readOnlyViewer): ?>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <?php $prevNum = $expandedStep > 1 ? $expandedStep - 1 : null; $nextNum = $expandedStep < 6 ? $expandedStep + 1 : null; ?>
+        <?php if ($prevNum): ?>
+          <a class="fr-back-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $mission['id']) ?>?step=<?= $prevNum ?>"><i data-lucide="chevron-right"></i> السابق</a>
+        <?php else: ?><span></span><?php endif; ?>
+        <?php if ($nextNum): ?>
+          <a class="fr-next-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $mission['id']) ?>?step=<?= $nextNum ?>">التالي <i data-lucide="chevron-left"></i></a>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
     </div>
     <?php endif; ?>
 
     <div class="fr-phases-footer">
       <?php if ($report['status'] === 'sent'): ?>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span style="font-size:12px;color:#6b7280;">معتمد<?= !empty($report['head_name']) ? ' — ' . esc($report['head_name']) : '' ?></span>
+          <span style="font-size:12px;color:#6b7280;">معتمد<?= !empty($report['head_name']) ? ' — ' . esc($report['head_name']) : '' ?><?= !empty($report['head_approved_at']) ? ' — ' . esc($report['head_approved_at']) : '' ?></span>
           <?php if (!empty($report['head_signature'])): ?><img src="<?= esc($report['head_signature']) ?>" alt="توقيع الرئيس" style="height:30px;"><?php endif; ?>
           <a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $mission['id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</a>
         </div>
@@ -148,21 +238,31 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
       <input type="hidden" name="head_name" id="frHeadNameHidden">
       <input type="hidden" name="head_signature" id="frHeadSigHidden">
 
-      <div class="wiz-field">
-        <span class="wiz-label">اسم الرئيس</span>
-        <input type="text" class="wiz-input" id="frHeadName" placeholder="اسم رئيس إدارة المراجعة الداخلية" value="<?= esc($report['head_name'] ?? '') ?>">
-      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <div class="wiz-field" style="flex:1;min-width:160px;">
+          <span class="wiz-label">اسم الرئيس</span>
+          <input type="text" class="wiz-input" id="frHeadName" placeholder="اسم رئيس إدارة المراجعة الداخلية" value="<?= esc($report['head_name'] ?? '') ?>">
+        </div>
 
-      <div class="wiz-field">
-        <span class="wiz-label">التوقيع</span>
-        <div class="wiz-sig-pad-card">
-          <canvas id="frHeadSigPad" class="wiz-sig-pad-canvas" width="440" height="130"></canvas>
-          <span class="wiz-sig-pad-hint" id="frHeadSigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
-          <button type="button" class="wiz-sig-pad-clear" id="frHeadSigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
+        <div class="wiz-field" style="flex:1.4;min-width:200px;">
+          <span class="wiz-label">التوقيع</span>
+          <div class="wiz-sig-pad-card">
+            <canvas id="frHeadSigPad" class="wiz-sig-pad-canvas" width="260" height="70" style="height:70px;"></canvas>
+            <span class="wiz-sig-pad-hint" id="frHeadSigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
+            <button type="button" class="wiz-sig-pad-clear" id="frHeadSigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
+          </div>
+        </div>
+
+        <div class="wiz-field" style="flex:1;min-width:140px;">
+          <span class="wiz-label">التاريخ</span>
+          <input type="date" class="wiz-input" name="head_approved_at" value="<?= esc($report['head_approved_at'] ?? date('Y-m-d')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
         </div>
       </div>
 
-      <button type="submit" class="fr-submit-btn" style="align-self:flex-start;"><i data-lucide="check-check"></i> اعتماد التقرير</button>
+      <div>
+        <button type="submit" class="fr-submit-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="check-check"></i> اعتماد التقرير</button>
+        <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الاعتماد</p><?php endif; ?>
+      </div>
     </form>
   </div>
   <?php endif; ?>
