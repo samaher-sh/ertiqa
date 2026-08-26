@@ -105,17 +105,14 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
 
     <div class="fr-phases-footer">
       <?php if ($report['status'] === 'sent'): ?>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:#6b7280;">معتمد</span>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:#6b7280;">معتمد<?= !empty($report['head_name']) ? ' — ' . esc($report['head_name']) : '' ?></span>
+          <?php if (!empty($report['head_signature'])): ?><img src="<?= esc($report['head_signature']) ?>" alt="توقيع الرئيس" style="height:30px;"><?php endif; ?>
           <a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $mission['id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</a>
         </div>
       <?php elseif ($isAuditHead): ?>
         <?php if ($report['status'] === 'pending_signatures'): ?>
-          <form method="post" action="<?= base_url('dashboard/reports/api/approve') ?>">
-            <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-            <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
-            <button type="submit" class="fr-submit-btn"><i data-lucide="check-check"></i> اعتماد التقرير</button>
-          </form>
+          <span style="font-size:12px;color:#6b7280;">أدخل اسمك ووقّع بالأسفل لاعتماد التقرير</span>
         <?php else: ?>
           <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'تحت المراجعة' : 'تحت الإعداد' ?></span>
         <?php endif; ?>
@@ -141,10 +138,41 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
       <?php endif; ?>
     </div>
   </div>
+
+  <?php if ($isAuditHead && $report['status'] === 'pending_signatures'): ?>
+  <div class="wiz-card" id="frHeadSignCard">
+    <div class="wiz-card-head"><i data-lucide="check-check"></i><span style="color:#fff;font-weight:700;font-size:14px;">اعتماد رئيس إدارة المراجعة الداخلية</span></div>
+    <form method="post" action="<?= base_url('dashboard/reports/api/approve') ?>" id="frApproveForm" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+      <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+      <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
+      <input type="hidden" name="head_name" id="frHeadNameHidden">
+      <input type="hidden" name="head_signature" id="frHeadSigHidden">
+
+      <div class="wiz-field">
+        <span class="wiz-label">اسم الرئيس</span>
+        <input type="text" class="wiz-input" id="frHeadName" placeholder="اسم رئيس إدارة المراجعة الداخلية" value="<?= esc($report['head_name'] ?? '') ?>">
+      </div>
+
+      <div class="wiz-field">
+        <span class="wiz-label">التوقيع</span>
+        <div class="wiz-sig-pad-card">
+          <canvas id="frHeadSigPad" class="wiz-sig-pad-canvas" width="440" height="130"></canvas>
+          <span class="wiz-sig-pad-hint" id="frHeadSigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
+          <button type="button" class="wiz-sig-pad-clear" id="frHeadSigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
+        </div>
+      </div>
+
+      <button type="submit" class="fr-submit-btn" style="align-self:flex-start;"><i data-lucide="check-check"></i> اعتماد التقرير</button>
+    </form>
+  </div>
+  <?php endif; ?>
 </div>
 <?php $this->endSection() ?>
 
 <?php $this->section('scripts') ?>
 <script src="<?= av('assets/js/utils.js') ?>"></script>
 <script src="<?= av('assets/js/mvc-layout.js') ?>"></script>
+<?php if ($isAuditHead && $report['status'] === 'pending_signatures'): ?>
+<script src="<?= av('assets/js/finalreports-show-page.js') ?>"></script>
+<?php endif; ?>
 <?php $this->endSection() ?>

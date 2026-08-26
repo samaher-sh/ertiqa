@@ -39,7 +39,6 @@
             <?php if (!$canCreate): ?>
             <select name="status" class="wiz-select<?= $statusFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
               <option value="">كل الحالات</option>
-              <option value="draft" <?= $statusFilter === 'draft' ? 'selected' : '' ?>>تحت الإعداد</option>
               <option value="pending_signatures" <?= $statusFilter === 'pending_signatures' ? 'selected' : '' ?>>تحت المراجعة</option>
               <option value="sent" <?= $statusFilter === 'sent' ? 'selected' : '' ?>>معتمد</option>
             </select>
