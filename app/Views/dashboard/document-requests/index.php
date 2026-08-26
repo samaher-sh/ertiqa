@@ -38,7 +38,7 @@ $locked = !$selectedMissionId;
             <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
             <div style="display:flex;gap:8px;">
               <input type="text" name="doc_name" class="wiz-doc-name-input" placeholder="أدخل اسم المستند الجديد..." style="flex:1;">
-              <button type="submit" class="wiz-doc-del-btn" style="color:var(--p);" title="حفظ"><i data-lucide="check"></i></button>
+              <button type="submit" class="wiz-doc-confirm-btn" title="حفظ"><i data-lucide="check"></i></button>
             </div>
           </form>
         </details>
