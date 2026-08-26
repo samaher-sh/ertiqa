@@ -220,8 +220,8 @@ table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #
 .wiz-doc-empty{ padding:56px 0; text-align:center; color:#9ca3af; font-size:13px; }.wiz-doc-empty i, .wiz-doc-empty svg{ width:34px; height:34px; color:var(--pb); margin-bottom:10px; }
 .wiz-doc-del-btn{ padding:8px; border-radius:8px; color:#fca5a5; background:none; border:none; }
 .wiz-doc-del-btn:hover{ background:#fef2f2; color:#ef4444; }
-.wiz-doc-confirm-btn{ padding:8px; border-radius:8px; color:#fff; background:#16a34a; border:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.wiz-doc-confirm-btn:hover{ background:#15803d; }
+.wiz-doc-confirm-btn{ padding:8px; border-radius:8px; color:#16a34a; background:#fff; border:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.wiz-doc-confirm-btn:hover{ background:#f0fdf4; }
 .wiz-doc-confirm-btn i{ width:16px; height:16px; }
 .wiz-doc-footer{ padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:#f0f8fd; border-top:1.5px solid var(--pb); }
 .wiz-doc-footer-count{ font-size:12px; color:#9ca3af; }
