@@ -19,7 +19,24 @@
         يُضاف من هذا الملف فقط (غير موجود بالـ HTML الأساسي)
    ============================================================ */
 
+/* نفس autoGrowTextarea() بـ meetingsummary.js القديم -- كل حقول النص الطويل
+   (مكان الاجتماع، عنوان المهمة، الهدف، النقطة/الرأي/السبب) تكبر تلقائيًا
+   حسب المحتوى بدل ما يبقى ارتفاعها ثابت ويختفي الكلام اللي فوق */
+function autoGrowMSumTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+function bindMSumAutoGrow(scope) {
+  scope.querySelectorAll(".wiz-textarea, .msum-growfield").forEach(el => {
+    autoGrowMSumTextarea(el);
+    el.addEventListener("input", () => autoGrowMSumTextarea(el));
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  bindMSumAutoGrow(document);
+
   bindRowGroup({
     tbodyId: "msumAttendanceBody", rowSelector: "[data-msum-attendee-row]",
     addBtnId: "msumAddAttendanceBtn", delSelector: "[data-msum-del-attendee]",
@@ -66,7 +83,9 @@ function bindRowGroup({ tbodyId, rowSelector, addBtnId, delSelector, fieldPrefix
       const index = tbody.querySelectorAll(rowSelector).length;
       const div = document.createElement("tbody");
       div.innerHTML = template(index).trim();
-      tbody.appendChild(div.firstElementChild);
+      const newRow = div.firstElementChild;
+      tbody.appendChild(newRow);
+      bindMSumAutoGrow(newRow);
       if (window.lucide) lucide.createIcons();
     });
   }

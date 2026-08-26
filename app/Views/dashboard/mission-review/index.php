@@ -102,7 +102,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
         <div class="wiz-sla-grid" style="padding:20px 24px;">
           <div class="wiz-field">
             <label class="wiz-label">اسم المنسّق <span class="wiz-req">*</span></label>
-            <input name="coordinator_name" type="text" class="wiz-input plain" placeholder="اسم منسّق التواصل" value="<?= esc(old('coordinator_name') ?? ($a['coordinator_name'] ?? '')) ?>" <?= $canEdit ? '' : 'readonly' ?>>
+            <input name="coordinator_name" type="text" data-mask="letters" class="wiz-input plain" placeholder="اسم منسّق التواصل" value="<?= esc(old('coordinator_name') ?? ($a['coordinator_name'] ?? '')) ?>" <?= $canEdit ? '' : 'readonly' ?>>
           </div>
           <div class="wiz-field">
             <label class="wiz-label">البريد الإلكتروني للمنسّق</label>
@@ -110,7 +110,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
           </div>
           <div class="wiz-field">
             <label class="wiz-label">رقم جوال المنسّق</label>
-            <input name="coordinator_phone" type="tel" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="05XXXXXXXX" value="<?= esc(old('coordinator_phone') ?? ($a['coordinator_phone'] ?? '')) ?>" <?= $canEdit ? '' : 'readonly' ?>>
+            <input name="coordinator_phone" type="tel" inputmode="numeric" maxlength="10" dir="ltr" style="text-align:left;" data-mask="phone" class="wiz-input plain" placeholder="05XXXXXXXX" value="<?= esc(old('coordinator_phone') ?? ($a['coordinator_phone'] ?? '')) ?>" <?= $canEdit ? '' : 'readonly' ?>>
           </div>
         </div>
 
