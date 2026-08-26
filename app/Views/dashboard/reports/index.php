@@ -28,6 +28,14 @@
                 <option value="<?= $y ?>" <?= $yearFilter === (string) $y ? 'selected' : '' ?>><?= $y ?></option>
               <?php endfor; ?>
             </select>
+            <?php if (!empty($deptOptions)): ?>
+            <select name="dept" class="wiz-select<?= $deptFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
+              <option value="">كل الإدارات</option>
+              <?php foreach ($deptOptions as $deptId => $deptName): ?>
+                <option value="<?= (int) $deptId ?>" <?= $deptFilter === (string) $deptId ? 'selected' : '' ?>><?= esc($deptName) ?></option>
+              <?php endforeach; ?>
+            </select>
+            <?php endif; ?>
             <?php if (!$canCreate): ?>
             <select name="status" class="wiz-select<?= $statusFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
               <option value="">كل الحالات</option>
