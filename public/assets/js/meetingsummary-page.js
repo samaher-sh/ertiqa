@@ -66,7 +66,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initSignaturePad();
   initAttachUpload();
+  bindAttachListActions();
 });
+
+/* ---------- عرض/حذف مرفق من قائمة "المرفقات" ---------- */
+function bindAttachListActions() {
+  const wrap = document.getElementById("msumAttachListWrap");
+  if (!wrap) return;
+
+  wrap.addEventListener("click", async e => {
+    const viewBtn = e.target.closest(".msum-attach-view-btn");
+    if (viewBtn) {
+      const row = viewBtn.closest(".msum-attach-row");
+      openAttachPreviewModal(row.dataset.attachName, row.dataset.attachUrl);
+      return;
+    }
+
+    const delBtn = e.target.closest(".msum-attach-del-btn");
+    if (delBtn) {
+      if (!confirm("هل أنت متأكد من حذف هذا المرفق؟")) return;
+      try {
+        const data = await apiPost(base + "/dashboard/documents/delete/" + delBtn.dataset.attachId, {});
+        if (data.success) {
+          const row = delBtn.closest(".msum-attach-row");
+          const list = row.parentElement;
+          row.remove();
+          if (!list.querySelector(".msum-attach-row")) {
+            list.outerHTML = '<div style="padding:16px 24px;"><span class="msum-attach-empty" style="margin-right:0;">لا توجد مرفقات</span></div>';
+          }
+        } else {
+          alert(data.message || "تعذّر حذف المرفق");
+        }
+      } catch (err) {
+        alert(err.message || "تعذّر حذف المرفق");
+      }
+    }
+  });
+}
+
+function openAttachPreviewModal(name, url) {
+  const overlay = document.createElement("div");
+  overlay.className = "msum-attach-modal-overlay";
+  overlay.innerHTML = `
+    <div class="msum-attach-modal">
+      <i data-lucide="file-text" class="file-ic"></i>
+      <p>${escapeHtml(name)}</p>
+      <div class="msum-attach-modal-actions">
+        <a class="msum-attach-modal-download" href="${url}" target="_blank"><i data-lucide="download"></i> تحميل</a>
+        <button type="button" class="msum-attach-modal-close">إغلاق</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  if (window.lucide) lucide.createIcons();
+
+  const close = () => overlay.remove();
+  overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+  overlay.querySelector(".msum-attach-modal-close").addEventListener("click", close);
+}
 
 function bindRowGroup({ tbodyId, rowSelector, addBtnId, delSelector, fieldPrefix, template }) {
   const tbody = document.getElementById(tbodyId);

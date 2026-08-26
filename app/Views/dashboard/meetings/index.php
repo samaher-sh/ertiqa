@@ -191,11 +191,23 @@ $deptName = $mission['target_department_name'] ?? '';
           <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="paperclip"></i><span style="color:#fff;font-weight:700;font-size:14px;">المرفقات</span></div>
           <?php if (!$allReadOnly): ?><span id="msumAttachMount"></span><?php endif; ?>
         </div>
-        <div style="padding:16px 24px;">
+        <div id="msumAttachListWrap">
           <?php if (!empty($attachments)): ?>
-            <span class="msum-attach-empty" style="margin-right:0;"><?php foreach ($attachments as $i => $d): ?><?= $i ? '، ' : '' ?><a href="<?= base_url('dashboard/documents/download/' . $d['id']) ?>" target="_blank" style="color:var(--p);text-decoration:underline;"><?= esc($d['file_name']) ?></a><?php endforeach; ?></span>
+            <div class="msum-attach-list">
+              <?php foreach ($attachments as $d): ?>
+                <div class="msum-attach-row" data-attach-name="<?= esc($d['file_name'], 'attr') ?>" data-attach-url="<?= base_url('dashboard/documents/download/' . $d['id']) ?>">
+                  <span class="msum-attach-name"><i data-lucide="paperclip"></i> <?= esc($d['file_name']) ?></span>
+                  <div class="msum-attach-actions">
+                    <button type="button" class="msum-attach-view-btn" title="عرض"><i data-lucide="eye"></i></button>
+                    <?php if (!$allReadOnly && (int) ($d['uploaded_by'] ?? 0) === (int) session()->get('user_id')): ?>
+                      <button type="button" class="msum-attach-del-btn" data-attach-id="<?= (int) $d['id'] ?>" title="حذف"><i data-lucide="trash-2"></i></button>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
           <?php else: ?>
-            <span class="msum-attach-empty" style="margin-right:0;">لا توجد مرفقات</span>
+            <div style="padding:16px 24px;"><span class="msum-attach-empty" style="margin-right:0;">لا توجد مرفقات</span></div>
           <?php endif; ?>
         </div>
       </div>
