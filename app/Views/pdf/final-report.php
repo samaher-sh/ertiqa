@@ -224,5 +224,15 @@
             </table>
         <?php endforeach; endif; ?>
     </div>
+
+    <!-- ========== اعتماد رئيس إدارة المراجعة الداخلية ========== -->
+    <h2>اعتماد رئيس إدارة المراجعة الداخلية</h2>
+    <table class="info">
+        <tr>
+            <td class="label">الاسم</td><td><?= esc($report['head_name'] ?? '') ?: '—' ?></td>
+            <td class="label">التوقيع</td>
+            <td><?php if (!empty($report['head_signature'])): ?><img class="sig-img" src="<?= esc($report['head_signature']) ?>"><?php else: ?>—<?php endif; ?></td>
+        </tr>
+    </table>
 </body>
 </html>

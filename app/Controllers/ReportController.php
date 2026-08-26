@@ -130,7 +130,7 @@ class ReportController extends BaseController
             'currentUser'  => $this->sessionUserSummary(),
             'reports'      => $reports,
             'isPresident'  => $isPresident,
-            'isReadOnlyViewer' => $isHr || $isPresident || $isAuditHead,
+            'isReadOnlyViewer' => $isHr || $isPresident,
             'canCreate'    => $canCreate,
             'missions'     => $missions,
             'yearFilter'   => $yearFilter,
@@ -367,12 +367,15 @@ class ReportController extends BaseController
         return $mission && (int) $mission['audit_department_id'] === (int) session()->get('department_id');
     }
 
-    /** POST /dashboard/reports/api/approve — اعتماد رئيس إدارة المراجعة الداخلية النهائي */
+    /** POST /dashboard/reports/api/approve — اعتماد رئيس إدارة المراجعة الداخلية النهائي،
+     *  مع اسمه وتوقيعه (يُحفظان بالتقرير ويظهران أيضًا بمستند PDF الخاص به) */
     public function approve()
     {
         $isJson = $this->isJsonRequest();
         $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $reportId = (int) ($data['report_id'] ?? 0);
+        $headName = trim((string) ($data['head_name'] ?? ''));
+        $headSignature = (string) ($data['head_signature'] ?? '');
 
         if (!$reportId || !$this->canApproveReport($reportId)) {
             if ($isJson) {
@@ -389,8 +392,14 @@ class ReportController extends BaseController
             }
             return redirect()->back()->with('error', 'التقرير غير جاهز للاعتماد حاليًا.');
         }
+        if (!$headName || !$headSignature) {
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب إدخال اسم الرئيس والتوقيع قبل الاعتماد.']);
+            }
+            return redirect()->back()->with('error', 'يجب إدخال اسم الرئيس والتوقيع قبل الاعتماد.');
+        }
 
-        $reportModel->update($reportId, ['status' => 'sent']);
+        $reportModel->update($reportId, ['status' => 'sent', 'head_name' => $headName, 'head_signature' => $headSignature]);
         (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_approved', 'report', $reportId, 'رقم التقرير: ' . $reportId);
 
         if ($isJson) {
