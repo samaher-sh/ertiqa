@@ -27,7 +27,7 @@ $flashSuccess = session()->getFlashdata('success');
    "جولة" مضمَّنة خطوة-بخطوة كانت بالـ SPA القديمة)، عشان الطرف المنتظِر
    يقدر يراجع أي مرحلة سابقة أُنجزت، مو بس المرحلة القادمة التي عليه دوره فيها */
 $tourStages = [
-    ['label' => 'الخطاب الرسمي',          'always' => true, 'actions' => [], 'url' => base_url('dashboard/pdf/mission-letter/' . $mission['id'])],
+    ['label' => 'الخطاب الرسمي',          'always' => true, 'actions' => [], 'url' => base_url('dashboard/pdf/mission-letter/' . $mission['id']) . '?inline=1'],
     ['label' => 'اتفاقية مستوى الخدمة',    'always' => false, 'actions' => ['sla_submitted'], 'url' => base_url('dashboard/target-mission') . '?mission_id=' . $mission['id']],
     ['label' => 'قائمة المستندات المرسلة', 'always' => false, 'actions' => ['documents_submitted'], 'url' => base_url('dashboard/document-requests') . '?mission_id=' . $mission['id']],
     ['label' => 'مصفوفة المخاطر',         'always' => false, 'actions' => ['risk_matrix_saved'], 'url' => base_url('dashboard/risk-matrix') . '?mission_id=' . $mission['id']],
@@ -91,7 +91,7 @@ $reachedStages = array_values(array_filter($tourStages, fn($s) => $s['always'] |
           <?php foreach ($reachedStages as $stage): ?>
             <div class="st-phase-field">
               <span class="lbl"><?= esc($stage['label']) ?></span>
-              <a class="val" style="color:var(--p);text-decoration:underline;" href="<?= esc($stage['url']) ?>" target="_blank"><i data-lucide="eye" style="width:12px;height:12px;vertical-align:middle;"></i> عرض</a>
+              <a class="val st-stage-preview-btn" style="color:var(--p);text-decoration:underline;" href="<?= esc($stage['url']) ?>" target="_blank" data-preview-title="<?= esc($stage['label'], 'attr') ?>"><i data-lucide="eye" style="width:12px;height:12px;vertical-align:middle;"></i> عرض</a>
             </div>
           <?php endforeach; ?>
         </div>
@@ -134,4 +134,5 @@ $reachedStages = array_values(array_filter($tourStages, fn($s) => $s['always'] |
 <?php $this->section('scripts') ?>
 <script src="<?= av('assets/js/utils.js') ?>"></script>
 <script src="<?= av('assets/js/mvc-layout.js') ?>"></script>
+<script src="<?= av('assets/js/senttasks-show-page.js') ?>"></script>
 <?php $this->endSection() ?>
