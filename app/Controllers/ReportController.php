@@ -182,13 +182,35 @@ class ReportController extends BaseController
         }
         $expandedStep = ($requestedStep && isset(self::STEPS[$requestedStep])) ? $requestedStep : ($firstUnchecked ?? (int) end($items)['section_number']);
 
+        /* محتوى المرحلة المعروضة حاليًا يُبنى مباشرة بهذي الصفحة (بدل رابط
+           "افتح الصفحة" فقط)، عشان المستخدم -- خصوصًا رئيس إدارة المراجعة
+           الداخلية قبل اعتماده -- يقدر يستعرض كل مرحلة وهو متنقّل بينها
+           بـ"التالي"/"السابق" بدون ما يطلع من الصفحة */
         $section2Data = null;
+        $section3Data = null;
+        $section4Data = null;
+        $section5Data = null;
+        $section6Data = null;
+
         if ($expandedStep === 2) {
             $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
             $section2Data = [
                 'agreement' => $agreement,
                 'responses' => (new ServiceAgreementResponseModel())->forMission($missionId),
             ];
+        } elseif ($expandedStep === 3) {
+            $section3Data = ['docRequests' => (new DocumentRequestModel())->forMissionWithResponses($missionId)];
+        } elseif ($expandedStep === 4) {
+            $section4Data = ['riskItems' => (new RiskMatrixItemModel())->forMission($missionId)];
+        } elseif ($expandedStep === 5) {
+            $meeting = (new MeetingModel())->firstForMission($missionId);
+            $section5Data = [
+                'meeting'   => $meeting,
+                'attendees' => $meeting ? (new MeetingAttendeeModel())->forMeeting($meeting['id']) : [],
+                'points'    => $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [],
+            ];
+        } elseif ($expandedStep === 6) {
+            $section6Data = ['observations' => (new AuditNoteModel())->forMission($missionId)];
         }
 
         return view('dashboard/reports/show', [
@@ -205,6 +227,10 @@ class ReportController extends BaseController
             'expandedStep' => $expandedStep,
             'stepUrl'      => self::STEP_VIEW_URL[$expandedStep] ?? null,
             'section2Data' => $section2Data,
+            'section3Data' => $section3Data,
+            'section4Data' => $section4Data,
+            'section5Data' => $section5Data,
+            'section6Data' => $section6Data,
         ]);
     }
 
@@ -376,6 +402,7 @@ class ReportController extends BaseController
         $reportId = (int) ($data['report_id'] ?? 0);
         $headName = trim((string) ($data['head_name'] ?? ''));
         $headSignature = (string) ($data['head_signature'] ?? '');
+        $headApprovedAt = trim((string) ($data['head_approved_at'] ?? '')) ?: date('Y-m-d');
 
         if (!$reportId || !$this->canApproveReport($reportId)) {
             if ($isJson) {
@@ -399,7 +426,7 @@ class ReportController extends BaseController
             return redirect()->back()->with('error', 'يجب إدخال اسم الرئيس والتوقيع قبل الاعتماد.');
         }
 
-        $reportModel->update($reportId, ['status' => 'sent', 'head_name' => $headName, 'head_signature' => $headSignature]);
+        $reportModel->update($reportId, ['status' => 'sent', 'head_name' => $headName, 'head_signature' => $headSignature, 'head_approved_at' => $headApprovedAt]);
         (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_approved', 'report', $reportId, 'رقم التقرير: ' . $reportId);
 
         if ($isJson) {
