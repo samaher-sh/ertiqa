@@ -17,13 +17,13 @@ use App\Models\MissionModel;
 
 class ReportController extends BaseController
 {
-    /* روابط الصفحات الحقيقية المطابقة لكل مرحلة (بُنيت بنفس الجلسة) — تُستخدم
-       بدل تضمين محتوى كل مرحلة داخل صفحة التقرير النهائي نفسها (كانت
-       finalreports.js تُعيد استخدام دوال عرض 4 ملفات جافاسكربت مختلفة لهذا،
-       غير ممكن هنا لأننا لا نُحمِّل observations.js/riskmatrix.js/meetingsummary.js
-       على هذي الصفحة أصلًا) -- القسم 2 وحده بلا صفحة حقيقية مخصصة فيُعرض ملخصه هنا مباشرة */
+    /* روابط الصفحات الحقيقية المطابقة لكل مرحلة -- تُضمَّن مباشرة بـ iframe
+       داخل صفحة مراحل الاعتماد نفسها (بدل رابط "افتح الصفحة" فقط)، عشان
+       يظهر نفس النموذج/الصفحة الحقيقية اللي يشوفها أي طرف آخر بالضبط،
+       بدل تكرار عرضه بقالب مختلف. القسم 1 (الخطاب الرسمي) رابط PDF مباشر
+       يُبنى بالكنترولر (يحتاج missionId) فمو موجود هنا */
     private const STEP_VIEW_URL = [
-        1 => null, // خطاب رسمي -- رابط PDF مباشر يُبنى بالكنترولر (يحتاج missionId)
+        2 => 'dashboard/target-mission',
         3 => 'dashboard/document-requests',
         4 => 'dashboard/risk-matrix',
         5 => 'dashboard/meetings',
@@ -182,36 +182,13 @@ class ReportController extends BaseController
         }
         $expandedStep = ($requestedStep && isset(self::STEPS[$requestedStep])) ? $requestedStep : ($firstUnchecked ?? (int) end($items)['section_number']);
 
-        /* محتوى المرحلة المعروضة حاليًا يُبنى مباشرة بهذي الصفحة (بدل رابط
-           "افتح الصفحة" فقط)، عشان المستخدم -- خصوصًا رئيس إدارة المراجعة
-           الداخلية قبل اعتماده -- يقدر يستعرض كل مرحلة وهو متنقّل بينها
-           بـ"التالي"/"السابق" بدون ما يطلع من الصفحة */
-        $section2Data = null;
-        $section3Data = null;
-        $section4Data = null;
-        $section5Data = null;
-        $section6Data = null;
-
-        if ($expandedStep === 2) {
-            $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
-            $section2Data = [
-                'agreement' => $agreement,
-                'responses' => (new ServiceAgreementResponseModel())->forMission($missionId),
-            ];
-        } elseif ($expandedStep === 3) {
-            $section3Data = ['docRequests' => (new DocumentRequestModel())->forMissionWithResponses($missionId)];
-        } elseif ($expandedStep === 4) {
-            $section4Data = ['riskItems' => (new RiskMatrixItemModel())->forMission($missionId)];
-        } elseif ($expandedStep === 5) {
-            $meeting = (new MeetingModel())->firstForMission($missionId);
-            $section5Data = [
-                'meeting'   => $meeting,
-                'attendees' => $meeting ? (new MeetingAttendeeModel())->forMeeting($meeting['id']) : [],
-                'points'    => $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [],
-            ];
-        } elseif ($expandedStep === 6) {
-            $section6Data = ['observations' => (new AuditNoteModel())->forMission($missionId)];
-        }
+        /* محتوى المرحلة المعروضة حاليًا يُضمَّن مباشرة بـ iframe لصفحته
+           الحقيقية (نفس النموذج بالضبط اللي يشوفه أي طرف آخر) بدل رابط
+           "افتح الصفحة" فقط أو إعادة بنائه بقالب مختلف هنا */
+        $stepUrl = self::STEP_VIEW_URL[$expandedStep] ?? null;
+        $stepEmbedUrl = $expandedStep === 1
+            ? base_url('dashboard/pdf/mission-letter/' . $missionId) . '?inline=1'
+            : ($stepUrl ? base_url($stepUrl) . '?mission_id=' . $missionId : null);
 
         return view('dashboard/reports/show', [
             'navItems'     => $this->navItemsForCurrentSession(),
@@ -225,12 +202,7 @@ class ReportController extends BaseController
             'readOnlyViewer' => $readOnlyViewer,
             'isAuditHead'  => $roleCode === 'audit_head',
             'expandedStep' => $expandedStep,
-            'stepUrl'      => self::STEP_VIEW_URL[$expandedStep] ?? null,
-            'section2Data' => $section2Data,
-            'section3Data' => $section3Data,
-            'section4Data' => $section4Data,
-            'section5Data' => $section5Data,
-            'section6Data' => $section6Data,
+            'stepEmbedUrl' => $stepEmbedUrl,
         ]);
     }
 

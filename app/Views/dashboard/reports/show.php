@@ -69,112 +69,10 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
         <span class="fr-step-status <?= $expandedState ?>"><?= $expandedState === 'done' ? 'معتمدة' : ($expandedState === 'active' ? 'الحالية' : 'قادمة') ?></span>
       </div>
       <div class="fr-step-detail-body">
-        <?php if ($expandedStep === 1): ?>
-          <div class="fr-preview-grid"><div class="fr-preview-field span2">
-            <span class="lbl">الخطاب الرسمي</span>
-            <span class="val"><a href="<?= base_url('dashboard/pdf/mission-letter/' . $mission['id']) ?>" target="_blank" style="color:var(--p);text-decoration:underline;">فتح الخطاب الرسمي (PDF)</a></span>
-          </div></div>
-        <?php elseif ($expandedStep === 2 && $section2Data): ?>
-          <?php $ag = $section2Data['agreement']; ?>
-          <div class="fr-preview-grid">
-            <div class="fr-preview-field"><span class="lbl">حالة الاتفاقية</span><span class="val"><?= $ag && $ag['status'] === 'submitted' ? 'مُرسَلة' : 'لم تُرسَل بعد' ?></span></div>
-            <div class="fr-preview-field"><span class="lbl">اسم المنسّق</span><span class="val"><?= esc($ag['coordinator_name'] ?? '—') ?></span></div>
+        <?php if ($stepEmbedUrl): ?>
+          <div class="fr-step-iframe-wrap">
+            <iframe src="<?= esc($stepEmbedUrl, 'attr') ?>" class="fr-step-iframe" loading="lazy"></iframe>
           </div>
-          <?php if (!empty($section2Data['responses'])): ?>
-            <div class="obs-table-wrap" style="margin-top:12px;">
-              <table class="obs-table">
-                <thead><tr><th>البند</th><th style="width:100px;">موافق</th><th>ملاحظة</th></tr></thead>
-                <tbody>
-                  <?php foreach ($section2Data['responses'] as $r): ?>
-                    <tr><td><?= esc($r['row_text']) ?></td><td><?= !empty($r['agree']) ? 'نعم' : (!empty($r['disagree']) ? 'لا' : '—') ?></td><td><?= esc($r['note'] ?: '—') ?></td></tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        <?php elseif ($expandedStep === 3 && $section3Data): ?>
-          <div class="obs-table-wrap">
-            <table class="obs-table">
-              <thead><tr><th style="width:30px;">م</th><th>المستند</th><th style="width:90px;">يوجد</th><th>ملاحظات</th></tr></thead>
-              <tbody>
-                <?php if (empty($section3Data['docRequests'])): ?>
-                  <tr><td colspan="4" style="text-align:center;color:#9ca3af;">لا توجد مستندات مطلوبة</td></tr>
-                <?php else: foreach ($section3Data['docRequests'] as $i => $d): ?>
-                  <tr>
-                    <td><?= $i + 1 ?></td>
-                    <td><?= esc($d['doc_name']) ?></td>
-                    <td><?= $d['exists_flag'] === null ? '—' : ((int) $d['exists_flag'] === 1 ? 'يوجد' : 'لا يوجد') ?></td>
-                    <td><?= esc($d['response_note'] ?: '—') ?></td>
-                  </tr>
-                <?php endforeach; endif; ?>
-              </tbody>
-            </table>
-          </div>
-        <?php elseif ($expandedStep === 4 && $section4Data): ?>
-          <div class="obs-table-wrap">
-            <table class="obs-table">
-              <thead><tr><th style="width:30px;">م</th><th>المخاطر</th><th style="width:80px;">التقييم</th><th>وصف الضوابط</th><th style="width:110px;">نوع النشاط</th></tr></thead>
-              <tbody>
-                <?php if (empty($section4Data['riskItems'])): ?>
-                  <tr><td colspan="5" style="text-align:center;color:#9ca3af;">لا توجد مخاطر مسجّلة</td></tr>
-                <?php else: foreach ($section4Data['riskItems'] as $i => $it): ?>
-                  <tr>
-                    <td><?= $i + 1 ?></td>
-                    <td><?= esc($it['risk']) ?></td>
-                    <td><?= esc($it['risk_rating'] ?: '—') ?></td>
-                    <td><?= esc($it['controls']) ?></td>
-                    <td><?= esc($it['activity_type']) ?></td>
-                  </tr>
-                <?php endforeach; endif; ?>
-              </tbody>
-            </table>
-          </div>
-        <?php elseif ($expandedStep === 5 && $section5Data): ?>
-          <div class="fr-preview-grid">
-            <div class="fr-preview-field"><span class="lbl">تاريخ الاجتماع</span><span class="val"><?= esc($section5Data['meeting']['meeting_date'] ?? '—') ?></span></div>
-            <div class="fr-preview-field"><span class="lbl">مكان الاجتماع</span><span class="val"><?= esc($section5Data['meeting']['location'] ?? '—') ?></span></div>
-          </div>
-          <div class="obs-table-wrap" style="margin-top:12px;">
-            <table class="obs-table">
-              <thead><tr><th style="width:30px;">م</th><th>الاسم</th><th>الإدارة</th><th>الوظيفة</th></tr></thead>
-              <tbody>
-                <?php if (empty($section5Data['attendees'])): ?>
-                  <tr><td colspan="4" style="text-align:center;color:#9ca3af;">لا يوجد حضور مسجّل</td></tr>
-                <?php else: foreach ($section5Data['attendees'] as $i => $a): ?>
-                  <tr><td><?= $i + 1 ?></td><td><?= esc($a['external_name']) ?></td><td><?= esc($a['attendee_dept']) ?></td><td><?= esc($a['attendee_position']) ?></td></tr>
-                <?php endforeach; endif; ?>
-              </tbody>
-            </table>
-          </div>
-          <?php if (!empty($section5Data['points'])): ?>
-          <div class="obs-table-wrap" style="margin-top:12px;">
-            <table class="obs-table">
-              <thead><tr><th>النقطة</th><th>الرأي</th><th>السبب / التوضيح</th></tr></thead>
-              <tbody>
-                <?php foreach ($section5Data['points'] as $p): ?>
-                  <tr><td><?= esc($p['point_text']) ?></td><td><?= esc($p['opinion'] ?: '—') ?></td><td><?= esc($p['reason'] ?: '—') ?></td></tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-          <?php endif; ?>
-        <?php elseif ($expandedStep === 6 && $section6Data): ?>
-          <?php if (empty($section6Data['observations'])): ?>
-            <p style="text-align:center;color:#9ca3af;">لا توجد ملاحظات مسجّلة</p>
-          <?php else: foreach ($section6Data['observations'] as $i => $o): ?>
-            <div class="fr-preview-grid" style="margin-bottom:12px;">
-              <div class="fr-preview-field span2"><span class="lbl"><?= ($i + 1) . '. ' . esc($o['title']) ?></span></div>
-              <div class="fr-preview-field"><span class="lbl">الإدارة المعنية</span><span class="val"><?= esc($o['department_name'] ?? '—') ?></span></div>
-              <div class="fr-preview-field"><span class="lbl">التاريخ</span><span class="val"><?= esc($o['observation_date']) ?></span></div>
-              <div class="fr-preview-field span2"><span class="lbl">الملاحظة</span><span class="val"><?= esc($o['observation_text'] ?: '—') ?></span></div>
-              <div class="fr-preview-field span2"><span class="lbl">التوصيات</span><span class="val"><?= esc($o['recommendations_text'] ?: '—') ?></span></div>
-            </div>
-          <?php endforeach; endif; ?>
-        <?php elseif ($stepUrl): ?>
-          <div class="fr-preview-grid"><div class="fr-preview-field span2">
-            <span class="lbl"><?= esc($expandedItem['section_title']) ?></span>
-            <span class="val"><a href="<?= base_url($stepUrl) ?>?mission_id=<?= (int) $mission['id'] ?>" target="_blank" style="color:var(--p);text-decoration:underline;">فتح "<?= esc($expandedItem['section_title']) ?>" لهذه المهمة</a></span>
-          </div></div>
         <?php endif; ?>
       </div>
       <?php if (!$expandedIsDone): ?><p class="fr-step-hint">لم تكتمل بيانات هذه المرحلة بعد</p><?php endif; ?>
@@ -272,7 +170,5 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
 <?php $this->section('scripts') ?>
 <script src="<?= av('assets/js/utils.js') ?>"></script>
 <script src="<?= av('assets/js/mvc-layout.js') ?>"></script>
-<?php if ($isAuditHead && $report['status'] === 'pending_signatures'): ?>
 <script src="<?= av('assets/js/finalreports-show-page.js') ?>"></script>
-<?php endif; ?>
 <?php $this->endSection() ?>

@@ -1,12 +1,31 @@
 /* ============================================================
-   finalreports-show-page.js — تحسين تدريجي لكومبوننت "اعتماد رئيس إدارة
-   المراجعة الداخلية" بصفحة مراحل اعتماد تقرير حقيقية (ReportController::show).
-   يضيف لوحة توقيع تفاعلية بـ canvas (نفس آلية msumInitSignaturePad/
-   bindSignaturePad المستخدمة بملخص الاجتماع وخطوة اتفاقية مستوى الخدمة)،
-   ويربط التوقيع + الاسم بحقلين مخفيين يُرسلان مع نموذج الاعتماد العادي.
+   finalreports-show-page.js — تحسين تدريجي لصفحة مراحل اعتماد تقرير حقيقية
+   (ReportController::show). دالتان مستقلتان:
+   1) إخفاء عناصر التصفح المشتركة داخل iframe معاينة المرحلة الحالية.
+   2) لوحة توقيع تفاعلية بـ canvas لكومبوننت "اعتماد رئيس إدارة المراجعة
+      الداخلية" (نفس آلية msumInitSignaturePad/bindSignaturePad المستخدمة
+      بملخص الاجتماع وخطوة اتفاقية مستوى الخدمة)، تربط التوقيع + الاسم
+      بحقلين مخفيين يُرسلان مع نموذج الاعتماد العادي.
    ============================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
+  /* نافذة معاينة مرحلة الاعتماد الحالية (fr-step-iframe): نفس الصفحة
+     الحقيقية المطابقة للمرحلة (خطاب/اتفاقية/مستندات/مخاطر/اجتماع/ملاحظات)،
+     مضمَّنة same-origin -- نخفي عناصر التصفح المشتركة (سايدبار/هيدر) وبطاقة
+     "المهمة المرتبطة" عشان يبين محتوى المرحلة فقط، نفس أسلوب
+     senttasks-show-page.js بالضبط */
+  document.querySelectorAll(".fr-step-iframe").forEach(iframe => {
+    iframe.addEventListener("load", () => {
+      try {
+        const doc = iframe.contentDocument;
+        ["#sidebar", ".topbar", ".mobile-overlay", ".obs-linked-card"].forEach(sel => {
+          const el = doc.querySelector(sel);
+          if (el) el.style.display = "none";
+        });
+      } catch (e) {}
+    });
+  });
+
   const canvas = document.getElementById("frHeadSigPad");
   const form = document.getElementById("frApproveForm");
   if (!canvas || !form) return;
