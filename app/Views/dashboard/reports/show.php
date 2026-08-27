@@ -97,10 +97,8 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
           <a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $mission['id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</a>
         </div>
       <?php elseif ($isAuditHead): ?>
-        <?php if ($report['status'] === 'pending_signatures'): ?>
-          <span style="font-size:12px;color:#6b7280;">أدخل اسمك ووقّع بالأسفل لاعتماد التقرير</span>
-        <?php else: ?>
-          <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'بانتظار الاعتماد' : 'تحت الإعداد' ?></span>
+        <?php if ($report['status'] !== 'pending_signatures'): ?>
+          <span style="font-size:12px;color:#6b7280;">تحت الإعداد</span>
         <?php endif; ?>
       <?php elseif ($readOnlyViewer): ?>
         <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'بانتظار الاعتماد' : 'تحت الإعداد' ?></span>

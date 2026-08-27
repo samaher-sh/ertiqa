@@ -42,12 +42,12 @@ $deptName = $mission['target_department_name'] ?? '';
         <div class="wiz-card-head">
           <i data-lucide="users"></i>
           <div><h2>ملخص الاجتماع</h2></div>
-          <?php if ($allReadOnly): ?><span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span><?php endif; ?>
+          <?php if ($allReadOnly && empty($embed)): ?><span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span><?php endif; ?>
           <div style="display:flex;gap:8px;margin-right:auto;">
             <?php if ($selectedMissionId && empty($embed)): ?><a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/meeting-summary/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a><?php endif; ?>
           </div>
         </div>
-        <?php if ($isHrUser): ?><div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div><?php endif; ?>
+        <?php if ($isHrUser && empty($embed)): ?><div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div><?php endif; ?>
 
         <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <?php if ($errorMsg): ?><div class="obs-alert obs-alert-error" style="grid-column:1/-1;"><?= esc($errorMsg) ?></div><?php endif; ?>
@@ -107,7 +107,7 @@ $deptName = $mission['target_department_name'] ?? '';
         <div class="wiz-card-head" style="justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:8px;">
             <i data-lucide="message-square"></i><span style="color:#fff;font-weight:700;font-size:14px;">ملخص ما تم مناقشته خلال الاجتماع</span>
-            <?php if ($isHrUser): ?><span class="msum-auto-chip" style="background:rgba(255,255,255,.2);color:#fff;border:none;"><i data-lucide="lock"></i>النقاط تلقائية</span><?php endif; ?>
+            <?php if ($isHrUser && empty($embed)): ?><span class="msum-auto-chip" style="background:rgba(255,255,255,.2);color:#fff;border:none;"><i data-lucide="lock"></i>النقاط تلقائية</span><?php endif; ?>
           </div>
           <?php if ($canAddRemovePoints): ?><button type="submit" name="form_action" value="add_point" formnovalidate class="msum-attach-btn" id="msumAddPointBtn" style="padding:6px 12px;font-size:12px;box-shadow:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);"><i data-lucide="plus" style="width:14px;height:14px;"></i> إضافة نقطة</button><?php endif; ?>
         </div>
