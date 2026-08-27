@@ -36,7 +36,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
         <div class="obs-header-actions">
           <?php if (!$readOnly): ?>
             <a class="obs-btn-add" href="<?= base_url('dashboard/risk-matrix/edit') . ($selectedMissionId ? '?mission_id=' . $selectedMissionId : '') ?>"><i data-lucide="pencil"></i> تعديل الجدول</a>
-          <?php else: ?>
+          <?php elseif (empty($embed)): ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
           <?php endif; ?>
           <?php if ($selectedMissionId && empty($embed)): ?>

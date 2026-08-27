@@ -141,7 +141,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
         <div class="wiz-card-head">
           <i data-lucide="clipboard-list"></i>
           <span style="color:#fff;font-weight:700;font-size:14px;">بنود الاتفاقية</span>
-          <p style="margin-right:auto;font-size:11px;"><?= $canEdit ? 'وافق أو لا توافق على كل بند، وأضف ملاحظة إن وجدت' : 'عرض فقط' ?></p>
+          <?php if ($canEdit): ?><p style="margin-right:auto;font-size:11px;">وافق أو لا توافق على كل بند، وأضف ملاحظة إن وجدت</p><?php elseif (empty($embed)): ?><p style="margin-right:auto;font-size:11px;">عرض فقط</p><?php endif; ?>
         </div>
         <div class="wiz-table-wrap">
           <table class="wiz-table">
