@@ -64,8 +64,8 @@ $reportsApproved = (int) ($stats['reports_approved_count'] ?? 0);
         <p class="notif-empty">لا توجد إخطارات حاليًا</p>
       <?php else: ?>
         <?php foreach ($activeNotifs as $n):
-          $icon = $n['type'] === 'meeting' ? 'calendar-check' : ($n['type'] === 'report_approval' ? 'file-check' : 'bell');
-          $href = $n['type'] === 'meeting'
+          $icon = $n['type'] === 'meeting' ? 'calendar-check' : ($n['type'] === 'meeting_proposal' ? 'calendar-clock' : ($n['type'] === 'report_approval' ? 'file-check' : 'bell'));
+          $href = ($n['type'] === 'meeting' || $n['type'] === 'meeting_proposal')
               ? base_url('dashboard/meeting-schedule') . '?mission_id=' . (int) $n['mission_id']
               : ($n['type'] === 'report_approval'
                   ? base_url('dashboard/reports/' . (int) $n['mission_id'])

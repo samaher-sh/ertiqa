@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\MissionModel;
 use App\Models\MeetingModel;
 use App\Models\ReportModel;
+use App\Models\MissionChatMessageModel;
 
 class DashboardController extends BaseController
 {
@@ -170,6 +171,25 @@ class DashboardController extends BaseController
                     'body'       => 'المهمة (' . ($meeting['mission_code'] ?? '') . ') — ' . $meeting['meeting_date']
                         . ($meeting['meeting_time'] ? ' — ' . $meeting['meeting_time'] : '')
                         . ($meeting['location'] ? ' · ' . $meeting['location'] : ''),
+                ];
+            }
+
+            // مواعيد اجتماع مقترحة لسا بانتظار رد الطرف الثاني -- تظهر فقط لمن
+            // عليه دور الرد (مو لنفس الطرف اللي اقترح، ومو للطرف الثالث لو كان
+            // فريق المراجعة أكثر من شخص وواحد منهم اللي اقترح)
+            foreach ((new MissionChatMessageModel())->pendingProposalsForMissions($missionIds) as $p) {
+                $senderIsTarget = (int) $p['sender_department_id'] === (int) $p['target_department_id'];
+                if ($isHrDept && $senderIsTarget) continue;
+                if ($isAuditMember && !$senderIsTarget) continue;
+
+                $notifications[] = [
+                    'type'       => 'meeting_proposal',
+                    'mission_id' => (int) $p['mission_id'],
+                    'updated_at' => $p['created_at'],
+                    'title'      => 'يوجد موعد اجتماع مقترح بانتظار ردكم',
+                    'body'       => 'المهمة (' . ($p['mission_code'] ?? '') . ') — ' . $p['proposed_date']
+                        . ($p['proposed_time'] ? ' — ' . $p['proposed_time'] : '')
+                        . ($p['proposed_location'] ? ' · ' . $p['proposed_location'] : ''),
                 ];
             }
         }
