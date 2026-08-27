@@ -188,7 +188,7 @@ class ReportController extends BaseController
         $stepUrl = self::STEP_VIEW_URL[$expandedStep] ?? null;
         $stepEmbedUrl = $expandedStep === 1
             ? base_url('dashboard/pdf/mission-letter/' . $missionId) . '?inline=1'
-            : ($stepUrl ? base_url($stepUrl) . '?mission_id=' . $missionId : null);
+            : ($stepUrl ? base_url($stepUrl) . '?mission_id=' . $missionId . '&embed=1' : null);
 
         return view('dashboard/reports/show', [
             'navItems'     => $this->navItemsForCurrentSession(),
@@ -345,7 +345,7 @@ class ReportController extends BaseController
         if ($isJson) {
             return $this->response->setJSON(['success' => true]);
         }
-        return redirect()->to(base_url('dashboard/reports/' . (int) ($data['mission_id'] ?? $report['mission_id'] ?? 0)))->with('success', 'تم اعتماد التقرير وإرساله بنجاح.');
+        return redirect()->to(base_url('dashboard/reports/' . (int) ($data['mission_id'] ?? $report['mission_id'] ?? 0)))->with('success', 'تم إرسال التقرير للمراجعة بنجاح.');
     }
 
     /** الاعتماد النهائي (pending_signatures → sent) مقصور على رئيس إدارة المراجعة

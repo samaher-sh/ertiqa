@@ -64,14 +64,19 @@ class ObservationController extends BaseController
 
         $roleCode = session()->get('role_code');
 
+        /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
+           لغرض المعاينة فقط، فتُجبَر على عرض فقط ويُخفى تصدير PDF الخاص بها */
+        $embed = $this->request->getGet('embed') === '1';
+
         return view('dashboard/observations/index', $this->pageViewData([
             'missions'          => $missions,
             'selectedMissionId' => $missionId,
             'mission'           => $mission,
             'items'             => $items,
-            'readOnly'          => $this->roleFlags()['obsReadOnly'],
+            'readOnly'          => $this->roleFlags()['obsReadOnly'] || $embed,
             'isAuditMember'     => $roleCode === 'audit_member',
             'isAuditHead'       => $roleCode === 'audit_head',
+            'embed'             => $embed,
         ]));
     }
 

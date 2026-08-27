@@ -77,7 +77,6 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
       </div>
       <?php if (!$expandedIsDone): ?><p class="fr-step-hint">لم تكتمل بيانات هذه المرحلة بعد</p><?php endif; ?>
 
-      <?php if ($isAuditHead || $readOnlyViewer): ?>
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <?php $prevNum = $expandedStep > 1 ? $expandedStep - 1 : null; $nextNum = $expandedStep < 6 ? $expandedStep + 1 : null; ?>
         <?php if ($prevNum): ?>
@@ -87,7 +86,6 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
           <a class="fr-next-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $mission['id']) ?>?step=<?= $nextNum ?>">التالي <i data-lucide="chevron-left"></i></a>
         <?php endif; ?>
       </div>
-      <?php endif; ?>
     </div>
     <?php endif; ?>
 
@@ -102,17 +100,17 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
         <?php if ($report['status'] === 'pending_signatures'): ?>
           <span style="font-size:12px;color:#6b7280;">أدخل اسمك ووقّع بالأسفل لاعتماد التقرير</span>
         <?php else: ?>
-          <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'تحت المراجعة' : 'تحت الإعداد' ?></span>
+          <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'بانتظار الاعتماد' : 'تحت الإعداد' ?></span>
         <?php endif; ?>
       <?php elseif ($readOnlyViewer): ?>
-        <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'تحت المراجعة' : 'تحت الإعداد' ?></span>
+        <span style="font-size:12px;color:#6b7280;"><?= $report['status'] === 'pending_signatures' ? 'بانتظار الاعتماد' : 'تحت الإعداد' ?></span>
       <?php elseif ($expandedItem): ?>
         <?php if ($isLastStep): ?>
           <form method="post" action="<?= base_url('dashboard/reports/api/finalize') ?>">
             <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
             <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
             <input type="hidden" name="mission_id" value="<?= (int) $mission['id'] ?>">
-            <button type="submit" class="fr-submit-btn" <?= (!$expandedIsDone || !$priorChecked || $report['status'] !== 'draft') ? 'disabled' : '' ?>><i data-lucide="send"></i> <?= $report['status'] === 'draft' ? 'اعتماد التقرير وإرساله' : 'تم الإرسال' ?></button>
+            <button type="submit" class="fr-submit-btn" <?= (!$expandedIsDone || !$priorChecked || $report['status'] !== 'draft') ? 'disabled' : '' ?>><i data-lucide="send"></i> <?= $report['status'] === 'draft' ? 'إرسال للمراجعة' : 'تم الإرسال' ?></button>
           </form>
         <?php else: ?>
           <form method="post" action="<?= base_url('dashboard/reports/api/toggle-check') ?>">

@@ -44,7 +44,7 @@ $deptName = $mission['target_department_name'] ?? '';
           <div><h2>ملخص الاجتماع</h2></div>
           <?php if ($allReadOnly): ?><span class="msum-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span><?php endif; ?>
           <div style="display:flex;gap:8px;margin-right:auto;">
-            <?php if ($selectedMissionId): ?><a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/meeting-summary/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a><?php endif; ?>
+            <?php if ($selectedMissionId && empty($embed)): ?><a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/meeting-summary/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a><?php endif; ?>
           </div>
         </div>
         <?php if ($isHrUser): ?><div class="msum-auto-banner"><span><i data-lucide="zap"></i> الإدارة محل المراجعة تُملأ تلقائياً من المهمة المرتبطة</span></div><?php endif; ?>

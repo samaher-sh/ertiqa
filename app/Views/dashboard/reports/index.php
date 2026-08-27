@@ -39,7 +39,7 @@
             <?php if (!$canCreate): ?>
             <select name="status" class="wiz-select<?= $statusFilter ? ' filled' : '' ?>" onchange="this.form.submit()">
               <option value="">كل الحالات</option>
-              <option value="pending_signatures" <?= $statusFilter === 'pending_signatures' ? 'selected' : '' ?>>تحت المراجعة</option>
+              <option value="pending_signatures" <?= $statusFilter === 'pending_signatures' ? 'selected' : '' ?>>بانتظار الاعتماد</option>
               <option value="sent" <?= $statusFilter === 'sent' ? 'selected' : '' ?>>معتمد</option>
             </select>
             <?php endif; ?>
@@ -79,7 +79,7 @@
               <td style="font-size:12px;color:#6b7280;"><?= esc($r['year']) ?></td>
               <td style="font-size:12px;color:#6b7280;"><?= esc(substr($r['created_at'] ?? '', 0, 10)) ?></td>
               <?php
-              $statusLabel = $approved ? 'معتمد' : (($isPresident && $r['status'] === 'pending_signatures') ? 'بانتظار الاعتماد' : ($r['status'] === 'pending_signatures' ? 'تحت المراجعة' : 'تحت الإعداد'));
+              $statusLabel = $approved ? 'معتمد' : ($r['status'] === 'pending_signatures' ? 'بانتظار الاعتماد' : 'تحت الإعداد');
               ?>
               <td><span class="fr-status-pill" style="background:<?= $approved ? '#f0fdf4' : '#fef9ec' ?>;color:<?= $approved ? '#1f5f7a' : '#b45309' ?>;"><span class="dot" style="background:<?= $approved ? '#3185b3' : '#f59e0b' ?>;"></span><?= esc($statusLabel) ?></span></td>
               <td>

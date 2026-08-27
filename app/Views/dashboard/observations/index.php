@@ -35,7 +35,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
           <?php else: ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
           <?php endif; ?>
-          <?php if ($selectedMissionId): ?>
+          <?php if ($selectedMissionId && empty($embed)): ?>
             <a class="obs-btn-pdf" id="obsExportBtn" href="<?= base_url('dashboard/pdf/observations/' . $selectedMissionId) ?>" style="text-decoration:none;"><i data-lucide="file-text"></i> تصدير PDF</a>
           <?php endif; ?>
         </div>
