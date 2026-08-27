@@ -82,7 +82,7 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
         <?php if ($prevNum): ?>
           <a class="fr-back-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $mission['id']) ?>?step=<?= $prevNum ?>"><i data-lucide="chevron-right"></i> السابق</a>
         <?php else: ?><span></span><?php endif; ?>
-        <?php if ($nextNum): ?>
+        <?php if ($nextNum && ($isAuditHead || $readOnlyViewer)): ?>
           <a class="fr-next-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $mission['id']) ?>?step=<?= $nextNum ?>">التالي <i data-lucide="chevron-left"></i></a>
         <?php endif; ?>
       </div>

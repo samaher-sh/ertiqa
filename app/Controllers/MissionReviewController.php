@@ -108,6 +108,7 @@ class MissionReviewController extends BaseController
             'agreement'         => $agreement,
             'rowsBySection'     => $rowsBySection,
             'canEdit'           => $canEdit && !$embed,
+            'embed'             => $embed,
         ]);
     }
 

@@ -35,6 +35,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
   <div class="obs-disabled-wrap<?= $locked ? ' locked' : '' ?>">
   <?php if ($mission): ?>
 
+    <?php if (empty($embed)): ?>
     <div class="wiz-card">
       <div class="wiz-card-head">
         <i data-lucide="file-text"></i>
@@ -87,6 +88,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
         </div>
       </div>
     </div>
+    <?php endif; ?>
 
     <form method="post" action="<?= base_url('dashboard/target-mission/api/save-agreement') ?>" id="mrAgreementForm">
       <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
@@ -198,6 +200,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
       </div>
     </form>
 
+    <?php if (empty($embed)): ?>
     <div class="wiz-card">
       <div class="wiz-card-head" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -210,6 +213,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
         <a class="dr-submit-btn" style="text-decoration:none;" href="<?= base_url('dashboard/document-requests') ?>?mission_id=<?= (int) $mission['id'] ?>"><i data-lucide="folder-check"></i> فتح قائمة المستندات</a>
       </div>
     </div>
+    <?php endif; ?>
 
   <?php endif; ?>
   </div>
