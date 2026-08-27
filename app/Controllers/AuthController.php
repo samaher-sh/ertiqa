@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use App\Services\LDAPService;
 
 class AuthController extends BaseController
 {
@@ -55,12 +56,14 @@ class AuthController extends BaseController
                 return $this->response->setStatusCode(401)->setJSON($genericError);
             }
         } else {
-            // auth_source == 'ldap' — التحقق عبر LDAP لسا ما اتبنى
-            // (مكانه المستقبلي هنا، بدون أي تعديل على باقي المنطق وقتها)
-            return $this->response->setStatusCode(501)->setJSON([
-                'success' => false,
-                'message' => 'الدخول عبر الدليل الموحّد (LDAP) لسا غير مفعّل لهذا الحساب.',
-            ]);
+            // auth_source == 'ldap' — التحقق عبر خادم Active Directory (LDAPService)،
+            // بنفس رقمه الوظيفي (national_id) المُدخَل بنموذج الدخول. نفس رسالة
+            // الخطأ العامة دائمًا بغض النظر عن السبب الفعلي (رقم غير موجود بـ AD،
+            // كلمة مرور غلط، أو تعذّر الاتصال بالخادم) -- ما نُسرّب أي تفصيل للعميل
+            $ldapResult = (new LDAPService())->authenticate($nationalId, $password);
+            if (empty($ldapResult['success'])) {
+                return $this->response->setStatusCode(401)->setJSON($genericError);
+            }
         }
 
         // نجح الدخول — نحفظ بيانات الجلسة
