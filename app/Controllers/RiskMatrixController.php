@@ -57,11 +57,17 @@ class RiskMatrixController extends BaseController
             $rows = (new RiskMatrixItemModel())->forMission($missionId);
         }
 
+        /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
+           لغرض المعاينة فقط، فتُجبَر على عرض فقط ويُخفى تصدير PDF الخاص بها
+           (التقرير النهائي فيه تصدير واحد شامل يغطّيها) */
+        $embed = $this->request->getGet('embed') === '1';
+
         return view('dashboard/risk-matrix/index', $this->pageViewData([
             'missions'          => $missions,
             'selectedMissionId' => $missionId,
             'rows'              => $rows,
-            'readOnly'          => $this->isReadOnly(),
+            'readOnly'          => $this->isReadOnly() || $embed,
+            'embed'             => $embed,
         ]));
     }
 

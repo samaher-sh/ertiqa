@@ -84,6 +84,10 @@ class MeetingSummaryController extends BaseController
             $attachments = (new DocumentModel())->forRelated('meeting', $meeting['id']);
         }
 
+        /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
+           لغرض المعاينة فقط، فتُجبَر على عرض فقط ويُخفى تصدير PDF الخاص بها */
+        $embed = $this->request->getGet('embed') === '1';
+
         return view('dashboard/meetings/index', [
             'navItems'     => $this->navItemsForCurrentSession(),
             'migratedKeys' => $this->migratedPageKeys(),
@@ -98,7 +102,8 @@ class MeetingSummaryController extends BaseController
             'approvals'         => $approvals,
             'attachments'       => $attachments,
             'isHrUser'          => $flags['isHrUser'],
-            'allReadOnly'       => $flags['allReadOnly'],
+            'allReadOnly'       => $flags['allReadOnly'] || $embed,
+            'embed'             => $embed,
         ]);
     }
 

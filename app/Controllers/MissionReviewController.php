@@ -92,6 +92,11 @@ class MissionReviewController extends BaseController
             $canEdit = (bool) ($departmentId && (int) $mission['target_department_id'] === $departmentId);
         }
 
+        /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
+           لغرض المعاينة فقط، فتُجبَر على عرض فقط بغض النظر عن صلاحية المستخدم
+           الفعلية على هذي المهمة */
+        $embed = $this->request->getGet('embed') === '1';
+
         return view('dashboard/mission-review/index', [
             'navItems'     => $this->navItemsForCurrentSession(),
             'migratedKeys' => $this->migratedPageKeys(),
@@ -102,7 +107,7 @@ class MissionReviewController extends BaseController
             'mission'           => $mission,
             'agreement'         => $agreement,
             'rowsBySection'     => $rowsBySection,
-            'canEdit'           => $canEdit,
+            'canEdit'           => $canEdit && !$embed,
         ]);
     }
 

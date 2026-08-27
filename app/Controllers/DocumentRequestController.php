@@ -70,10 +70,14 @@ class DocumentRequestController extends BaseController
 
         $userId = (int) session()->get('user_id');
         $allowedIds = array_map('intval', array_column((new MissionModel())->activeMissionsForUser($userId), 'id'));
-        $canAdd = $missionId && in_array($missionId, $allowedIds, true);
+        /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
+           (ReportController::show) لغرض المعاينة فقط، فتُجبَر على عرض فقط بغض
+           النظر عن صلاحية المستخدم الفعلية على هذي المهمة */
+        $embed = $this->request->getGet('embed') === '1';
+        $canAdd = $missionId && in_array($missionId, $allowedIds, true) && !$embed;
 
         $departmentId = (int) session()->get('department_id');
-        $canSubmit = $missionId && $departmentId && (int) ($mission['target_department_id'] ?? 0) === $departmentId;
+        $canSubmit = $missionId && $departmentId && (int) ($mission['target_department_id'] ?? 0) === $departmentId && !$embed;
 
         return view('dashboard/document-requests/index', [
             'navItems'     => $this->navItemsForCurrentSession(),

@@ -39,7 +39,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
           <?php else: ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
           <?php endif; ?>
-          <?php if ($selectedMissionId): ?>
+          <?php if ($selectedMissionId && empty($embed)): ?>
             <a class="obs-btn-pdf" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/risk-matrix/' . $selectedMissionId) ?>"><i data-lucide="file-text"></i> تصدير PDF</a>
           <?php endif; ?>
         </div>
