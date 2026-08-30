@@ -28,7 +28,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
       <div class="wiz-field">
         <label class="wiz-label">الرقم الوظيفي <span class="wiz-req">*</span></label>
         <div style="display:flex;gap:8px;">
-          <input type="text" name="employee_number" id="employeeNumberInput" inputmode="numeric" class="wiz-input" style="flex:1;" placeholder="أدخلي الرقم الوظيفي" value="<?= esc(old('employee_number') ?? '') ?>" required>
+          <input type="text" name="employee_number" id="employeeNumberInput" inputmode="numeric" class="wiz-input" style="flex:1;" placeholder="أدخل الرقم الوظيفي" value="<?= esc(old('employee_number') ?? '') ?>" required>
           <button type="button" class="wiz-btn wiz-btn-outline" id="searchLdapBtn">بحث</button>
         </div>
       </div>
@@ -43,7 +43,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
       <div class="wiz-field">
         <label class="wiz-label">الدور بنظام ارتقاء <span class="wiz-req">*</span></label>
         <select name="role_id" class="wiz-select" required>
-          <option value="">اختاري الدور</option>
+          <option value="">اختر الدور</option>
           <?php foreach ($roles as $r): ?>
             <option value="<?= (int) $r['id'] ?>" <?= (string) old('role_id') === (string) $r['id'] ? 'selected' : '' ?>><?= esc($r['name_ar']) ?></option>
           <?php endforeach; ?>
@@ -53,7 +53,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
       <div class="wiz-field">
         <label class="wiz-label">الإدارة بنظام ارتقاء <span class="wiz-req">*</span></label>
         <select name="department_id" class="wiz-select" required>
-          <option value="">اختاري الإدارة</option>
+          <option value="">اختر الإدارة</option>
           <?php foreach ($departments as $d): ?>
             <option value="<?= (int) $d['id'] ?>" <?= (string) old('department_id') === (string) $d['id'] ? 'selected' : '' ?>><?= esc(($d['parent_id'] ? '— ' : '') . $d['name_ar']) ?></option>
           <?php endforeach; ?>
