@@ -61,6 +61,7 @@ abstract class BaseController extends Controller
             'observations'      => ['label' => 'الملاحظات',          'url' => base_url('dashboard/observations'),     'icon' => 'book-open'],
             'finalReports'      => ['label' => 'تقرير نهائي',        'url' => base_url('dashboard/reports'),          'icon' => 'file-text'],
             'sentTasks'         => ['label' => 'المراسلات المشتركة', 'url' => base_url('dashboard/sent-tasks'),       'icon' => 'send'],
+            'addUser'           => ['label' => 'إضافة مستخدم',       'url' => base_url('dashboard/users/create'),     'icon' => 'user-plus'],
         ];
     }
 
@@ -77,7 +78,7 @@ abstract class BaseController extends Controller
         } elseif ($isHrDept) {
             $keys = ['home', 'meetingSchedule', 'sentTasks', 'finalReports'];
         } elseif ($isAuditHead) {
-            $keys = ['home', 'finalReports'];
+            $keys = ['home', 'finalReports', 'addUser'];
         }
 
         $result = [];
@@ -110,7 +111,7 @@ abstract class BaseController extends Controller
      */
     protected function migratedPageKeys(): array
     {
-        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'home'];
+        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'home', 'addUser'];
     }
 
     /**

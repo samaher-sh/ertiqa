@@ -27,4 +27,22 @@ class DepartmentModel extends Model
     {
         return $this->where('name_ar', $name)->first() ?: null;
     }
+
+    /**
+     * كل الإدارات (رئيسية وفرعية) بترتيب هرمي مسطّح -- كل إدارة رئيسية
+     * وبعدها فروعها مباشرة -- تُستخدم لقائمة منسدلة واحدة مسطّحة (زي فورم
+     * إضافة مستخدم) بدل قائمتين متتاليتين (رئيسية ثم فرعية)
+     */
+    public function flatHierarchy(): array
+    {
+        $mains = $this->mainDepartments();
+        $flat = [];
+        foreach ($mains as $main) {
+            $flat[] = $main;
+            foreach ($this->subDepartments((int) $main['id']) as $sub) {
+                $flat[] = $sub;
+            }
+        }
+        return $flat;
+    }
 }
