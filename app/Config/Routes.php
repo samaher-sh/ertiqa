@@ -15,6 +15,8 @@ $routes->get('api/departments', 'ApiController::departments');
 $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'DashboardController::index');
     $routes->get('ldap/search',           'LdapController::search');
+    $routes->get('users/create',          'UsersController::create');
+    $routes->post('users',                'UsersController::store');
     $routes->get('api/home-stats',        'DashboardController::homeStats');
     $routes->get('api/target-missions',   'DashboardController::targetMissions');
     $routes->get('api/active-missions',   'DashboardController::activeMissions');
