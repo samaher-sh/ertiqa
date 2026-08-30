@@ -47,22 +47,26 @@ class AuthController extends BaseController
             'message' => 'اسم المستخدم أو كلمة المرور غير صحيحة.',
         ];
 
-        if (!$user) {
-            return $this->response->setStatusCode(401)->setJSON($genericError);
-        }
-
-        if ($user['auth_source'] === 'local') {
+        if ($user && $user['auth_source'] === 'local') {
+            // حساب محلي صراحة (حسابات اختبار/طوارئ) -- ما نكلّم AD إطلاقًا
             if (empty($user['password_hash']) || !password_verify($password, $user['password_hash'])) {
                 return $this->response->setStatusCode(401)->setJSON($genericError);
             }
         } else {
-            // auth_source == 'ldap' — التحقق عبر خادم Active Directory (LDAPService)،
-            // بنفس رقمه الوظيفي (national_id) المُدخَل بنموذج الدخول. نفس رسالة
-            // الخطأ العامة دائمًا بغض النظر عن السبب الفعلي (رقم غير موجود بـ AD،
-            // كلمة مرور غلط، أو تعذّر الاتصال بالخادم) -- ما نُسرّب أي تفصيل للعميل
+            // أي حالة ثانية (صف محلي بحالة auth_source='ldap'، أو ما فيه صف
+            // محلي إطلاقًا) — نتحقق مباشرة عند خادم Active Directory بدون
+            // اشتراط وجود صف محلي مسبقًا. لو صحّت بيانات AD لكن الموظف ما
+            // له حساب مفعّل بنظامنا (ما فيه دور/إدارة مُسندة)، نرفض برسالة
+            // واضحة (مو رسالة الخطأ العامة) عشان يعرف يتواصل مع الإدارة
             $ldapResult = (new LDAPService())->authenticate($nationalId, $password);
             if (empty($ldapResult['success'])) {
                 return $this->response->setStatusCode(401)->setJSON($genericError);
+            }
+            if (!$user) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'حسابك موثّق بالدليل الموحّد (LDAP)، لكنه غير مُفعّل بنظام ارتقاء بعد. يرجى التواصل مع إدارة المراجعة الداخلية.',
+                ]);
             }
         }
 
