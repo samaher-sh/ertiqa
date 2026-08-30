@@ -19,7 +19,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
   <div class="wiz-card">
     <div class="wiz-card-head">
       <i data-lucide="user-plus"></i>
-      <div><h2>إضافة مستخدم جديد</h2><p>يُضاف المستخدم من الدليل الموحّد (LDAP) بعد التحقق من وجوده فعليًا</p></div>
+      <div><h2>إضافة مستخدم جديد</h2></div>
     </div>
 
     <form method="post" action="<?= base_url('dashboard/users') ?>" id="addUserForm" style="padding:20px 24px;display:flex;flex-direction:column;gap:16px;">
