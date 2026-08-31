@@ -162,7 +162,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
                     <td><div class="lbl"><span class="dot"></span><span><?= esc($row['row_text']) ?></span></div></td>
                     <td style="text-align:center;">
                       <?php if ($canEdit): ?>
-                        <label class="wiz-checkbox-visual mr-toggle<?= $isAgree ? ' checked' : '' ?>" style="cursor:pointer;">
+                        <label class="wiz-checkbox-visual mr-toggle<?= $isAgree ? ' checked' : '' ?>" style="cursor:pointer;" data-mr-row="<?= (int) $row['id'] ?>" data-mr-answer="agree">
                           <input type="radio" name="rows[<?= (int) $row['id'] ?>][answer]" value="agree" <?= $isAgree ? 'checked' : '' ?> style="position:absolute;opacity:0;width:0;height:0;">
                           <?= $isAgree ? '<i data-lucide="check" style="width:14px;height:14px;color:var(--p);"></i>' : '' ?>
                         </label>
@@ -172,7 +172,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
                     </td>
                     <td style="text-align:center;">
                       <?php if ($canEdit): ?>
-                        <label class="wiz-checkbox-visual no mr-toggle<?= $isDisagree ? ' checked' : '' ?>" style="cursor:pointer;">
+                        <label class="wiz-checkbox-visual no mr-toggle<?= $isDisagree ? ' checked' : '' ?>" style="cursor:pointer;" data-mr-row="<?= (int) $row['id'] ?>" data-mr-answer="disagree">
                           <input type="radio" name="rows[<?= (int) $row['id'] ?>][answer]" value="disagree" <?= $isDisagree ? 'checked' : '' ?> style="position:absolute;opacity:0;width:0;height:0;">
                           <?= $isDisagree ? '<i data-lucide="x" style="width:14px;height:14px;color:#dc2626;"></i>' : '' ?>
                         </label>
@@ -223,4 +223,5 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
 <?php $this->section('scripts') ?>
 <script src="<?= av('assets/js/utils.js') ?>"></script>
 <script src="<?= av('assets/js/mvc-layout.js') ?>"></script>
+<script src="<?= av('assets/js/mission-review-page.js') ?>"></script>
 <?php $this->endSection() ?>
