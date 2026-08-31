@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="<?= av('assets/css/dashboard.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/wizard.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/observations.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/documentrequests.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/missionreview.css') ?>">
 <?php $this->endSection() ?>
 
