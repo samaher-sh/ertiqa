@@ -45,4 +45,33 @@ class DepartmentModel extends Model
         }
         return $flat;
     }
+
+    /**
+     * يقارن إدارتين مع مراعاة الهرمية (إدارة رئيسية + أقسام فرعية تحتها) --
+     * لا يكفي تطابق الرقم بالضبط، لأنه منسّق الإدارة الرئيسية (زي الموارد
+     * البشرية) لازم يُعتبر بنطاق أي مهمة تستهدف قسمًا فرعيًا تحتها (زي
+     * التوظيف) والعكس صحيح. مستخدَمة بكل صلاحية وصول تقارن إدارة مستخدم
+     * بإدارة مستهدفة بمهمة (مصفوفة مستوى الخدمة، تحميل المرفقات، ...)
+     */
+    public function isInScope(int $deptA, int $deptB): bool
+    {
+        if (!$deptA || !$deptB) {
+            return false;
+        }
+        if ($deptA === $deptB) {
+            return true;
+        }
+
+        $a = $this->find($deptA);
+        if ($a && (int) ($a['parent_id'] ?? 0) === $deptB) {
+            return true;
+        }
+
+        $b = $this->find($deptB);
+        if ($b && (int) ($b['parent_id'] ?? 0) === $deptA) {
+            return true;
+        }
+
+        return false;
+    }
 }

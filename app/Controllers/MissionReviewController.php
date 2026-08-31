@@ -17,34 +17,10 @@ use App\Models\DepartmentModel;
  */
 class MissionReviewController extends BaseController
 {
-    /**
-     * يقارن إدارة المستخدم بالإدارة المستهدفة بالمهمة مع مراعاة الهرمية
-     * (إدارة رئيسية + أقسام فرعية تحتها) -- لا يكفي تطابق الرقم بالضبط، لأنه
-     * منسّق الإدارة الرئيسية (زي الموارد البشرية) لازم يقدر يعبّي اتفاقية
-     * مهمة تستهدف قسمًا فرعيًا تحتها (زي التوظيف) والعكس صحيح
-     */
+    /** يقارن إدارة المستخدم بالإدارة المستهدفة بالمهمة مع مراعاة الهرمية -- راجع DepartmentModel::isInScope() */
     private function departmentInScope(int $targetDeptId, int $userDeptId): bool
     {
-        if (!$userDeptId || !$targetDeptId) {
-            return false;
-        }
-        if ($targetDeptId === $userDeptId) {
-            return true;
-        }
-
-        $deptModel = new DepartmentModel();
-
-        $target = $deptModel->find($targetDeptId);
-        if ($target && (int) ($target['parent_id'] ?? 0) === $userDeptId) {
-            return true;
-        }
-
-        $userDept = $deptModel->find($userDeptId);
-        if ($userDept && (int) ($userDept['parent_id'] ?? 0) === $targetDeptId) {
-            return true;
-        }
-
-        return false;
+        return (new DepartmentModel())->isInScope($targetDeptId, $userDeptId);
     }
 
     /** المهمة لو المستخدم الحالي فعليًا من الإدارة المستهدفة لها (أو إدارة رئيسية/فرعية منها)، وإلا null */
