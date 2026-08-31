@@ -214,8 +214,10 @@ table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #
 .wiz-locked-cell .inner{ opacity:.3; pointer-events:none; }
 .wiz-locked-cell .overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:12px; background:rgba(241,245,249,.85); }.wiz-locked-cell .overlay i, .wiz-locked-cell .overlay svg{ width:13px; height:13px; color:#9ca3af; }
 .wiz-pill{ padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; background:#eef3f5; color:#94a3b8; border:1.5px solid #e2e8f0; }
-.wiz-upload-pill{ display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:12px; font-size:11px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); }
-.wiz-upload-pill i{ width:12px; height:12px; }
+.wiz-upload-pill{ display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:12px; font-size:11px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); max-width:100%; }
+.wiz-upload-pill i{ width:12px; height:12px; flex-shrink:0; }
+.wiz-upload-pill span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wiz-upload-pill.has-file{ background:#eafff0; color:#15803d; border-color:#86efac; }
 .wiz-doc-note-input{ width:100%; padding:8px 12px; border-radius:12px; font-size:13px; border:1.5px solid #e2e8f0; background:#f8fafc; font-family:inherit; outline:none; }
 .wiz-doc-empty{ padding:56px 0; text-align:center; color:#9ca3af; font-size:13px; }.wiz-doc-empty i, .wiz-doc-empty svg{ width:34px; height:34px; color:var(--pb); margin-bottom:10px; }
 .wiz-doc-del-btn{ padding:8px; border-radius:8px; color:#fca5a5; background:none; border:none; }
