@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\DocumentModel;
 use App\Models\MissionModel;
 use App\Models\MeetingModel;
+use App\Models\DepartmentModel;
 
 class DocumentController extends BaseController
 {
@@ -18,17 +19,32 @@ class DocumentController extends BaseController
      * ReportController::missionForParty، مطلوب هنا لأن endpoint المرفقات هذا هو
      * اللي كان يفشل بصمت (403) ويكسر تحميل بيانات ملخص الاجتماع كاملة عبر
      * Promise.all بمسم meetingsummary.js لمّا يُستخدم رئيس إدارة المراجعة
-     * الداخلية (مثلًا أثناء تصدير التقرير النهائي)
+     * الداخلية (مثلًا أثناء تصدير التقرير النهائي).
+     *
+     * كانت ناقصة طرف "الإدارة المستهدفة" (منسّق/مدير إدارة محل المراجعة)
+     * كليًا -- فمستند رفعه المنسّق نفسه عبر صفحة قائمة المستندات كان يفشل
+     * تنزيله بـ 404 "ليس لديك صلاحية الوصول"، لأن activeMissionsForUser()
+     * ترجّع بس مهام فريق المراجعة (مو الإدارة الخاضعة له)
      */
     private function missionAccessAllowed(int $missionId): bool
     {
-        if (session()->get('role_code') === 'audit_head') {
-            $mission = (new MissionModel())->find($missionId);
-            return $mission && (int) $mission['audit_department_id'] === (int) session()->get('department_id');
+        $mission = (new MissionModel())->find($missionId);
+        if (!$mission) {
+            return false;
         }
+
+        $departmentId = (int) session()->get('department_id');
+
+        if (session()->get('role_code') === 'audit_head') {
+            return (int) $mission['audit_department_id'] === $departmentId;
+        }
+
         $userId = (int) session()->get('user_id');
         $allowedIds = array_map('intval', array_column((new MissionModel())->activeMissionsForUser($userId), 'id'));
-        return in_array($missionId, $allowedIds, true);
+        $isAuditSide  = in_array($missionId, $allowedIds, true);
+        $isTargetSide = (new DepartmentModel())->isInScope((int) $mission['target_department_id'], $departmentId);
+
+        return $isAuditSide || $isTargetSide;
     }
 
     /**
