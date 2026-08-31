@@ -32,7 +32,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
       'formAction'        => base_url('dashboard/target-mission'),
   ]) ?>
 
-  <div class="obs-disabled-wrap<?= $locked ? ' locked' : '' ?>">
+  <div class="obs-disabled-wrap flex flex-col gap-4<?= $locked ? ' locked' : '' ?>">
   <?php if ($mission): ?>
 
     <?php if (empty($embed)): ?>
@@ -90,7 +90,7 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
     </div>
     <?php endif; ?>
 
-    <form method="post" action="<?= base_url('dashboard/target-mission/api/save-agreement') ?>" id="mrAgreementForm">
+    <form method="post" action="<?= base_url('dashboard/target-mission/api/save-agreement') ?>" id="mrAgreementForm" class="flex flex-col gap-4">
       <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
       <input type="hidden" name="mission_id" value="<?= (int) $mission['id'] ?>">
 
