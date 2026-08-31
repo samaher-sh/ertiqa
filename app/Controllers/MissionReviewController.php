@@ -7,6 +7,7 @@ use App\Models\ServiceAgreementModel;
 use App\Models\ServiceAgreementResponseModel;
 use App\Models\MissionStageHistoryModel;
 use App\Models\AuditLogModel;
+use App\Models\DepartmentModel;
 
 /**
  * صفحة مراجعة المهمة من طرف الإدارة الخاضعة للمراجعة (dept_coordinator وما شابه):
@@ -16,7 +17,37 @@ use App\Models\AuditLogModel;
  */
 class MissionReviewController extends BaseController
 {
-    /** المهمة لو المستخدم الحالي فعليًا من الإدارة المستهدفة لها، وإلا null */
+    /**
+     * يقارن إدارة المستخدم بالإدارة المستهدفة بالمهمة مع مراعاة الهرمية
+     * (إدارة رئيسية + أقسام فرعية تحتها) -- لا يكفي تطابق الرقم بالضبط، لأنه
+     * منسّق الإدارة الرئيسية (زي الموارد البشرية) لازم يقدر يعبّي اتفاقية
+     * مهمة تستهدف قسمًا فرعيًا تحتها (زي التوظيف) والعكس صحيح
+     */
+    private function departmentInScope(int $targetDeptId, int $userDeptId): bool
+    {
+        if (!$userDeptId || !$targetDeptId) {
+            return false;
+        }
+        if ($targetDeptId === $userDeptId) {
+            return true;
+        }
+
+        $deptModel = new DepartmentModel();
+
+        $target = $deptModel->find($targetDeptId);
+        if ($target && (int) ($target['parent_id'] ?? 0) === $userDeptId) {
+            return true;
+        }
+
+        $userDept = $deptModel->find($userDeptId);
+        if ($userDept && (int) ($userDept['parent_id'] ?? 0) === $targetDeptId) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /** المهمة لو المستخدم الحالي فعليًا من الإدارة المستهدفة لها (أو إدارة رئيسية/فرعية منها)، وإلا null */
     private function missionForTargetUser(int $missionId): ?array
     {
         $mission = (new MissionModel())->findWithDetails($missionId);
@@ -25,7 +56,7 @@ class MissionReviewController extends BaseController
         }
 
         $departmentId = (int) session()->get('department_id');
-        if (!$departmentId || (int) $mission['target_department_id'] !== $departmentId) {
+        if (!$this->departmentInScope((int) $mission['target_department_id'], $departmentId)) {
             return null;
         }
 
@@ -53,7 +84,7 @@ class MissionReviewController extends BaseController
 
         $allowedIds = array_map('intval', array_column($missionModel->activeMissionsForUser($userId), 'id'));
         $isAuditSide  = in_array($missionId, $allowedIds, true);
-        $isTargetSide = $departmentId && (int) $mission['target_department_id'] === $departmentId;
+        $isTargetSide = $this->departmentInScope((int) $mission['target_department_id'], $departmentId);
 
         return ($isAuditSide || $isTargetSide) ? $mission : null;
     }
@@ -89,7 +120,7 @@ class MissionReviewController extends BaseController
                 $rowsBySection[$r['section_title']][] = $r;
             }
             $departmentId = (int) session()->get('department_id');
-            $canEdit = (bool) ($departmentId && (int) $mission['target_department_id'] === $departmentId);
+            $canEdit = $this->departmentInScope((int) $mission['target_department_id'], $departmentId);
         }
 
         /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
