@@ -76,8 +76,8 @@ $locked = !$selectedMissionId;
                         <label class="mr-exists-pill yes"><input type="radio" name="responses[<?= $i ?>][exists_flag]" value="1" <?= (int) $r['exists_flag'] === 1 ? 'checked' : '' ?>> يوجد</label>
                         <label class="mr-exists-pill no"><input type="radio" name="responses[<?= $i ?>][exists_flag]" value="0" <?= $r['exists_flag'] !== null && (int) $r['exists_flag'] === 0 ? 'checked' : '' ?>> لا يوجد</label>
                       </div>
-                    <?php else: ?>
-                      <span class="wiz-pill"><?= $hasResponse ? ((int) $r['exists_flag'] ? 'يوجد' : 'لا يوجد') : 'بانتظار الرد' ?></span>
+                    <?php elseif ($hasResponse): ?>
+                      <span class="wiz-pill"><?= (int) $r['exists_flag'] ? 'يوجد' : 'لا يوجد' ?></span>
                     <?php endif; ?>
                   </td>
                   <td style="text-align:center;">
