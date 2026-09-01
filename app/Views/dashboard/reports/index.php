@@ -9,7 +9,12 @@
 <?php $this->endSection() ?>
 
 <?php $this->section('content') ?>
+<?php
+$flash = session()->getFlashdata('success') ?? session()->getFlashdata('error');
+$flashType = session()->getFlashdata('success') ? 'success' : 'error';
+?>
 <div class="flex flex-col gap-4">
+  <?php if ($flash): ?><div class="obs-alert obs-alert-<?= $flashType ?>"><?= esc($flash) ?></div><?php endif; ?>
   <div class="fr-header-card">
     <div class="fr-header-bar">
       <i class="main" data-lucide="file-text"></i>
