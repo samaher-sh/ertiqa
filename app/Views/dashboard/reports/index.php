@@ -85,11 +85,11 @@
               <td>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a class="fr-action-view-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $r['mission_id']) ?>">عرض</a>
-                  <?php if ($approved): ?><a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $r['mission_id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i></a><?php endif; ?>
                   <?php if ($isAuditHead): ?>
-                    <button type="button" class="fr-action-approve-btn" data-report-id="<?= (int) $r['id'] ?>" data-mission-code="<?= esc($r['mission_code'], 'attr') ?>" title="اعتماد التقرير"><i data-lucide="check"></i></button>
-                    <button type="button" class="fr-action-reject-btn" data-report-id="<?= (int) $r['id'] ?>" data-mission-code="<?= esc($r['mission_code'], 'attr') ?>" title="رفض التقرير"><i data-lucide="x"></i></button>
+                    <button type="button" class="fr-action-approve-btn" data-report-id="<?= (int) $r['id'] ?>" data-mission-code="<?= esc($r['mission_code'], 'attr') ?>" title="اعتماد التقرير">اعتماد</button>
+                    <button type="button" class="fr-action-reject-btn" data-report-id="<?= (int) $r['id'] ?>" data-mission-code="<?= esc($r['mission_code'], 'attr') ?>" title="رفض التقرير">رفض</button>
                   <?php endif; ?>
+                  <?php if ($approved): ?><a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $r['mission_id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i></a><?php endif; ?>
                 </div>
               </td>
             </tr>
