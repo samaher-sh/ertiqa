@@ -34,6 +34,9 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
 ?>
 <div class="flex flex-col gap-5">
   <?php if ($flash): ?><div class="obs-alert obs-alert-<?= $flashType ?>"><?= esc($flash) ?></div><?php endif; ?>
+  <?php if ($report['status'] === 'draft' && !empty($report['head_rejection_note'])): ?>
+    <div class="obs-alert obs-alert-error"><strong>رفض رئيس إدارة المراجعة الداخلية التقرير وأرجعه للتعديل:</strong> <?= esc($report['head_rejection_note']) ?></div>
+  <?php endif; ?>
 
   <div class="fr-topbar">
     <a class="fr-back-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports') ?>"><i data-lucide="chevron-right"></i> التقارير النهائية</a>

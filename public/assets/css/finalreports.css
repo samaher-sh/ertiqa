@@ -51,8 +51,12 @@ table.fr-table tbody tr{ border-bottom:1px solid #eef3f5; }
 .fr-status-pill{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:6px 10px; border-radius:9999px; }
 .fr-status-pill .dot{ width:6px; height:6px; border-radius:50%; }
 .fr-action-view-btn{ padding:6px 16px; border-radius:8px; font-size:12px; font-weight:700; color:#fff; background:var(--p); border:1px solid var(--pd); }
-.fr-action-approve-btn{ display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; color:#1f5f7a; background:#f0fdf4; border:1px solid #b3d4e5; }
-.fr-action-approve-btn i{ width:11px; height:11px; }
+.fr-action-approve-btn, .fr-action-reject-btn{ display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; cursor:pointer; transition:all .12s; }
+.fr-action-approve-btn{ color:#15803d; background:#eafff0; border:1px solid #86efac; }
+.fr-action-approve-btn:hover{ background:#15803d; color:#fff; }
+.fr-action-reject-btn{ color:#dc2626; background:#fef2f2; border:1px solid #fecaca; }
+.fr-action-reject-btn:hover{ background:#dc2626; color:#fff; }
+.fr-action-approve-btn i, .fr-action-reject-btn i{ width:14px; height:14px; }
 .fr-action-approved-pill{ display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#1f5f7a; background:#f0fdf4; border:1px solid #b3d4e5; padding:6px 12px; border-radius:8px; }
 .fr-action-approved-pill i{ width:11px; height:11px; }
 /* زر "تصدير PDF" (رئيس إدارة المراجعة الداخلية، تقارير معتمدة) -- بجدول القائمة
@@ -201,3 +205,25 @@ table.fr-doc-table td:last-child, table.fr-risk-table td:last-child, table.fr-me
 
 /* fr-preview-empty / fr-preview-grid / fr-preview-field: تستخدمها أيضًا جولة
    "عرض" بالمراسلات المشتركة (senttasks.js) لمرحلة "التقرير النهائي" -- لا تُحذف */
+
+/* ===== نافذتا "اعتماد"/"رفض" المنبثقتَين بقائمة التقارير (audit_head) ===== */
+.fr-modal-overlay{ display:none; position:fixed; inset:0; background:rgba(21,44,51,.45); z-index:200; align-items:center; justify-content:center; padding:20px; }
+.fr-modal-overlay.open{ display:flex; }
+.fr-modal-card{ background:#fff; border-radius:16px; width:100%; max-width:460px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(13,132,181,.25); }
+.fr-modal-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 20px; border-radius:16px 16px 0 0; background:var(--p); color:#fff; }
+.fr-modal-head.reject{ background:#dc2626; }
+.fr-modal-head h3{ display:flex; align-items:center; gap:8px; margin:0; font-size:14px; font-weight:700; }
+.fr-modal-close{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.18); color:#fff; cursor:pointer; }
+.fr-modal-close:hover{ background:rgba(255,255,255,.32); }
+.fr-modal-close i{ width:13px; height:13px; }
+.fr-modal-body{ padding:20px; display:flex; flex-direction:column; gap:14px; }
+.fr-modal-sub{ margin:0; font-size:12px; font-weight:700; color:var(--pd); background:var(--pl); border:1px solid var(--pb); border-radius:8px; padding:8px 12px; }
+.fr-modal-textarea{ min-height:96px; resize:vertical; font-family:inherit; }
+.fr-modal-actions{ display:flex; gap:10px; }
+.fr-modal-approve-btn{ display:flex; align-items:center; gap:8px; padding:10px 22px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#15803d; border:none; cursor:pointer; }
+.fr-modal-approve-btn:hover{ background:#166534; }
+.fr-modal-reject-btn{ display:flex; align-items:center; gap:8px; padding:10px 22px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#dc2626; border:none; cursor:pointer; }
+.fr-modal-reject-btn:hover{ background:#b91c1c; }
+.fr-modal-cancel-btn{ padding:10px 18px; border-radius:12px; font-size:13px; font-weight:700; color:#4a6b74; background:#f0f7fa; border:1px solid #d8e6eb; cursor:pointer; }
+.fr-modal-cancel-btn:hover{ background:#e2ecf0; }
+.fr-modal-approve-btn i, .fr-modal-reject-btn i{ width:14px; height:14px; }
