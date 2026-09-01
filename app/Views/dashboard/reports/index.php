@@ -99,10 +99,6 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
               <td>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a class="fr-action-view-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $r['mission_id']) ?>">عرض</a>
-                  <?php if ($isAuditHead): ?>
-                    <button type="button" class="fr-action-approve-btn" data-report-id="<?= (int) $r['id'] ?>" data-mission-code="<?= esc($r['mission_code'], 'attr') ?>" title="اعتماد التقرير">اعتماد</button>
-                    <button type="button" class="fr-action-reject-btn" data-report-id="<?= (int) $r['id'] ?>" data-mission-code="<?= esc($r['mission_code'], 'attr') ?>" title="رفض التقرير">رفض</button>
-                  <?php endif; ?>
                   <?php if ($approved): ?><a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $r['mission_id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i></a><?php endif; ?>
                 </div>
               </td>
@@ -112,77 +108,10 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
       </tbody>
     </table>
   </div>
-
-  <?php if ($isAuditHead): ?>
-  <div class="fr-modal-overlay" id="frApproveModal">
-    <div class="fr-modal-card">
-      <div class="fr-modal-head">
-        <h3><i data-lucide="check-check"></i> اعتماد التقرير</h3>
-        <button type="button" class="fr-modal-close" data-modal-close="frApproveModal"><i data-lucide="x"></i></button>
-      </div>
-      <form method="post" action="<?= base_url('dashboard/reports/api/approve') ?>" id="frApproveForm" class="fr-modal-body">
-        <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-        <input type="hidden" name="report_id" id="frApproveReportId" value="">
-        <input type="hidden" name="head_name" id="frApproveHeadNameHidden">
-        <input type="hidden" name="head_signature" id="frApproveSigHidden">
-        <p class="fr-modal-sub" id="frApproveMissionLabel"></p>
-
-        <div class="wiz-field">
-          <span class="wiz-label">اسم الرئيس</span>
-          <input type="text" class="wiz-input" id="frApproveHeadName" placeholder="اسم رئيس إدارة المراجعة الداخلية">
-        </div>
-
-        <div class="wiz-field">
-          <span class="wiz-label">التوقيع</span>
-          <div class="wiz-sig-pad-card">
-            <canvas id="frApproveSigPad" class="wiz-sig-pad-canvas" width="440" height="90" style="height:90px;width:100%;"></canvas>
-            <span class="wiz-sig-pad-hint" id="frApproveSigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
-            <button type="button" class="wiz-sig-pad-clear" id="frApproveSigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
-          </div>
-        </div>
-
-        <div class="wiz-field">
-          <span class="wiz-label">التاريخ</span>
-          <input type="date" class="wiz-input" name="head_approved_at" id="frApproveDate" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-        </div>
-
-        <div class="fr-modal-actions">
-          <button type="submit" class="fr-modal-approve-btn"><i data-lucide="check-check"></i> اعتماد التقرير</button>
-          <button type="button" class="fr-modal-cancel-btn" data-modal-close="frApproveModal">إلغاء</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="fr-modal-overlay" id="frRejectModal">
-    <div class="fr-modal-card">
-      <div class="fr-modal-head reject">
-        <h3><i data-lucide="x-circle"></i> رفض التقرير</h3>
-        <button type="button" class="fr-modal-close" data-modal-close="frRejectModal"><i data-lucide="x"></i></button>
-      </div>
-      <form method="post" action="<?= base_url('dashboard/reports/api/reject') ?>" id="frRejectForm" class="fr-modal-body">
-        <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-        <input type="hidden" name="report_id" id="frRejectReportId" value="">
-        <p class="fr-modal-sub" id="frRejectMissionLabel"></p>
-
-        <div class="wiz-field">
-          <span class="wiz-label">سبب الرفض <span class="wiz-req">*</span></span>
-          <textarea name="note" id="frRejectNote" class="wiz-input fr-modal-textarea" rows="4" placeholder="اكتب سبب الرفض هنا... سيظهر للمراجع عشان يعدّل التقرير" required></textarea>
-        </div>
-
-        <div class="fr-modal-actions">
-          <button type="submit" class="fr-modal-reject-btn"><i data-lucide="x-circle"></i> رفض التقرير</button>
-          <button type="button" class="fr-modal-cancel-btn" data-modal-close="frRejectModal">إلغاء</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  <?php endif; ?>
 </div>
 <?php $this->endSection() ?>
 
 <?php $this->section('scripts') ?>
 <script src="<?= av('assets/js/utils.js') ?>"></script>
 <script src="<?= av('assets/js/mvc-layout.js') ?>"></script>
-<?php if ($isAuditHead): ?><script src="<?= av('assets/js/reports-index-page.js') ?>"></script><?php endif; ?>
 <?php $this->endSection() ?>

@@ -130,7 +130,6 @@ class ReportController extends BaseController
             'currentUser'  => $this->sessionUserSummary(),
             'reports'      => $reports,
             'isPresident'  => $isPresident,
-            'isAuditHead'  => $isAuditHead,
             'isReadOnlyViewer' => $isHr || $isPresident,
             'canCreate'    => $canCreate,
             'missions'     => $missions,
@@ -449,7 +448,7 @@ class ReportController extends BaseController
         if ($isJson) {
             return $this->response->setJSON(['success' => true]);
         }
-        return redirect()->to(base_url('dashboard/reports'))->with('success', 'تم رفض التقرير وإرجاعه للمراجع.');
+        return redirect()->to(base_url('dashboard/reports/' . (int) $report['mission_id']))->with('success', 'تم رفض التقرير وإرجاعه للمراجع.');
     }
 
     /**

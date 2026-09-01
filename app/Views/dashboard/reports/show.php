@@ -162,6 +162,24 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
       </div>
     </form>
   </div>
+
+  <div class="wiz-card" id="frRejectCard">
+    <div class="wiz-card-head reject"><i data-lucide="x-circle"></i><span style="color:#fff;font-weight:700;font-size:14px;">رفض التقرير</span></div>
+    <form method="post" action="<?= base_url('dashboard/reports/api/reject') ?>" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+      <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+      <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
+
+      <div class="wiz-field">
+        <span class="wiz-label">سبب الرفض</span>
+        <textarea name="note" class="wiz-input fr-reject-textarea" rows="3" required placeholder="اكتب سبب الرفض هنا... سيظهر للمراجع عشان يعدّل التقرير"></textarea>
+      </div>
+
+      <div>
+        <button type="submit" class="fr-reject-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="x-circle"></i> رفض التقرير</button>
+        <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الرفض</p><?php endif; ?>
+      </div>
+    </form>
+  </div>
   <?php endif; ?>
 </div>
 <?php $this->endSection() ?>
