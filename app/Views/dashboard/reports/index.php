@@ -79,9 +79,18 @@
               <td style="font-size:12px;color:#6b7280;"><?= esc($r['year']) ?></td>
               <td style="font-size:12px;color:#6b7280;"><?= esc(substr($r['created_at'] ?? '', 0, 10)) ?></td>
               <?php
-              $statusLabel = $approved ? 'معتمد' : ($r['status'] === 'pending_signatures' ? 'بانتظار الاعتماد' : 'تحت الإعداد');
+              $rejected = $r['status'] === 'draft' && !empty($r['head_rejection_note']);
+              if ($approved) {
+                  $statusLabel = 'معتمد'; $pillBg = '#f0fdf4'; $pillColor = '#1f5f7a'; $dotColor = '#3185b3';
+              } elseif ($rejected) {
+                  $statusLabel = 'مرفوض'; $pillBg = '#fef2f2'; $pillColor = '#dc2626'; $dotColor = '#dc2626';
+              } elseif ($r['status'] === 'pending_signatures') {
+                  $statusLabel = 'بانتظار الاعتماد'; $pillBg = '#fef9ec'; $pillColor = '#b45309'; $dotColor = '#f59e0b';
+              } else {
+                  $statusLabel = 'تحت الإعداد'; $pillBg = '#fef9ec'; $pillColor = '#b45309'; $dotColor = '#f59e0b';
+              }
               ?>
-              <td><span class="fr-status-pill" style="background:<?= $approved ? '#f0fdf4' : '#fef9ec' ?>;color:<?= $approved ? '#1f5f7a' : '#b45309' ?>;"><span class="dot" style="background:<?= $approved ? '#3185b3' : '#f59e0b' ?>;"></span><?= esc($statusLabel) ?></span></td>
+              <td><span class="fr-status-pill" style="background:<?= $pillBg ?>;color:<?= $pillColor ?>;"><span class="dot" style="background:<?= $dotColor ?>;"></span><?= esc($statusLabel) ?></span></td>
               <td>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a class="fr-action-view-btn" style="text-decoration:none;" href="<?= base_url('dashboard/reports/' . $r['mission_id']) ?>">عرض</a>

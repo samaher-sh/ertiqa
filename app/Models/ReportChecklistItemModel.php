@@ -22,4 +22,12 @@ class ReportChecklistItemModel extends Model
     {
         $this->where('report_id', $reportId)->where('section_number', $sectionNumber)->set(['is_checked' => $checked ? 1 : 0])->update();
     }
+
+    /** يفرّغ علامات "تم" لكل مراحل تقرير -- تُستخدم وقت رفض رئيس إدارة المراجعة
+     *  الداخلية للتقرير، عشان يلزم المراجع يعيد تأكيد كل مرحلة قبل ما يقدر
+     *  يرسل التقرير مرة ثانية (بدل ما يرسله فورًا بدون أي مراجعة فعلية) */
+    public function resetForReport(int $reportId): void
+    {
+        $this->where('report_id', $reportId)->set(['is_checked' => 0])->update();
+    }
 }
