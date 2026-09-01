@@ -130,6 +130,7 @@ class ReportController extends BaseController
             'currentUser'  => $this->sessionUserSummary(),
             'reports'      => $reports,
             'isPresident'  => $isPresident,
+            'isAuditHead'  => $isAuditHead,
             'isReadOnlyViewer' => $isHr || $isPresident,
             'canCreate'    => $canCreate,
             'missions'     => $missions,
@@ -405,6 +406,46 @@ class ReportController extends BaseController
             return $this->response->setJSON(['success' => true]);
         }
         return redirect()->to(base_url('dashboard/reports/' . (int) $report['mission_id']))->with('success', 'تم اعتماد التقرير بنجاح.');
+    }
+
+    /** POST /dashboard/reports/api/reject — رفض التقرير من رئيس إدارة المراجعة الداخلية،
+     *  يرجعه للمراجع ليعدّله (pending_signatures → draft) مع سبب الرفض */
+    public function reject()
+    {
+        $isJson = $this->isJsonRequest();
+        $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
+        $reportId = (int) ($data['report_id'] ?? 0);
+        $note = trim((string) ($data['note'] ?? ''));
+
+        if (!$reportId || !$this->canApproveReport($reportId)) {
+            if ($isJson) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية رفض هذا التقرير.']);
+            }
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية رفض هذا التقرير.');
+        }
+
+        $reportModel = new ReportModel();
+        $report = $reportModel->find($reportId);
+        if (!$report || $report['status'] !== 'pending_signatures') {
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'التقرير غير جاهز للرفض حاليًا (لازم يكون بانتظار الاعتماد).']);
+            }
+            return redirect()->back()->with('error', 'التقرير غير جاهز للرفض حاليًا (لازم يكون بانتظار الاعتماد).');
+        }
+        if (!$note) {
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب كتابة سبب الرفض.']);
+            }
+            return redirect()->back()->with('error', 'يجب كتابة سبب الرفض.');
+        }
+
+        $reportModel->update($reportId, ['status' => 'draft', 'head_rejection_note' => $note]);
+        (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_rejected', 'report', $reportId, $note);
+
+        if ($isJson) {
+            return $this->response->setJSON(['success' => true]);
+        }
+        return redirect()->to(base_url('dashboard/reports'))->with('success', 'تم رفض التقرير وإرجاعه للمراجع.');
     }
 
     /**

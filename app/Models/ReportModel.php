@@ -11,7 +11,7 @@ class ReportModel extends Model
     protected $returnType    = 'array';
     protected $useTimestamps = true;
 
-    protected $allowedFields = ['mission_id', 'status', 'head_name', 'head_signature', 'head_approved_at', 'generated_at', 'pdf_document_id', 'created_by'];
+    protected $allowedFields = ['mission_id', 'status', 'head_name', 'head_signature', 'head_approved_at', 'head_rejection_note', 'generated_at', 'pdf_document_id', 'created_by'];
 
     public function forUser(int $userId, array $filters = []): array
     {
