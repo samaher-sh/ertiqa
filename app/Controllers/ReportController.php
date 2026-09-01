@@ -440,6 +440,10 @@ class ReportController extends BaseController
         }
 
         $reportModel->update($reportId, ['status' => 'draft', 'head_rejection_note' => $note]);
+        // نفرّغ علامات "تم" لكل المراحل -- تلزم المراجع يعيد فتح ويؤكد كل مرحلة
+        // فعليًا قبل ما يقدر يرسل التقرير مرة ثانية، بدل ما يضغط "إرسال
+        // للمراجعة" فورًا بدون أي مراجعة حقيقية لسبب الرفض
+        (new ReportChecklistItemModel())->resetForReport($reportId);
         (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_rejected', 'report', $reportId, $note);
 
         if ($isJson) {
