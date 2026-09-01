@@ -200,9 +200,22 @@ table.fr-doc-table td:last-child, table.fr-risk-table td:last-child, table.fr-me
 /* fr-preview-empty / fr-preview-grid / fr-preview-field: تستخدمها أيضًا جولة
    "عرض" بالمراسلات المشتركة (senttasks.js) لمرحلة "التقرير النهائي" -- لا تُحذف */
 
-/* ===== بطاقة "رفض التقرير" بأسفل صفحة مراحل الاعتماد (audit_head) -- جنب
-   بطاقة "اعتماد رئيس إدارة المراجعة الداخلية" الموجودة أصلًا ===== */
-.wiz-card-head.reject{ background:#dc2626; }
+/* ===== بطاقة "قرار رئيس إدارة المراجعة الداخلية" بأسفل صفحة مراحل الاعتماد
+   (audit_head) -- زرا اعتماد/رفض جنب بعض (details name="frDecision" يخليهم
+   حصريَّين، فتح واحد يقفل التاني تلقائيًا بدون أي JS)، كل واحد يفتح نموذجه
+   وقت الضغط عليه فقط ===== */
+.fr-decision-row{ padding:20px; display:flex; gap:14px; flex-wrap:wrap; }
+.fr-decision-details{ flex:1; min-width:240px; }
+.fr-decision-details summary{ list-style:none; }
+.fr-decision-details summary::-webkit-details-marker{ display:none; }
+.fr-decision-btn{ display:flex; align-items:center; justify-content:center; gap:8px; padding:13px 20px; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; transition:all .15s; }
+.fr-decision-btn.approve{ color:#15803d; background:#eafff0; border:1.5px solid #86efac; }
+.fr-decision-btn.approve:hover{ background:#15803d; color:#fff; }
+.fr-decision-details[open] > .fr-decision-btn.approve{ background:#15803d; color:#fff; border-radius:12px 12px 0 0; }
+.fr-decision-btn.reject{ color:#dc2626; background:#fef2f2; border:1.5px solid #fecaca; }
+.fr-decision-btn.reject:hover{ background:#dc2626; color:#fff; }
+.fr-decision-details[open] > .fr-decision-btn.reject{ background:#dc2626; color:#fff; border-radius:12px 12px 0 0; }
+.fr-decision-panel{ margin-top:0; padding:16px; border:1.5px solid #e2ecf0; border-top:none; border-radius:0 0 12px 12px; display:flex; flex-direction:column; gap:14px; background:#f8fbfd; }
 .fr-reject-textarea{ min-height:80px; resize:vertical; font-family:inherit; }
 .fr-reject-btn{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; color:#fff; background:#dc2626; border:none; cursor:pointer; transition:all .15s; }
 .fr-reject-btn:disabled{ opacity:.4; cursor:not-allowed; }

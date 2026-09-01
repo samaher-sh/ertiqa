@@ -127,58 +127,63 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
   </div>
 
   <?php if ($isAuditHead && $report['status'] === 'pending_signatures'): ?>
-  <div class="wiz-card" id="frHeadSignCard">
-    <div class="wiz-card-head"><i data-lucide="check-check"></i><span style="color:#fff;font-weight:700;font-size:14px;">اعتماد رئيس إدارة المراجعة الداخلية</span></div>
-    <form method="post" action="<?= base_url('dashboard/reports/api/approve') ?>" id="frApproveForm" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
-      <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-      <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
-      <input type="hidden" name="head_name" id="frHeadNameHidden">
-      <input type="hidden" name="head_signature" id="frHeadSigHidden">
+  <div class="wiz-card" id="frDecisionCard">
+    <div class="wiz-card-head"><i data-lucide="gavel"></i><span style="color:#fff;font-weight:700;font-size:14px;">قرار رئيس إدارة المراجعة الداخلية</span></div>
+    <div class="fr-decision-row">
+      <details class="fr-decision-details" name="frDecision">
+        <summary class="fr-decision-btn approve"><i data-lucide="check-check"></i> اعتماد</summary>
+        <form method="post" action="<?= base_url('dashboard/reports/api/approve') ?>" id="frApproveForm" class="fr-decision-panel">
+          <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+          <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
+          <input type="hidden" name="head_name" id="frHeadNameHidden">
+          <input type="hidden" name="head_signature" id="frHeadSigHidden">
 
-      <div style="display:flex;gap:14px;flex-wrap:wrap;">
-        <div class="wiz-field" style="flex:1;min-width:160px;">
-          <span class="wiz-label">اسم الرئيس</span>
-          <input type="text" class="wiz-input" id="frHeadName" placeholder="اسم رئيس إدارة المراجعة الداخلية" value="<?= esc($report['head_name'] ?? '') ?>">
-        </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <div class="wiz-field" style="flex:1;min-width:160px;">
+              <span class="wiz-label">اسم الرئيس</span>
+              <input type="text" class="wiz-input" id="frHeadName" placeholder="اسم رئيس إدارة المراجعة الداخلية" value="<?= esc($report['head_name'] ?? '') ?>">
+            </div>
 
-        <div class="wiz-field" style="flex:1.4;min-width:200px;">
-          <span class="wiz-label">التوقيع</span>
-          <div class="wiz-sig-pad-card">
-            <canvas id="frHeadSigPad" class="wiz-sig-pad-canvas" width="260" height="70" style="height:70px;"></canvas>
-            <span class="wiz-sig-pad-hint" id="frHeadSigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
-            <button type="button" class="wiz-sig-pad-clear" id="frHeadSigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
+            <div class="wiz-field" style="flex:1.4;min-width:200px;">
+              <span class="wiz-label">التوقيع</span>
+              <div class="wiz-sig-pad-card">
+                <canvas id="frHeadSigPad" class="wiz-sig-pad-canvas" width="260" height="70" style="height:70px;"></canvas>
+                <span class="wiz-sig-pad-hint" id="frHeadSigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
+                <button type="button" class="wiz-sig-pad-clear" id="frHeadSigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
+              </div>
+            </div>
+
+            <div class="wiz-field" style="flex:1;min-width:140px;">
+              <span class="wiz-label">التاريخ</span>
+              <input type="date" class="wiz-input" name="head_approved_at" value="<?= esc($report['head_approved_at'] ?? date('Y-m-d')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+            </div>
           </div>
-        </div>
 
-        <div class="wiz-field" style="flex:1;min-width:140px;">
-          <span class="wiz-label">التاريخ</span>
-          <input type="date" class="wiz-input" name="head_approved_at" value="<?= esc($report['head_approved_at'] ?? date('Y-m-d')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-        </div>
-      </div>
+          <div>
+            <button type="submit" class="fr-submit-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="check-check"></i> اعتماد التقرير</button>
+            <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الاعتماد</p><?php endif; ?>
+          </div>
+        </form>
+      </details>
 
-      <div>
-        <button type="submit" class="fr-submit-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="check-check"></i> اعتماد التقرير</button>
-        <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الاعتماد</p><?php endif; ?>
-      </div>
-    </form>
-  </div>
+      <details class="fr-decision-details" name="frDecision">
+        <summary class="fr-decision-btn reject"><i data-lucide="x-circle"></i> رفض</summary>
+        <form method="post" action="<?= base_url('dashboard/reports/api/reject') ?>" class="fr-decision-panel">
+          <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+          <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
 
-  <div class="wiz-card" id="frRejectCard">
-    <div class="wiz-card-head reject"><i data-lucide="x-circle"></i><span style="color:#fff;font-weight:700;font-size:14px;">رفض التقرير</span></div>
-    <form method="post" action="<?= base_url('dashboard/reports/api/reject') ?>" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
-      <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-      <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
+          <div class="wiz-field">
+            <span class="wiz-label">سبب الرفض</span>
+            <textarea name="note" class="wiz-input fr-reject-textarea" rows="3" required placeholder="اكتب سبب الرفض هنا... سيظهر للمراجع عشان يعدّل التقرير"></textarea>
+          </div>
 
-      <div class="wiz-field">
-        <span class="wiz-label">سبب الرفض</span>
-        <textarea name="note" class="wiz-input fr-reject-textarea" rows="3" required placeholder="اكتب سبب الرفض هنا... سيظهر للمراجع عشان يعدّل التقرير"></textarea>
-      </div>
-
-      <div>
-        <button type="submit" class="fr-reject-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="x-circle"></i> رفض التقرير</button>
-        <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الرفض</p><?php endif; ?>
-      </div>
-    </form>
+          <div>
+            <button type="submit" class="fr-reject-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="x-circle"></i> رفض التقرير</button>
+            <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الرفض</p><?php endif; ?>
+          </div>
+        </form>
+      </details>
+    </div>
   </div>
   <?php endif; ?>
 </div>
