@@ -388,9 +388,9 @@ class ReportController extends BaseController
         $report = $reportModel->find($reportId);
         if (!$report || $report['status'] !== 'pending_signatures') {
             if ($isJson) {
-                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'التقرير غير جاهز للاعتماد حاليًا.']);
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر تعتمده.']);
             }
-            return redirect()->back()->with('error', 'التقرير غير جاهز للاعتماد حاليًا.');
+            return redirect()->back()->with('error', 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر تعتمده.');
         }
         if (!$headName || !$headSignature) {
             if ($isJson) {
@@ -428,9 +428,9 @@ class ReportController extends BaseController
         $report = $reportModel->find($reportId);
         if (!$report || $report['status'] !== 'pending_signatures') {
             if ($isJson) {
-                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'التقرير غير جاهز للرفض حاليًا (لازم يكون بانتظار الاعتماد).']);
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر ترفضه.']);
             }
-            return redirect()->back()->with('error', 'التقرير غير جاهز للرفض حاليًا (لازم يكون بانتظار الاعتماد).');
+            return redirect()->back()->with('error', 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر ترفضه.');
         }
         if (!$note) {
             if ($isJson) {
