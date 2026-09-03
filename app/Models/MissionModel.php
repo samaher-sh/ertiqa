@@ -98,10 +98,42 @@ class MissionModel extends Model
      * SQL مباشر على العمود يعكس الواقع أيضًا، ويشتغل عليها countInStageForUser()
      * (إحصائية "قيد المراجعة" بالصفحة الرئيسية) اللي تعتمد على العمود الخام تحديدًا
      */
+    /**
+     * نفس محتوى DashboardController::STAGE_NOTIFICATIONS بالضبط -- أي تعديل
+     * مستقبلي على تلك النصوص يلزم تطبيقه هنا بالتوازي (نفس ملاحظة NotificationService)
+     */
+    private const STAGE_NOTIFICATIONS = [
+        2 => ['for' => 'target', 'title' => 'بانتظار الرد على مهمة مراجعة',   'suffix' => 'بانتظار استكمال اتفاقية مستوى الخدمة أو الرد على المستندات المطلوبة.'],
+        3 => ['for' => 'audit',  'title' => 'بانتظار تعبئة مصفوفة المخاطر',   'suffix' => 'بانتظار تعبئة مصفوفة المخاطر.'],
+        4 => ['for' => 'audit',  'title' => 'بانتظار ملخص الاجتماع',         'suffix' => 'بانتظار تعبئة ملخص الاجتماع.'],
+        5 => ['for' => 'audit',  'title' => 'بانتظار إضافة الملاحظات',       'suffix' => 'بانتظار إضافة الملاحظات.'],
+        7 => ['for' => 'audit',  'title' => 'بانتظار إعداد التقرير النهائي', 'suffix' => 'بانتظار إعداد واعتماد التقرير النهائي.'],
+    ];
+
     public function syncCurrentStage(int $missionId): int
     {
-        $stage = $this->computeRealNextStage($missionId);
+        $before = $this->find($missionId);
+        $stage  = $this->computeRealNextStage($missionId);
         $this->update($missionId, ['current_stage' => $stage]);
+
+        if ($before && (int) $before['current_stage'] !== $stage) {
+            $info = self::STAGE_NOTIFICATIONS[$stage] ?? null;
+            if ($info) {
+                $notifier = new \App\Services\NotificationService();
+                $recipients = $info['for'] === 'target'
+                    ? $notifier->targetSideUserIds($missionId)
+                    : $notifier->auditSideUserIds($missionId);
+                $notifier->notifyUsers(
+                    $recipients,
+                    'task',
+                    $info['title'],
+                    'المهمة (' . $before['mission_code'] . ') ' . $info['suffix'],
+                    $missionId,
+                    base_url('dashboard')
+                );
+            }
+        }
+
         return $stage;
     }
 
