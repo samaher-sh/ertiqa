@@ -125,41 +125,15 @@ class DocumentController extends BaseController
         }
 
         $file = $this->request->getFile('file');
-        if (!$file || !$file->isValid()) {
+        if (!$file) {
             return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لم يتم اختيار ملف صحيح.']);
         }
 
-        if ($file->getSizeByUnit('kb') > self::MAX_SIZE_KB) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'حجم الملف أكبر من الحد المسموح (10 ميجا).']);
+        $result = (new DocumentModel())->saveUploadedFile($file, 'observation', $observationId, (int) $obs['mission_id'], (int) session()->get('user_id'));
+        if (!$result['success']) {
+            return $this->response->setStatusCode(422)->setJSON($result);
         }
-
-        $ext = strtolower($file->getClientExtension());
-        if (!in_array($ext, self::ALLOWED_EXT, true)) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'نوع الملف غير مسموح به.']);
-        }
-
-        $uploadDir = WRITEPATH . 'uploads/observations/' . $observationId;
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $newName = $file->getRandomName();
-        $file->move($uploadDir, $newName);
-
-        $docModel = new DocumentModel();
-        $docId = $docModel->insert([
-            'mission_id'   => (int) $obs['mission_id'],
-            'related_type' => 'observation',
-            'related_id'   => $observationId,
-            'file_name'    => $file->getClientName(),
-            'file_path'    => 'observations/' . $observationId . '/' . $newName,
-            'file_size'    => $file->getSize(),
-            'mime_type'    => $file->getClientMimeType(),
-            'uploaded_by'  => (int) session()->get('user_id'),
-            'uploaded_at'  => date('Y-m-d H:i:s'),
-        ], true);
-
-        return $this->response->setJSON(['success' => true, 'document' => $docModel->find($docId)]);
+        return $this->response->setJSON($result);
     }
 
     /**

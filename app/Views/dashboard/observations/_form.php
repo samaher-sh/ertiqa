@@ -36,7 +36,7 @@ $errorMsg = session()->getFlashdata('error');
   <div class="obs-form-body">
     <?php if ($errorMsg): ?><div class="obs-alert obs-alert-error"><?= esc($errorMsg) ?></div><?php endif; ?>
 
-    <form method="post" action="<?= base_url('dashboard/observations/api/save') ?>" id="obsForm" data-ref-code="<?= esc($observation['ref_code'] ?? '') ?>" data-mission-code="<?= esc($mission['mission_code'] ?? '') ?>">
+    <form method="post" enctype="multipart/form-data" action="<?= base_url('dashboard/observations/api/save') ?>" id="obsForm" data-ref-code="<?= esc($observation['ref_code'] ?? '') ?>" data-mission-code="<?= esc($mission['mission_code'] ?? '') ?>">
       <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
       <?php if ($isEdit): ?><input type="hidden" name="id" value="<?= (int) $observation['id'] ?>"><?php endif; ?>
       <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
@@ -90,6 +90,21 @@ $errorMsg = session()->getFlashdata('error');
           </select>
         </div>
       </div>
+
+      <?php if (!$isEdit): ?>
+        <div class="obs-divider"></div>
+        <div class="obs-attach-section">
+          <div class="obs-attach-section-head">
+            <span class="wiz-label" style="margin:0;">المرفقات</span>
+          </div>
+          <label class="obs-attach-upload-btn" style="width:fit-content;">
+            <i data-lucide="upload"></i> اختيار ملفات للإرفاق
+            <input type="file" name="new_attachments[]" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png" id="obsNewAttachInput">
+          </label>
+          <div id="obsNewAttachPreviewList" class="obs-attach-item-list" style="margin-top:8px;"></div>
+          <span class="obs-attach-empty-msg">تُرفَع الملفات المختارة تلقائيًا فور حفظ الملاحظة.</span>
+        </div>
+      <?php endif; ?>
 
     </form>
 
