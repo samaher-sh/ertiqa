@@ -14,6 +14,7 @@ class MeetingModel extends Model
     protected $allowedFields = [
         'mission_id', 'title', 'objective', 'meeting_code', 'meeting_date', 'meeting_time',
         'location', 'meeting_type', 'minutes_text', 'status', 'created_by',
+        'hr_opinion', 'hr_reason',
     ];
 
     /** الاجتماع الأول (التمهيدي) المرتبط بمهمة - نفس مفهوم "ملخص الاجتماع" بصفحة واحدة لكل مهمة */
