@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\MissionChatMessageModel;
 use App\Models\MeetingModel;
 use App\Models\AuditLogModel;
+use App\Services\NotificationService;
 
 class MissionChatController extends BaseController
 {
@@ -146,6 +147,21 @@ class MissionChatController extends BaseController
         $detail = 'التاريخ: ' . $date . ' — الوقت: ' . $time . ($location ? ' — ' . $location : '');
         (new AuditLogModel())->log($missionId, (int) session()->get('user_id'), 'meeting_proposed', 'meeting', null, $detail);
 
+        $mission = (new \App\Models\MissionModel())->find($missionId);
+        if ($mission) {
+            $senderIsTarget = (int) session()->get('department_id') === (int) $mission['target_department_id'];
+            $notifier = new NotificationService();
+            $recipients = $senderIsTarget ? $notifier->auditSideUserIds($missionId) : $notifier->targetSideUserIds($missionId);
+            $notifier->notifyUsers(
+                $recipients,
+                'meeting_proposal',
+                'يوجد موعد اجتماع مقترح بانتظار ردكم',
+                'المهمة (' . $mission['mission_code'] . ') — ' . $date . ($time ? ' — ' . $time : '') . ($location ? ' · ' . $location : ''),
+                $missionId,
+                base_url('dashboard/meeting-schedule?mission_id=' . $missionId)
+            );
+        }
+
         if ($isJson) {
             return $this->response->setJSON(['success' => true]);
         }
@@ -208,6 +224,25 @@ class MissionChatController extends BaseController
 
         $detail = 'التاريخ: ' . $proposal['proposed_date'] . ' — الوقت: ' . $proposal['proposed_time'];
         (new AuditLogModel())->log($missionId, $userId, 'meeting_confirmed', 'meeting', $meeting['id'], $detail);
+
+        $mission = (new \App\Models\MissionModel())->find($missionId);
+        if ($mission) {
+            $notifier = new NotificationService();
+            $recipients = array_diff(
+                array_merge($notifier->auditSideUserIds($missionId), $notifier->targetSideUserIds($missionId)),
+                [$userId]
+            );
+            $notifier->notifyUsers(
+                $recipients,
+                'meeting',
+                'تم تأكيد موعد اجتماع',
+                'المهمة (' . $mission['mission_code'] . ') — ' . $proposal['proposed_date']
+                    . ($proposal['proposed_time'] ? ' — ' . $proposal['proposed_time'] : '')
+                    . ($proposal['proposed_location'] ? ' · ' . $proposal['proposed_location'] : ''),
+                $missionId,
+                base_url('dashboard/meeting-schedule?mission_id=' . $missionId)
+            );
+        }
 
         if ($isJson) {
             return $this->response->setJSON(['success' => true]);

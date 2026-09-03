@@ -16,9 +16,11 @@ class Email extends BaseConfig
     public string $userAgent = 'CodeIgniter';
 
     /**
-     * The mail sending protocol: mail, sendmail, smtp
+     * The mail sending protocol: mail, sendmail, smtp -- القيم الفعلية
+     * (SMTPHost/SMTPUser/SMTPPass...) تُقرأ من .env بمفاتيح "email.<الخاصية>"،
+     * نفس آلية Config\Database وConfig\Ldap بالضبط -- لا تُوضع هنا مباشرة
      */
-    public string $protocol = 'mail';
+    public string $protocol = 'smtp';
 
     /**
      * The server path to Sendmail.
@@ -82,7 +84,7 @@ class Email extends BaseConfig
     /**
      * Type of mail, either 'text' or 'html'
      */
-    public string $mailType = 'text';
+    public string $mailType = 'html';
 
     /**
      * Character set (utf-8, iso-8859-1, etc.)

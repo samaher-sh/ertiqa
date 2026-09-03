@@ -14,6 +14,7 @@ use App\Models\MeetingSummaryPointModel;
 use App\Models\MeetingApprovalModel;
 use App\Models\AuditNoteModel;
 use App\Models\MissionModel;
+use App\Services\NotificationService;
 
 class ReportController extends BaseController
 {
@@ -339,7 +340,23 @@ class ReportController extends BaseController
 
         $report = $reportModel->find($reportId);
         if ($report && !empty($report['mission_id'])) {
-            (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_finalized', 'report', $reportId, 'رقم التقرير: ' . $reportId);
+            $missionId = (int) $report['mission_id'];
+            (new \App\Models\AuditLogModel())->log($missionId, (int) session()->get('user_id'), 'report_finalized', 'report', $reportId, 'رقم التقرير: ' . $reportId);
+
+            // إخطار رؤساء إدارة المراجعة الداخلية بإدارة المهمة -- نفس نص
+            // إخطار "report_approval" المحسوب حيًا بودجت الصفحة الرئيسية
+            $mission = (new MissionModel())->find($missionId);
+            if ($mission) {
+                $notifier = new NotificationService();
+                $notifier->notifyUsers(
+                    $notifier->auditHeadUserIds((int) $mission['audit_department_id']),
+                    'report_approval',
+                    'تقرير نهائي بانتظار اعتمادك',
+                    'المهمة (' . $mission['mission_code'] . ') — التقرير جاهز وبانتظار اعتمادك النهائي.',
+                    $missionId,
+                    base_url('dashboard/reports/' . $missionId)
+                );
+            }
         }
 
         if ($isJson) {
@@ -444,6 +461,19 @@ class ReportController extends BaseController
         // للمراجعة" فورًا بدون أي مراجعة حقيقية لسبب الرفض
         (new ReportChecklistItemModel())->resetForReport($reportId);
         (new \App\Models\AuditLogModel())->log((int) $report['mission_id'], (int) session()->get('user_id'), 'report_rejected', 'report', $reportId, $note);
+
+        $mission = (new MissionModel())->find((int) $report['mission_id']);
+        if ($mission) {
+            $notifier = new NotificationService();
+            $notifier->notifyUsers(
+                $notifier->auditSideUserIds((int) $mission['id']),
+                'report_rejected',
+                'تقرير مرفوض من رئيس المراجعة',
+                'المهمة (' . $mission['mission_code'] . ') — تم رفض التقرير النهائي. سبب الرفض: ' . $note,
+                (int) $mission['id'],
+                base_url('dashboard/reports/' . (int) $mission['id'])
+            );
+        }
 
         if ($isJson) {
             return $this->response->setJSON(['success' => true]);
