@@ -11,10 +11,6 @@ use App\Models\AuditLogModel;
 
 class DocumentRequestController extends BaseController
 {
-    /** يسمح فقط بامتدادات آمنة ومعقولة لمستندات الاتفاقية */
-    private const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
-    private const MAX_SIZE_KB = 10240; // 10 ميجا
-
     /** المهمة (لو المستخدم الحالي له صلاحية وصول فعلية لها، من أي طرف)، وإلا null.
      *  رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
      *  حتى لو مو عضو فريق فيها -- يحتاج يستعرض قائمة المستندات قبل اعتماد التقرير النهائي */
@@ -63,7 +59,7 @@ class DocumentRequestController extends BaseController
 
             $docModel = new DocumentModel();
             $requests = array_map(function ($r) use ($docModel) {
-                $r['file'] = $docModel->forRelated('document_request', (int) $r['id'])[0] ?? null;
+                $r['files'] = $docModel->forRelated('document_request', (int) $r['id']);
                 return $r;
             }, $requests);
         }
@@ -113,7 +109,7 @@ class DocumentRequestController extends BaseController
 
         $docModel = new DocumentModel();
         $requests = array_map(function ($r) use ($docModel) {
-            $r['file'] = $docModel->forRelated('document_request', (int) $r['id'])[0] ?? null;
+            $r['files'] = $docModel->forRelated('document_request', (int) $r['id']);
             return $r;
         }, $requests);
 
@@ -243,43 +239,11 @@ class DocumentRequestController extends BaseController
                 'responded_at' => $now,
             ]);
 
-            $file = $this->request->getFile('file_' . $requestId);
-            if ($file && $file->isValid() && !$file->hasMoved()) {
-                if ($file->getSizeByUnit('kb') > self::MAX_SIZE_KB) {
-                    continue;
-                }
-                $ext = strtolower($file->getClientExtension());
-                if (!in_array($ext, self::ALLOWED_EXT, true)) {
-                    continue;
-                }
-
-                $uploadDir = WRITEPATH . 'uploads/document-requests/' . $requestId;
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                $newName = $file->getRandomName();
-                $file->move($uploadDir, $newName);
-
-                // ملف سابق لنفس الطلب (لو موجود) يُستبدل بالجديد بدل ما يتكدس
-                foreach ($docModel->forRelated('document_request', $requestId) as $old) {
-                    $oldPath = WRITEPATH . 'uploads/' . $old['file_path'];
-                    if (is_file($oldPath)) {
-                        unlink($oldPath);
-                    }
-                    $docModel->delete($old['id']);
-                }
-
-                $docModel->insert([
-                    'mission_id'   => $missionId,
-                    'related_type' => 'document_request',
-                    'related_id'   => $requestId,
-                    'file_name'    => $file->getClientName(),
-                    'file_path'    => 'document-requests/' . $requestId . '/' . $newName,
-                    'file_size'    => $file->getSize(),
-                    'mime_type'    => $file->getClientMimeType(),
-                    'uploaded_by'  => $userId,
-                    'uploaded_at'  => $now,
-                ]);
+            // كل الملفات المختارة تُضاف لقائمة مرفقات الطلب (لا تستبدل الموجودة) --
+            // حذف مرفق محدَّد له زر مستقل بالقائمة (DocumentController::delete)
+            foreach ($this->request->getFileMultiple('file_' . $requestId) ?? [] as $file) {
+                if (!$file || !$file->isValid() || $file->hasMoved()) continue;
+                $docModel->saveUploadedFile($file, 'document_request', $requestId, $missionId, $userId);
             }
         }
 
