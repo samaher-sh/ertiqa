@@ -17,7 +17,9 @@ $canEditMeeting = !$allReadOnly;
 $canEditAttendance = !$allReadOnly;
 $canEditPointText = !$isHrUser && !$allReadOnly;
 $canEditStatement = !$allReadOnly;
+$canEditHrResponse = $isHrUser;
 $canAddRemovePoints = !$isHrUser && !$allReadOnly;
+$hrOpinionLabels = ['agree' => 'موافق', 'reserved' => 'متحفظ'];
 $showApprovals = !$isHrUser;
 $deptName = $mission['target_department_name'] ?? '';
 ?>
@@ -119,7 +121,13 @@ $deptName = $mission['target_department_name'] ?? '';
             </tr></thead>
             <tbody id="msumPointsBody">
               <?php foreach ($points as $i => $pt): ?>
-                <?php $text = $pt['point_text'] ?? $pt['text'] ?? ''; $statement = $pt['statement'] ?? ''; ?>
+                <?php
+                  $text = $pt['point_text'] ?? $pt['text'] ?? '';
+                  $statement = $pt['statement'] ?? '';
+                  $hrOpinion = $pt['hr_opinion'] ?? '';
+                  $hrReason = $pt['hr_reason'] ?? '';
+                  $responseColspan = $canAddRemovePoints ? 3 : 2;
+                ?>
                 <tr data-msum-point-row>
                   <td>
                     <?php if ($isHrUser): ?>
@@ -138,6 +146,30 @@ $deptName = $mission['target_department_name'] ?? '';
                     <?php endif; ?>
                   </td>
                   <?php if ($canAddRemovePoints): ?><td style="text-align:center;"><button type="submit" name="form_action" value="remove_point" formnovalidate class="msum-del-btn" data-msum-del-point onclick="document.getElementById('msumRemoveIndex').value='<?= $i ?>'"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td><?php endif; ?>
+                </tr>
+                <tr class="msum-point-response-row">
+                  <td colspan="<?= $responseColspan ?>">
+                    <div class="msum-point-response">
+                      <label>الرأي</label>
+                      <?php if ($canEditHrResponse): ?>
+                        <select name="points[<?= $i ?>][hr_opinion]" class="msum-hr-opinion-select">
+                          <option value="">اختر...</option>
+                          <option value="agree" <?= $hrOpinion === 'agree' ? 'selected' : '' ?>>موافق</option>
+                          <option value="reserved" <?= $hrOpinion === 'reserved' ? 'selected' : '' ?>>متحفظ</option>
+                        </select>
+                      <?php else: ?>
+                        <div class="msum-opinion-readonly <?= $hrOpinion ? 'has' : 'empty' ?>"><?= esc($hrOpinionLabels[$hrOpinion] ?? '—') ?></div>
+                        <input type="hidden" name="points[<?= $i ?>][hr_opinion]" value="<?= esc($hrOpinion) ?>">
+                      <?php endif; ?>
+                      <label>السبب</label>
+                      <?php if ($canEditHrResponse): ?>
+                        <input type="text" name="points[<?= $i ?>][hr_reason]" class="msum-plain-input" placeholder="اكتب السبب..." value="<?= esc($hrReason) ?>">
+                      <?php else: ?>
+                        <div class="msum-opinion-readonly empty" style="color:<?= $hrReason ? '#152c33' : '#9ca3af' ?>;"><?= esc($hrReason ?: '—') ?></div>
+                        <input type="hidden" name="points[<?= $i ?>][hr_reason]" value="<?= esc($hrReason) ?>">
+                      <?php endif; ?>
+                    </div>
+                  </td>
                 </tr>
               <?php endforeach; ?>
               <?php if (empty($points)): ?><tr><td colspan="3" class="msum-empty-points">لا توجد نقاط. اضغط "إضافة نقطة" للبدء.</td></tr><?php endif; ?>
