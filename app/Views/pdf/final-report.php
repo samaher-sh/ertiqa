@@ -176,12 +176,12 @@
 
         <h2>ملخص ما تم مناقشته</h2>
         <table class="grid">
-            <thead><tr><th>النقطة</th><th>الرأي</th><th>السبب / التوضيح</th></tr></thead>
+            <thead><tr><th>النقطة</th><th>الإفادة</th></tr></thead>
             <tbody>
                 <?php if (empty($points)): ?>
-                    <tr><td colspan="3" class="empty-row">لا توجد نقاط مسجّلة</td></tr>
+                    <tr><td colspan="2" class="empty-row">لا توجد نقاط مسجّلة</td></tr>
                 <?php else: foreach ($points as $p): ?>
-                    <tr><td><?= nl2br(esc($p['point_text'])) ?></td><td><?= nl2br(esc($p['opinion'] ?: '—')) ?></td><td><?= nl2br(esc($p['reason'] ?: '—')) ?></td></tr>
+                    <tr><td><?= nl2br(esc($p['point_text'])) ?></td><td><?= nl2br(esc($p['statement'] ?: '—')) ?></td></tr>
                 <?php endforeach; endif; ?>
             </tbody>
         </table>

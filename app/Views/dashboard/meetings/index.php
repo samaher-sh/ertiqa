@@ -16,7 +16,7 @@ $locked = !$selectedMissionId;
 $canEditMeeting = !$allReadOnly;
 $canEditAttendance = !$allReadOnly;
 $canEditPointText = !$isHrUser && !$allReadOnly;
-$canEditOpinion = !$allReadOnly;
+$canEditStatement = !$allReadOnly;
 $canAddRemovePoints = !$isHrUser && !$allReadOnly;
 $showApprovals = !$isHrUser;
 $deptName = $mission['target_department_name'] ?? '';
@@ -114,12 +114,12 @@ $deptName = $mission['target_department_name'] ?? '';
         <div class="msum-table-wrap">
           <table class="msum-table">
             <thead><tr>
-              <th style="width:50%;">النقطة</th><th>الرأي</th><th style="width:33%;">السبب / التوضيح</th>
+              <th style="width:50%;">النقطة</th><th style="width:50%;">الإفادة</th>
               <?php if ($canAddRemovePoints): ?><th style="width:40px;"></th><?php endif; ?>
             </tr></thead>
             <tbody id="msumPointsBody">
               <?php foreach ($points as $i => $pt): ?>
-                <?php $text = $pt['point_text'] ?? $pt['text'] ?? ''; $opinion = $pt['opinion'] ?? ''; $reason = $pt['reason'] ?? ''; ?>
+                <?php $text = $pt['point_text'] ?? $pt['text'] ?? ''; $statement = $pt['statement'] ?? ''; ?>
                 <tr data-msum-point-row>
                   <td>
                     <?php if ($isHrUser): ?>
@@ -130,25 +130,17 @@ $deptName = $mission['target_department_name'] ?? '';
                     <?php endif; ?>
                   </td>
                   <td>
-                    <?php if ($canEditOpinion): ?>
-                      <textarea rows="2" class="wiz-textarea" style="border:1.5px solid <?= $opinion ? '#b3d4e5' : 'var(--pb)' ?>;background:<?= $opinion ? '#f0fdf4' : '#f0f8fd' ?>;" name="points[<?= $i ?>][opinion]" placeholder="اكتب الرأي..."><?= esc($opinion) ?></textarea>
+                    <?php if ($canEditStatement): ?>
+                      <textarea rows="2" class="wiz-textarea" style="border:1.5px solid <?= $statement ? '#b3d4e5' : 'var(--pb)' ?>;background:<?= $statement ? '#f0fdf4' : '#f0f8fd' ?>;" name="points[<?= $i ?>][statement]" placeholder="اكتب الإفادة..."><?= esc($statement) ?></textarea>
                     <?php else: ?>
-                      <div class="msum-opinion-readonly <?= $opinion ? 'has' : 'empty' ?>"><?= esc($opinion ?: '—') ?></div>
-                      <input type="hidden" name="points[<?= $i ?>][opinion]" value="<?= esc($opinion) ?>">
-                    <?php endif; ?>
-                  </td>
-                  <td>
-                    <?php if ($canEditOpinion): ?>
-                      <textarea rows="2" class="wiz-textarea plain" name="points[<?= $i ?>][reason]" placeholder="اكتب السبب أو التوضيح..."><?= esc($reason) ?></textarea>
-                    <?php else: ?>
-                      <div class="msum-opinion-readonly empty" style="color:<?= $reason ? '#152c33' : '#9ca3af' ?>;"><?= esc($reason ?: '—') ?></div>
-                      <input type="hidden" name="points[<?= $i ?>][reason]" value="<?= esc($reason) ?>">
+                      <div class="msum-opinion-readonly <?= $statement ? 'has' : 'empty' ?>"><?= esc($statement ?: '—') ?></div>
+                      <input type="hidden" name="points[<?= $i ?>][statement]" value="<?= esc($statement) ?>">
                     <?php endif; ?>
                   </td>
                   <?php if ($canAddRemovePoints): ?><td style="text-align:center;"><button type="submit" name="form_action" value="remove_point" formnovalidate class="msum-del-btn" data-msum-del-point onclick="document.getElementById('msumRemoveIndex').value='<?= $i ?>'"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td><?php endif; ?>
                 </tr>
               <?php endforeach; ?>
-              <?php if (empty($points)): ?><tr><td colspan="4" class="msum-empty-points">لا توجد نقاط. اضغط "إضافة نقطة" للبدء.</td></tr><?php endif; ?>
+              <?php if (empty($points)): ?><tr><td colspan="3" class="msum-empty-points">لا توجد نقاط. اضغط "إضافة نقطة" للبدء.</td></tr><?php endif; ?>
             </tbody>
           </table>
         </div>

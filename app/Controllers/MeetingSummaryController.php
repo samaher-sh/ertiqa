@@ -50,7 +50,7 @@ class MeetingSummaryController extends BaseController
         $flags = $this->roleFlags();
         $meeting = null;
         $attendees = [['id' => null, 'external_name' => '', 'attendee_dept' => '', 'attendee_position' => '']];
-        $points = [['id' => null, 'point_text' => '', 'opinion' => '', 'reason' => '']];
+        $points = [['id' => null, 'point_text' => '', 'statement' => '']];
         $approvals = [['id' => null, 'statement' => 'إعداد واعتماد', 'signer_name' => '', 'position' => 'رئيس المهمة', 'signature_data' => null, 'approval_date' => null]];
         $attachments = [];
         $mission = null;
@@ -135,7 +135,7 @@ class MeetingSummaryController extends BaseController
             $attendees = [['id' => null, 'external_name' => '', 'attendee_dept' => '', 'attendee_position' => '']];
         }
         if (empty($points)) {
-            $points = [['id' => null, 'point_text' => '', 'opinion' => '', 'reason' => '']];
+            $points = [['id' => null, 'point_text' => '', 'statement' => '']];
         }
         if (empty($approvals)) {
             $approvals = [['id' => null, 'statement' => 'إعداد واعتماد', 'signer_name' => '', 'position' => 'رئيس المهمة', 'signature_data' => null, 'approval_date' => null]];
@@ -190,7 +190,7 @@ class MeetingSummaryController extends BaseController
                     unset($attendees[(int) ($data['remove_index'] ?? -1)]);
                     $attendees = array_values($attendees);
                 } elseif ($formAction === 'add_point') {
-                    $points[] = ['text' => '', 'opinion' => '', 'reason' => ''];
+                    $points[] = ['text' => '', 'statement' => ''];
                 } elseif ($formAction === 'remove_point') {
                     unset($points[(int) ($data['remove_index'] ?? -1)]);
                     $points = array_values($points);

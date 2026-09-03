@@ -11,7 +11,7 @@ class MeetingSummaryPointModel extends Model
     protected $returnType    = 'array';
     protected $useTimestamps = false;
 
-    protected $allowedFields = ['meeting_id', 'point_text', 'opinion', 'reason', 'sort_order'];
+    protected $allowedFields = ['meeting_id', 'point_text', 'statement', 'sort_order'];
 
     public function forMeeting(int $meetingId): array
     {
@@ -28,8 +28,7 @@ class MeetingSummaryPointModel extends Model
             $insertRows[] = [
                 'meeting_id' => $meetingId,
                 'point_text' => $r['text'] ?? '',
-                'opinion'    => $r['opinion'] ?? null,
-                'reason'     => $r['reason'] ?? null,
+                'statement'  => $r['statement'] ?? null,
                 'sort_order' => $i + 1,
             ];
         }

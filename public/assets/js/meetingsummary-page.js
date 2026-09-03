@@ -20,7 +20,7 @@
    ============================================================ */
 
 /* نفس autoGrowTextarea() بـ meetingsummary.js القديم -- كل حقول النص الطويل
-   (مكان الاجتماع، عنوان المهمة، الهدف، النقطة/الرأي/السبب) تكبر تلقائيًا
+   (مكان الاجتماع، عنوان المهمة، الهدف، النقطة/الإفادة) تكبر تلقائيًا
    حسب المحتوى بدل ما يبقى ارتفاعها ثابت ويختفي الكلام اللي فوق */
 function autoGrowMSumTextarea(el) {
   if (!el) return;
@@ -58,8 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     template: index => `
       <tr data-msum-point-row>
         <td><textarea rows="2" name="points[${index}][text]" class="wiz-textarea plain" placeholder="النقطة ${index + 1}..."></textarea></td>
-        <td><textarea rows="2" class="wiz-textarea" style="border:1.5px solid var(--pb);background:#f0f8fd;" name="points[${index}][opinion]" placeholder="اكتب الرأي..."></textarea></td>
-        <td><textarea rows="2" class="wiz-textarea plain" name="points[${index}][reason]" placeholder="اكتب السبب أو التوضيح..."></textarea></td>
+        <td><textarea rows="2" class="wiz-textarea" style="border:1.5px solid var(--pb);background:#f0f8fd;" name="points[${index}][statement]" placeholder="اكتب الإفادة..."></textarea></td>
         <td style="text-align:center;"><button type="button" class="msum-del-btn" data-msum-del-point><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td>
       </tr>`,
   });
