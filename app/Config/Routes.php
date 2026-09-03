@@ -66,6 +66,7 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('observations/api/save',      'ObservationController::save');
     $routes->post('observations/api/delete/(:num)', 'ObservationController::delete/$1');
     $routes->post('observations/api/status/(:num)', 'ObservationController::updateStatus/$1');
+    $routes->post('observations/api/upload',    'DocumentController::uploadObservationAttachment');
     $routes->get('reports',                      'ReportController::index');
     $routes->get('reports/(:num)',                'ReportController::show/$1');
     $routes->get('reports/api/list',             'ReportController::list');

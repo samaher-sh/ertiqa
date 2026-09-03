@@ -15,12 +15,6 @@ $d = [
     'recommendations_text' => old('recommendations_text')  ?? ($observation['recommendations_text'] ?? ''),
     'risk_severity'        => old('risk_severity')          ?? ($observation['risk_severity'] ?? ''),
 ];
-$addToReport = old('add_to_report');
-if ($addToReport === null) {
-    $addToReport = isset($observation['add_to_report']) && $observation['add_to_report'] !== null
-        ? (string) (int) $observation['add_to_report']
-        : null;
-}
 /* التعديل يستخدم الإدارة المخزّنة أصلًا بالملاحظة نفسها (obs.dept/deptId بالجافاسكربت
    عبر {...obs} بـ obsOpenEdit) لا إدارة المهمة الحالية -- فقط الإضافة الجديدة تشتق
    الإدارة من المهمة المختارة حاليًا (obsMissionDept() بـ obsOpenNew) */
@@ -87,23 +81,25 @@ $errorMsg = session()->getFlashdata('error');
           <textarea id="obsRecommendations" name="recommendations_text" rows="2" class="wiz-textarea plain" placeholder="الإجراءات التصحيحية المقترحة..."><?= esc($d['recommendations_text']) ?></textarea>
         </div>
         <div class="wiz-field">
-          <label class="wiz-label" for="obsRisk">الحالة (الخطر):</label>
-          <input id="obsRisk" name="risk_severity" type="text" class="wiz-input plain" placeholder="اكتب حالة/خطورة الملاحظة..." value="<?= esc($d['risk_severity']) ?>">
-        </div>
-      </div>
-
-      <div class="obs-divider"></div>
-
-      <div class="obs-attach-row">
-        <div class="wiz-field" style="gap:8px;">
-          <label class="wiz-label">تضاف للتقرير؟</label>
-          <div class="obs-radio-group">
-            <label class="obs-radio-label"><input type="radio" name="add_to_report" value="1" <?= $addToReport === '1' ? 'checked' : '' ?>> نعم</label>
-            <label class="obs-radio-label"><input type="radio" name="add_to_report" value="0" <?= $addToReport === '0' ? 'checked' : '' ?>> لا</label>
-          </div>
+          <label class="wiz-label" for="obsRisk">تقييم الخطر</label>
+          <select id="obsRisk" name="risk_severity" class="wiz-select">
+            <option value="">— اختر —</option>
+            <?php foreach (['عالي', 'متوسط', 'منخفض'] as $r): ?>
+              <option value="<?= $r ?>" <?= $d['risk_severity'] === $r ? 'selected' : '' ?>><?= $r ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
       </div>
 
     </form>
+
+    <?php if ($isEdit): ?>
+      <div class="obs-divider"></div>
+      <?= view('dashboard/observations/_attachments', [
+          'observationId' => (int) $observation['id'],
+          'attachments'   => $attachments ?? [],
+          'canUpload'     => true,
+      ]) ?>
+    <?php endif; ?>
   </div>
 </div>

@@ -20,6 +20,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   bindObsFilters();
   bindDraftExport();
+  bindObsAttachUpload();
+  bindObsAttachListActions();
 });
 
 /* ---------- فلاتر قائمة الملاحظات ---------- */
@@ -211,4 +213,71 @@ function bindDraftExport() {
 
 function escapeAttr(str) {
   return String(str == null ? "" : str).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* ---------- كومبوننت مرفقات الملاحظة (صفحتَي العرض/التعديل) ---------- */
+function bindObsAttachUpload() {
+  const mount = document.getElementById("obsAttachMount");
+  if (!mount) return;
+  const observationId = mount.dataset.observationId;
+  if (!observationId) return;
+
+  mount.innerHTML = `
+    <label class="obs-attach-upload-btn">
+      <i data-lucide="upload"></i> إرفاق ملفات
+      <input type="file" id="obsAttachInput" hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+    </label>`;
+  if (window.lucide) lucide.createIcons();
+
+  document.getElementById("obsAttachInput").addEventListener("change", async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("observation_id", observationId);
+    formData.append("file", file);
+    try {
+      const data = await apiPostFile(base + "/dashboard/observations/api/upload", formData);
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.message || "تعذّر رفع الملف");
+      }
+    } catch (err) {
+      alert("تعذّر الاتصال بالخادم");
+    }
+  });
+}
+
+function bindObsAttachListActions() {
+  const wrap = document.getElementById("obsAttachListWrap");
+  if (!wrap) return;
+
+  wrap.addEventListener("click", async e => {
+    const viewBtn = e.target.closest(".obs-attach-view-btn");
+    if (viewBtn) {
+      const row = viewBtn.closest(".obs-attach-item");
+      window.open(row.dataset.attachUrl, "_blank");
+      return;
+    }
+
+    const delBtn = e.target.closest(".obs-attach-del-btn");
+    if (delBtn) {
+      if (!confirm("هل أنت متأكد من حذف هذا المرفق؟")) return;
+      try {
+        const data = await apiPost(base + "/dashboard/documents/delete/" + delBtn.dataset.attachId, {});
+        if (data.success) {
+          const row = delBtn.closest(".obs-attach-item");
+          const list = row.parentElement;
+          row.remove();
+          if (!list.querySelector(".obs-attach-item")) {
+            list.outerHTML = '<span class="obs-attach-empty-msg">لا توجد مرفقات</span>';
+          }
+        } else {
+          alert(data.message || "تعذّر حذف المرفق");
+        }
+      } catch (err) {
+        alert(err.message || "تعذّر حذف المرفق");
+      }
+    }
+  });
 }
