@@ -45,12 +45,13 @@ table.msum-table td:not(:last-child){ border-left:1px solid #d8e6eb; }
 .msum-opinion-readonly.empty{ background:#f8fafc; border:1px solid #e2e8f0; color:#9ca3af; }
 .msum-empty-points{ text-align:center; padding:32px 0; font-size:13px; font-weight:600; color:#9ca3af; background:#f9fafb; }
 
-/* ردّ الإدارة محل المراجعة (الرأي: موافق/متحفظ + السبب) -- صف إضافي أسفل كل نقطة */
-tr.msum-point-response-row td{ background:#f9fbfc; padding:10px 16px; }
+/* ردّ الإدارة محل المراجعة (الرأي: موافق/متحفظ + السبب) -- شامل لكل نقاط
+   "ملخص ما تم مناقشته" مجتمعة، أسفل الجدول مباشرة */
 .msum-point-response{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .msum-point-response label{ font-size:11px; font-weight:700; color:#6b7280; flex-shrink:0; }
 .msum-point-response select.msum-hr-opinion-select{ padding:7px 10px; border-radius:10px; font-size:13px; outline:none; background:#fff; border:1px solid #e5e7eb; font-family:inherit; min-width:110px; }
 .msum-point-response .msum-plain-input{ flex:1; min-width:160px; }
+.msum-overall-response{ padding:14px 24px; background:#f9fbfc; border-top:1.5px solid var(--pb); }
 .msum-point-response .msum-opinion-readonly{ min-height:auto; padding:6px 10px; }
 
 /* signature pad */

@@ -60,18 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <td><textarea rows="2" name="points[${index}][text]" class="wiz-textarea plain" placeholder="النقطة ${index + 1}..."></textarea></td>
         <td><textarea rows="2" class="wiz-textarea" style="border:1.5px solid var(--pb);background:#f0f8fd;" name="points[${index}][statement]" placeholder="اكتب الإفادة..."></textarea></td>
         <td style="text-align:center;"><button type="button" class="msum-del-btn" data-msum-del-point><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td>
-      </tr>
-      <tr class="msum-point-response-row">
-        <td colspan="3">
-          <div class="msum-point-response">
-            <label>الرأي</label>
-            <div class="msum-opinion-readonly empty">—</div>
-            <input type="hidden" name="points[${index}][hr_opinion]" value="">
-            <label>السبب</label>
-            <div class="msum-opinion-readonly empty">—</div>
-            <input type="hidden" name="points[${index}][hr_reason]" value="">
-          </div>
-        </td>
       </tr>`,
   });
 
@@ -140,34 +128,19 @@ function bindRowGroup({ tbodyId, rowSelector, addBtnId, delSelector, fieldPrefix
   const addBtn = document.getElementById(addBtnId);
   if (!tbody) return;
 
-  /* بعض المجموعات (النقاط) تُرندَر كصفَّين لكل عنصر: الصف الرئيسي (مطابق
-     rowSelector) وصف "ردّ الإدارة" أسفله مباشرة (بدون data-attribute مطابق
-     لـ rowSelector) -- هذي الدالة تجمع الصف الرئيسي مع كل الصفوف التابعة له
-     (اللي تليه ولا تطابق rowSelector) كوحدة واحدة تُضاف/تُحذف/تُرقَّم معًا */
-  function rowGroup(row) {
-    const group = [row];
-    let sib = row.nextElementSibling;
-    while (sib && !sib.matches(rowSelector)) {
-      group.push(sib);
-      sib = sib.nextElementSibling;
-    }
-    return group;
-  }
-
   if (addBtn) {
     addBtn.setAttribute("type", "button");
     addBtn.removeAttribute("name");
     addBtn.removeAttribute("value");
     addBtn.addEventListener("click", () => {
-      const emptyRow = tbody.querySelector(".msum-empty-points")?.closest("tr");
+      const emptyRow = tbody.querySelector("tr:not([" + rowSelector.slice(1, -1) + "])");
       if (emptyRow) emptyRow.remove();
       const index = tbody.querySelectorAll(rowSelector).length;
       const div = document.createElement("tbody");
       div.innerHTML = template(index).trim();
-      Array.from(div.children).forEach(row => {
-        tbody.appendChild(row);
-        bindMSumAutoGrow(row);
-      });
+      const newRow = div.firstElementChild;
+      tbody.appendChild(newRow);
+      bindMSumAutoGrow(newRow);
       if (window.lucide) lucide.createIcons();
     });
   }
@@ -177,7 +150,7 @@ function bindRowGroup({ tbodyId, rowSelector, addBtnId, delSelector, fieldPrefix
   tbody.addEventListener("click", e => {
     const btn = e.target.closest(delSelector);
     if (!btn) return;
-    rowGroup(btn.closest(rowSelector)).forEach(row => row.remove());
+    btn.closest(rowSelector).remove();
     renumber();
   });
 
@@ -193,7 +166,7 @@ function bindRowGroup({ tbodyId, rowSelector, addBtnId, delSelector, fieldPrefix
     rows.forEach((row, i) => {
       const numCell = row.querySelector(".msum-row-num, .msum-point-num");
       if (numCell) numCell.textContent = String(i + 1);
-      rowGroup(row).flatMap(r => Array.from(r.querySelectorAll("[name]"))).forEach(field => {
+      row.querySelectorAll("[name]").forEach(field => {
         field.name = field.name.replace(new RegExp("^" + fieldPrefix + "\\[\\d+\\]"), fieldPrefix + "[" + i + "]");
       });
     });
