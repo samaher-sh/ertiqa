@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindDraftExport();
   bindObsAttachUpload();
   bindObsAttachListActions();
+  bindObsNewAttachPreview();
 });
 
 /* ---------- فلاتر قائمة الملاحظات ---------- */
@@ -245,6 +246,45 @@ function bindObsAttachUpload() {
     } catch (err) {
       alert("تعذّر الاتصال بالخادم");
     }
+  });
+}
+
+/* ---------- معاينة الملفات المختارة بنموذج إضافة ملاحظة جديدة (قبل الحفظ) ----------
+   الملاحظة الجديدة ما عندها id بعد، فما تُرفع الملفات فورًا (بخلاف صفحتَي
+   العرض/التعديل) -- تبقى بحقل input عادي وتُرفع دفعة وحدة مع الحفظ نفسه
+   (ObservationController::save())؛ هذي الدالة تحسين بصري بحت (تعرض أسماء
+   الملفات المختارة + تسمح بإزالة واحد منها قبل الحفظ) -- بدون هذا الملف
+   الحقل يشتغل زي أي input file عادي (المتصفح نفسه يعرض عدد/اسم الملفات) */
+function bindObsNewAttachPreview() {
+  const input = document.getElementById("obsNewAttachInput");
+  const list = document.getElementById("obsNewAttachPreviewList");
+  if (!input || !list) return;
+
+  const render = () => {
+    list.innerHTML = "";
+    Array.from(input.files).forEach((file, i) => {
+      const row = document.createElement("div");
+      row.className = "obs-attach-item";
+      row.innerHTML = `
+        <span class="obs-attach-item-name"><i data-lucide="paperclip"></i> ${escapeHtml(file.name)}</span>
+        <div class="obs-attach-item-actions">
+          <button type="button" class="obs-attach-del-btn" data-remove-index="${i}" title="إزالة"><i data-lucide="x"></i></button>
+        </div>`;
+      list.appendChild(row);
+    });
+    if (window.lucide) lucide.createIcons();
+  };
+
+  input.addEventListener("change", render);
+
+  list.addEventListener("click", e => {
+    const btn = e.target.closest("[data-remove-index]");
+    if (!btn) return;
+    const idx = Number(btn.dataset.removeIndex);
+    const dt = new DataTransfer();
+    Array.from(input.files).forEach((file, i) => { if (i !== idx) dt.items.add(file); });
+    input.files = dt.files;
+    render();
   });
 }
 

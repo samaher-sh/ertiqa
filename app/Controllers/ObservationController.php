@@ -237,7 +237,25 @@ class ObservationController extends BaseController
         if ($isJson) {
             return $this->response->setJSON(['success' => true, 'id' => $id]);
         }
-        return redirect()->to(base_url('dashboard/observations/' . $id))->with('success', 'تم الحفظ بنجاح.');
+
+        /* نموذج بدون جافاسكربت: مرفقات يختارها المستخدم قبل حفظ الملاحظة أول
+           مرة (وقت ما لسا ما عندها id حقيقي يقدر يُرفَع عليه فورًا زي صفحتَي
+           العرض/التعديل) تُرفع دفعة وحدة هنا فور ما يتحدد $id -- بدل ما تُهمَل
+           كليًا لعدم توفّر id وقت اختيارها */
+        $uploadErrors = [];
+        foreach ($this->request->getFileMultiple('new_attachments') ?? [] as $file) {
+            if (!$file || !$file->isValid() || $file->hasMoved()) continue;
+            $result = (new \App\Models\DocumentModel())->saveUploadedFile($file, 'observation', $id, $missionId, $userId);
+            if (!$result['success']) {
+                $uploadErrors[] = $file->getClientName() . ': ' . $result['message'];
+            }
+        }
+
+        $successMsg = 'تم الحفظ بنجاح.';
+        if ($uploadErrors) {
+            $successMsg .= ' تعذّر رفع بعض المرفقات — ' . implode('، ', $uploadErrors);
+        }
+        return redirect()->to(base_url('dashboard/observations/' . $id))->with('success', $successMsg);
     }
 
     /** POST /dashboard/observations/api/delete/{id} */
