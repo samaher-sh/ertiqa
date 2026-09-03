@@ -11,7 +11,7 @@ class MeetingSummaryPointModel extends Model
     protected $returnType    = 'array';
     protected $useTimestamps = false;
 
-    protected $allowedFields = ['meeting_id', 'point_text', 'statement', 'sort_order'];
+    protected $allowedFields = ['meeting_id', 'point_text', 'statement', 'hr_opinion', 'hr_reason', 'sort_order'];
 
     public function forMeeting(int $meetingId): array
     {
@@ -29,6 +29,8 @@ class MeetingSummaryPointModel extends Model
                 'meeting_id' => $meetingId,
                 'point_text' => $r['text'] ?? '',
                 'statement'  => $r['statement'] ?? null,
+                'hr_opinion' => ($r['hr_opinion'] ?? '') ?: null,
+                'hr_reason'  => $r['hr_reason'] ?? null,
                 'sort_order' => $i + 1,
             ];
         }
