@@ -81,16 +81,26 @@ $locked = !$selectedMissionId;
                     <?php endif; ?>
                   </td>
                   <td style="text-align:center;">
-                    <?php if ($canSubmit): ?>
-                      <label class="wiz-upload-pill" for="dr-file-<?= (int) $r['id'] ?>" style="cursor:pointer;">
-                        <i data-lucide="upload"></i> <span><?= !empty($r['file']) ? 'استبدال الملف' : 'رفع الملف' ?></span>
-                      </label>
-                      <input type="file" name="file_<?= (int) $r['id'] ?>" id="dr-file-<?= (int) $r['id'] ?>" style="display:none;">
-                    <?php endif; ?>
-                    <?php if (!empty($r['file'])): ?>
-                      <a class="dr-file-link" href="<?= base_url('dashboard/documents/download/' . $r['file']['id']) ?>" target="_blank"><i data-lucide="paperclip"></i> <?= esc($r['file']['file_name']) ?></a>
+                    <?php $files = $r['files'] ?? []; ?>
+                    <?php if (!empty($files)): ?>
+                      <div class="dr-file-list">
+                        <?php foreach ($files as $f): ?>
+                          <div class="dr-file-row">
+                            <a class="dr-file-link" href="<?= base_url('dashboard/documents/download/' . $f['id']) ?>" target="_blank"><i data-lucide="paperclip"></i> <?= esc($f['file_name']) ?></a>
+                            <?php if ($canSubmit && (int) ($f['uploaded_by'] ?? 0) === (int) session()->get('user_id')): ?>
+                              <button type="button" class="dr-file-del-btn" data-doc-id="<?= (int) $f['id'] ?>" title="حذف"><i data-lucide="x"></i></button>
+                            <?php endif; ?>
+                          </div>
+                        <?php endforeach; ?>
+                      </div>
                     <?php elseif (!$canSubmit): ?>
                       <span class="wiz-pill">لا يوجد ملف</span>
+                    <?php endif; ?>
+                    <?php if ($canSubmit): ?>
+                      <label class="wiz-upload-pill" for="dr-file-<?= (int) $r['id'] ?>" style="cursor:pointer;">
+                        <i data-lucide="upload"></i> <span>رفع ملف</span>
+                      </label>
+                      <input type="file" name="file_<?= (int) $r['id'] ?>[]" id="dr-file-<?= (int) $r['id'] ?>" multiple style="display:none;">
                     <?php endif; ?>
                   </td>
                   <td>

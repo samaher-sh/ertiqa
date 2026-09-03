@@ -8,8 +8,14 @@
 
 .dr-radio{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#4a6b74; cursor:pointer; }
 
-.dr-file-link{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--pd); text-decoration:none; }
-.dr-file-link i{ width:13px; height:13px; }
+.dr-file-link{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--pd); text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dr-file-link i{ width:13px; height:13px; flex-shrink:0; }
+
+.dr-file-list{ display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
+.dr-file-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 8px; border-radius:8px; background:#f8fbfd; border:1px solid #e9f2f5; max-width:180px; margin:0 auto; }
+.dr-file-del-btn{ display:flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:6px; border:none; background:none; color:#fca5a5; flex-shrink:0; cursor:pointer; }
+.dr-file-del-btn:hover{ background:#fef2f2; color:#ef4444; }
+.dr-file-del-btn i{ width:11px; height:11px; }
 
 .dr-footer{ border-top:1px solid #e5e7eb; padding:14px 24px; display:flex; justify-content:flex-end; }
 .dr-submit-btn{
