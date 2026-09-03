@@ -6,6 +6,7 @@ use App\Models\DocumentModel;
 use App\Models\MissionModel;
 use App\Models\MeetingModel;
 use App\Models\DepartmentModel;
+use App\Models\AuditNoteModel;
 
 class DocumentController extends BaseController
 {
@@ -100,6 +101,61 @@ class DocumentController extends BaseController
             'file_size'    => $file->getSize(),
             'mime_type'    => $file->getClientMimeType(),
             'uploaded_by'  => $userId,
+            'uploaded_at'  => date('Y-m-d H:i:s'),
+        ], true);
+
+        return $this->response->setJSON(['success' => true, 'document' => $docModel->find($docId)]);
+    }
+
+    /**
+     * POST /dashboard/observations/api/upload — رفع مرفق لملاحظة معيّنة (لازم
+     * تكون محفوظة أصلًا -- عندها id حقيقي، فما تظهر خانة الرفع بنموذج إضافة
+     * ملاحظة جديدة قبل الحفظ، فقط بصفحتَي التعديل/العرض)
+     */
+    public function uploadObservationAttachment()
+    {
+        $observationId = (int) $this->request->getPost('observation_id');
+        if (!$observationId) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'ملاحظة غير محددة.']);
+        }
+
+        $obs = (new AuditNoteModel())->find($observationId);
+        if (!$obs || !$this->missionAccessAllowed((int) $obs['mission_id'])) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية الوصول لهذه الملاحظة.']);
+        }
+
+        $file = $this->request->getFile('file');
+        if (!$file || !$file->isValid()) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لم يتم اختيار ملف صحيح.']);
+        }
+
+        if ($file->getSizeByUnit('kb') > self::MAX_SIZE_KB) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'حجم الملف أكبر من الحد المسموح (10 ميجا).']);
+        }
+
+        $ext = strtolower($file->getClientExtension());
+        if (!in_array($ext, self::ALLOWED_EXT, true)) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'نوع الملف غير مسموح به.']);
+        }
+
+        $uploadDir = WRITEPATH . 'uploads/observations/' . $observationId;
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadDir, $newName);
+
+        $docModel = new DocumentModel();
+        $docId = $docModel->insert([
+            'mission_id'   => (int) $obs['mission_id'],
+            'related_type' => 'observation',
+            'related_id'   => $observationId,
+            'file_name'    => $file->getClientName(),
+            'file_path'    => 'observations/' . $observationId . '/' . $newName,
+            'file_size'    => $file->getSize(),
+            'mime_type'    => $file->getClientMimeType(),
+            'uploaded_by'  => (int) session()->get('user_id'),
             'uploaded_at'  => date('Y-m-d H:i:s'),
         ], true);
 

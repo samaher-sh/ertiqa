@@ -6,6 +6,7 @@ use App\Models\AuditNoteModel;
 use App\Models\MissionStageHistoryModel;
 use App\Models\AuditLogModel;
 use App\Models\MissionModel;
+use App\Models\DocumentModel;
 
 class ObservationController extends BaseController
 {
@@ -129,6 +130,7 @@ class ObservationController extends BaseController
             'selectedMissionId' => (int) $obs['mission_id'],
             'mission'           => $mission,
             'observation'       => $obs,
+            'attachments'       => (new DocumentModel())->forRelated('observation', $id),
         ]));
     }
 
@@ -145,6 +147,7 @@ class ObservationController extends BaseController
             'observation' => $obs,
             'mission'     => $mission,
             'readOnly'    => $this->roleFlags()['obsReadOnly'],
+            'attachments' => (new DocumentModel())->forRelated('observation', $id),
         ]));
     }
 
@@ -195,18 +198,22 @@ class ObservationController extends BaseController
         $model = new AuditNoteModel();
         $userId = (int) session()->get('user_id');
 
+        $riskSeverity = $data['risk_severity'] ?? '';
+        if (!in_array($riskSeverity, ['عالي', 'متوسط', 'منخفض'], true)) {
+            $riskSeverity = null;
+        }
+
         $payload = [
             'mission_id'            => $missionId,
             'department_id'         => $data['department_id'],
             'title'                 => $data['title'] ?? '',
             'observation_date'      => $data['observation_date'] ?: date('Y-m-d'),
-            'risk_severity'         => mb_substr((string) ($data['risk_severity'] ?? ''), 0, 50),
+            'risk_severity'         => $riskSeverity,
             'observation_text'      => $data['observation_text'],
             'standard_text'         => $data['standard_text'] ?? '',
             'reason_text'           => $data['reason_text'] ?? '',
             'impact_text'           => $data['impact_text'] ?? '',
             'recommendations_text'  => $data['recommendations_text'] ?? '',
-            'add_to_report'         => isset($data['add_to_report']) ? ($data['add_to_report'] ? 1 : 0) : null,
         ];
 
         if (!empty($data['id'])) {

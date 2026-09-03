@@ -24,7 +24,7 @@
                 <td class="label">الإدارة محل المراجعة</td><td><?= esc($o['dept'] ?: '—') ?></td>
                 <td class="label">التاريخ</td><td><?= esc($o['date'] ?: '—') ?></td>
             </tr>
-            <tr><td class="label">الحالة (الخطر)</td><td colspan="3"><?= esc($o['risk'] ?: '—') ?></td></tr>
+            <tr><td class="label">تقييم الخطر</td><td colspan="3"><?= esc($o['risk'] ?: '—') ?></td></tr>
             <tr><td class="label">الملاحظة</td><td colspan="3"><?= nl2br(esc($o['observation'] ?: '—')) ?></td></tr>
             <tr><td class="label">المعيار أو النظام</td><td colspan="3"><?= nl2br(esc($o['standard'] ?: '—')) ?></td></tr>
             <tr><td class="label">السبب</td><td colspan="3"><?= nl2br(esc($o['reason'] ?: '—')) ?></td></tr>

@@ -19,7 +19,7 @@
             <td class="label">الإدارة محل المراجعة</td><td><?= esc($dept ?: '—') ?></td>
             <td class="label">التاريخ</td><td><?= esc($date ?: '—') ?></td>
         </tr>
-        <tr><td class="label">الحالة (الخطر)</td><td colspan="3"><?= esc($risk ?: '—') ?></td></tr>
+        <tr><td class="label">تقييم الخطر</td><td colspan="3"><?= esc($risk ?: '—') ?></td></tr>
         <tr><td class="label">الملاحظة</td><td colspan="3"><?= nl2br(esc($observation ?: '—')) ?></td></tr>
         <tr><td class="label">المعيار أو النظام</td><td colspan="3"><?= nl2br(esc($standard ?: '—')) ?></td></tr>
         <tr><td class="label">السبب</td><td colspan="3"><?= nl2br(esc($reason ?: '—')) ?></td></tr>

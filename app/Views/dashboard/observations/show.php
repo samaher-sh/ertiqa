@@ -20,7 +20,6 @@ $obsStatusColors = [
 ];
 $rc = $obsRiskColors[$observation['risk_severity']] ?? ['bg' => '#f3f4f6', 'text' => '#4b5563', 'border' => '#e5e7eb', 'dot' => '#9ca3af'];
 $sc = $obsStatusColors[$observation['status']] ?? $obsStatusColors['بانتظار الرد'];
-$addToReport = $observation['add_to_report'];
 $flash = session()->getFlashdata('success');
 ?>
 <div class="flex flex-col gap-4">
@@ -46,7 +45,7 @@ $flash = session()->getFlashdata('success');
         <div class="obs-view-field"><span class="lbl">عنوان الملاحظة</span><span class="val"><?= esc($observation['title'] ?: '—') ?></span></div>
         <div class="obs-view-field"><span class="lbl">التاريخ</span><span class="val"><?= esc($observation['observation_date']) ?></span></div>
         <div class="obs-view-field">
-          <span class="lbl">الحالة (الخطر)</span>
+          <span class="lbl">تقييم الخطر</span>
           <span class="obs-pill" style="width:fit-content;background:<?= $rc['bg'] ?>;color:<?= $rc['text'] ?>;border:1px solid <?= $rc['border'] ?>;"><span class="dot" style="background:<?= $rc['dot'] ?>;"></span><?= esc($observation['risk_severity'] ?: '—') ?></span>
         </div>
       </div>
@@ -66,11 +65,15 @@ $flash = session()->getFlashdata('success');
           <span class="lbl">الحالة</span>
           <span class="obs-pill" style="width:fit-content;background:<?= $sc['bg'] ?>;color:<?= $sc['text'] ?>;border:1px solid <?= $sc['border'] ?>;"><span class="dot" style="background:<?= $sc['dot'] ?>;"></span><?= esc($observation['status']) ?></span>
         </div>
-        <div class="obs-view-field">
-          <span class="lbl">تضاف للتقرير</span>
-          <span class="val"><?= $addToReport === null ? '—' : ((int) $addToReport === 1 ? 'نعم' : 'لا') ?></span>
-        </div>
       </div>
+
+      <div class="obs-divider"></div>
+
+      <?= view('dashboard/observations/_attachments', [
+          'observationId' => (int) $observation['id'],
+          'attachments'   => $attachments ?? [],
+          'canUpload'     => !$readOnly,
+      ]) ?>
     </div>
   </div>
 </div>

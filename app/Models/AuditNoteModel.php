@@ -14,7 +14,7 @@ class AuditNoteModel extends Model
     protected $allowedFields = [
         'mission_id', 'ref_code', 'department_id', 'title', 'observation_date',
         'risk_severity', 'status', 'observation_text', 'standard_text',
-        'reason_text', 'impact_text', 'recommendations_text', 'add_to_report',
+        'reason_text', 'impact_text', 'recommendations_text',
         'reviewer_signature_user_id', 'team_head_signature_user_id',
         'reviewer_signed_at', 'team_head_signed_at', 'created_by',
     ];

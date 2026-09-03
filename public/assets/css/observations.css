@@ -115,6 +115,24 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 .obs-radio-label{ display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:#4a6b74; }
 .obs-radio-label input{ width:16px; height:16px; accent-color:var(--p); }
 
+/* ===== مرفقات ملاحظة (صفحتَي العرض/التعديل — _attachments.php) ===== */
+.obs-attach-section{ display:flex; flex-direction:column; gap:10px; }
+.obs-attach-section-head{ display:flex; align-items:center; justify-content:space-between; }
+.obs-attach-upload-btn{ display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:12px; font-size:12px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); cursor:pointer; }
+.obs-attach-upload-btn i{ width:14px; height:14px; }
+.obs-attach-item-list{ display:flex; flex-direction:column; gap:6px; }
+.obs-attach-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; border-radius:10px; background:#f8fbfd; border:1px solid #e9f2f5; }
+.obs-attach-item-name{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#152c33; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.obs-attach-item-name i{ width:15px; height:15px; color:var(--pd); flex-shrink:0; }
+.obs-attach-item-actions{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.obs-attach-view-btn, .obs-attach-del-btn{ display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; border:none; cursor:pointer; }
+.obs-attach-view-btn{ background:var(--pl); color:var(--pd); }
+.obs-attach-view-btn:hover{ background:var(--pb); }
+.obs-attach-del-btn{ background:#fef2f2; color:#ef4444; }
+.obs-attach-del-btn:hover{ background:#fee2e2; }
+.obs-attach-view-btn i, .obs-attach-del-btn i{ width:15px; height:15px; }
+.obs-attach-empty-msg{ font-size:12px; color:#9ca3af; }
+
 /* ===== View mode (read-only) ===== */
 .obs-view-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
 @media (min-width:768px){ .obs-view-grid.cols-4{ grid-template-columns:repeat(4,1fr); } }

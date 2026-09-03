@@ -215,7 +215,7 @@
             <table class="info">
                 <tr><td class="label">الإدارة المعنية</td><td><?= esc($o['department_name'] ?? '—') ?></td>
                     <td class="label">التاريخ</td><td><?= esc($o['observation_date']) ?></td></tr>
-                <tr><td class="label">الحالة (الخطر)</td><td colspan="3"><?= esc($o['risk_severity'] ?: '—') ?></td></tr>
+                <tr><td class="label">تقييم الخطر</td><td colspan="3"><?= esc($o['risk_severity'] ?: '—') ?></td></tr>
                 <tr><td class="label">الملاحظة</td><td colspan="3"><?= nl2br(esc($o['observation_text'] ?: '—')) ?></td></tr>
                 <tr><td class="label">المعيار أو النظام</td><td colspan="3"><?= nl2br(esc($o['standard_text'] ?: '—')) ?></td></tr>
                 <tr><td class="label">السبب</td><td colspan="3"><?= nl2br(esc($o['reason_text'] ?: '—')) ?></td></tr>
