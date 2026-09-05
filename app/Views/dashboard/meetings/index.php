@@ -175,21 +175,21 @@ $deptName = $mission['target_department_name'] ?? '';
         <div class="wiz-card-head"><i data-lucide="check"></i><span style="color:#fff;font-weight:700;font-size:14px;">إعداد واعتماد</span></div>
         <div class="msum-table-wrap">
           <table class="msum-table">
-            <thead><tr><th>الاسم</th><th>الوظيفة</th><th style="width:220px;">التوقيع</th></tr></thead>
+            <thead><tr><th>الاسم</th><th>الوظيفة</th><th style="width:140px;">الاعتماد</th></tr></thead>
             <tbody>
               <?php foreach ($approvals as $row): ?>
-                <?php $sig = $row['signature_data'] ?? $row['signature'] ?? ''; ?>
+                <?php $approved = !empty($row['signature_data'] ?? $row['signature'] ?? ''); ?>
                 <input type="hidden" name="approvals[0][statement]" value="<?= esc($row['statement'] ?? 'إعداد واعتماد') ?>">
-                <input type="hidden" name="approvals[0][date]" value="<?= esc($row['approval_date'] ?? $row['date'] ?? '') ?>">
+                <input type="hidden" name="approvals[0][date]" id="msumApprovalDate" value="<?= esc($row['approval_date'] ?? $row['date'] ?? '') ?>">
                 <tr>
                   <td><input type="text" name="approvals[0][name]" class="msum-plain-input" placeholder="الاسم" value="<?= esc($row['signer_name'] ?? $row['name'] ?? '') ?>" <?= $allReadOnly ? 'readonly' : '' ?>></td>
                   <td><input type="text" name="approvals[0][position]" class="msum-plain-input" placeholder="الوظيفة" value="<?= esc($row['position'] ?? '') ?>" <?= $allReadOnly ? 'readonly' : '' ?>></td>
-                  <td id="msumSigCell">
+                  <td id="msumSigCell" style="text-align:center;">
                     <?php if ($allReadOnly): ?>
-                      <?php if ($sig): ?><img src="<?= esc($sig) ?>" alt="توقيع" class="msum-sig-img"><?php else: ?><span class="msum-sig-empty">لا يوجد توقيع</span><?php endif; ?>
+                      <?php if ($approved): ?><span class="msum-approved-badge"><i data-lucide="check-circle"></i> معتمد</span><?php else: ?><span class="msum-sig-empty">لم يُعتمد بعد</span><?php endif; ?>
                     <?php else: ?>
-                      <input type="hidden" name="approvals[0][signature]" id="msumSignatureInput" value="<?= esc($sig) ?>">
-                      <?php if ($sig): ?><img src="<?= esc($sig) ?>" alt="توقيع" class="msum-sig-img" id="msumSigPreview"><?php else: ?><span class="msum-sig-empty" id="msumSigPreview">لا يوجد توقيع — يتطلب جافاسكربت للرسم</span><?php endif; ?>
+                      <input type="hidden" name="approvals[0][signature]" id="msumSignatureInput" value="<?= esc($approved ? '1' : '') ?>">
+                      <label class="msum-approve-checkbox"><input type="checkbox" id="msumApproveCheckbox" <?= $approved ? 'checked' : '' ?>> اعتماد</label>
                     <?php endif; ?>
                   </td>
                 </tr>

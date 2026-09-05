@@ -271,12 +271,12 @@ $channelsMeta = [
                 <input id="p2SigDate" type="date" class="wiz-input plain" value="<?= esc($v('sig_date')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
               </div>
               <div>
-                <p class="wiz-sig-mini-label">التوقيع</p>
-                <div class="wiz-sig-pad-card">
-                  <canvas id="p2SigPad" class="wiz-sig-pad-canvas" width="440" height="130"></canvas>
-                  <span class="wiz-sig-pad-hint" id="p2SigPadHint"><i data-lucide="pen-line"></i> وقّع هنا</span>
-                  <button type="button" class="wiz-sig-pad-clear" id="p2SigPadClear" title="مسح التوقيع"><i data-lucide="eraser"></i></button>
-                </div>
+                <p class="wiz-sig-mini-label">الاعتماد</p>
+                <label class="wiz-sig-approve-check">
+                  <input type="checkbox" id="p2SigApproveCheckbox" <?= $v('sig_signature') ? 'checked' : '' ?>>
+                  <span>أعتمد اتفاقية مستوى الخدمة</span>
+                </label>
+                <input type="hidden" id="p2SigSignature" value="<?= esc($v('sig_signature')) ?>">
               </div>
             </div>
             <div class="wiz-sig-card locked">
