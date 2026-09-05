@@ -29,7 +29,7 @@ $flashSuccess = session()->getFlashdata('success');
 $tourStages = [
     ['label' => 'الخطاب الرسمي',          'always' => true, 'actions' => [], 'url' => base_url('dashboard/pdf/mission-letter/' . $mission['id']) . '?inline=1'],
     ['label' => 'اتفاقية مستوى الخدمة',    'always' => false, 'actions' => ['sla_submitted'], 'url' => base_url('dashboard/target-mission') . '?mission_id=' . $mission['id'] . '&embed=1'],
-    ['label' => 'قائمة المستندات المرسلة', 'always' => false, 'actions' => ['documents_submitted'], 'url' => base_url('dashboard/document-requests') . '?mission_id=' . $mission['id'] . '&embed=1'],
+    ['label' => 'قائمة الطلبات المرسلة',   'always' => false, 'actions' => ['documents_submitted'], 'url' => base_url('dashboard/document-requests') . '?mission_id=' . $mission['id'] . '&embed=1'],
     ['label' => 'مصفوفة المخاطر',         'always' => false, 'actions' => ['risk_matrix_saved'], 'url' => base_url('dashboard/risk-matrix') . '?mission_id=' . $mission['id'] . '&embed=1'],
     ['label' => 'الاجتماع',               'always' => false, 'actions' => ['meeting_confirmed', 'meeting_summary_saved'], 'url' => base_url('dashboard/meetings') . '?mission_id=' . $mission['id'] . '&embed=1'],
     ['label' => 'الملاحظات',              'always' => false, 'actions' => ['observation_added'], 'url' => base_url('dashboard/observations') . '?mission_id=' . $mission['id'] . '&embed=1'],

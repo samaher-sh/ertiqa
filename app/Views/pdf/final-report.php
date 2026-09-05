@@ -102,9 +102,9 @@
         </table>
     </div>
 
-    <!-- ========== 3. قائمة المستندات ========== -->
+    <!-- ========== 3. قائمة الطلبات ========== -->
     <div class="section-break">
-        <h1 class="section-title">3. قائمة المستندات</h1>
+        <h1 class="section-title">3. قائمة الطلبات</h1>
         <table class="grid">
             <thead><tr><th style="width:30px;">م</th><th>المستند</th><th style="width:80px;">يوجد</th><th>ملاحظات</th></tr></thead>
             <tbody>
