@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </tr>`,
   });
 
-  initSignaturePad();
+  bindApproveCheckbox();
   initAttachUpload();
   bindAttachListActions();
 });
@@ -173,59 +173,20 @@ function bindRowGroup({ tbodyId, rowSelector, addBtnId, delSelector, fieldPrefix
   }
 }
 
-function initSignaturePad() {
-  const cell = document.getElementById("msumSigCell");
+/* اعتماد "إعداد واعتماد" بضغطة واحدة (بدون توقيع يدوي) -- checkbox واحد
+   يضبط قيمة الحقل المخفي المستخدَم أصلًا لتخزين التوقيع ('1' بدل صورة
+   base64)، ويسجّل تاريخ اليوم تلقائيًا وقت التفعيل */
+function bindApproveCheckbox() {
+  const checkbox = document.getElementById("msumApproveCheckbox");
   const hiddenInput = document.getElementById("msumSignatureInput");
-  const preview = document.getElementById("msumSigPreview");
-  if (!cell || !hiddenInput) return;
+  const dateInput = document.getElementById("msumApprovalDate");
+  if (!checkbox || !hiddenInput) return;
 
-  if (preview) preview.remove();
-
-  const wrap = document.createElement("div");
-  wrap.className = "msum-sig-pad-wrap";
-  wrap.innerHTML = '<canvas class="msum-sig-canvas" width="220" height="80"></canvas><button type="button" class="msum-sig-clear" title="مسح التوقيع">✕</button>';
-  cell.appendChild(wrap);
-  const canvas = wrap.querySelector("canvas");
-  const clearBtn = wrap.querySelector(".msum-sig-clear");
-
-  const ctx = canvas.getContext("2d");
-  ctx.strokeStyle = "#152c33";
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  if (hiddenInput.value) {
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    img.src = hiddenInput.value;
-  }
-
-  let drawing = false, last = null;
-  const pointFromEvent = e => {
-    const rect = canvas.getBoundingClientRect();
-    const src = e.touches && e.touches.length ? e.touches[0] : e;
-    return { x: (src.clientX - rect.left) * (canvas.width / rect.width), y: (src.clientY - rect.top) * (canvas.height / rect.height) };
-  };
-  const start = e => { e.preventDefault(); drawing = true; last = pointFromEvent(e); };
-  const move = e => {
-    if (!drawing) return;
-    e.preventDefault();
-    const p = pointFromEvent(e);
-    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-    last = p;
-  };
-  const end = () => { if (!drawing) return; drawing = false; hiddenInput.value = canvas.toDataURL("image/png"); };
-
-  canvas.addEventListener("mousedown", start);
-  canvas.addEventListener("mousemove", move);
-  window.addEventListener("mouseup", end);
-  canvas.addEventListener("touchstart", start, { passive: false });
-  canvas.addEventListener("touchmove", move, { passive: false });
-  canvas.addEventListener("touchend", end);
-
-  clearBtn.addEventListener("click", () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hiddenInput.value = "";
+  checkbox.addEventListener("change", () => {
+    hiddenInput.value = checkbox.checked ? "1" : "";
+    if (checkbox.checked && dateInput && !dateInput.value) {
+      dateInput.value = new Date().toISOString().slice(0, 10);
+    }
   });
 }
 

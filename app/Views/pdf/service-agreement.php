@@ -65,8 +65,8 @@
             <td class="label">التاريخ</td><td><?= esc($sigDate ?: '—') ?></td>
         </tr>
         <tr>
-            <td class="label">التوقيع</td>
-            <td colspan="3"><?php if (!empty($sigSignature)): ?><img class="sig-img" src="<?= esc($sigSignature) ?>"><?php else: ?>—<?php endif; ?></td>
+            <td class="label">الاعتماد</td>
+            <td colspan="3"><?= !empty($sigSignature) ? '✓ معتمد' : '—' ?></td>
         </tr>
         <tr>
             <td class="label">ممثل الإدارة</td>

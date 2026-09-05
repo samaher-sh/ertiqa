@@ -82,6 +82,12 @@ table.msum-table td:not(:last-child){ border-left:1px solid #d8e6eb; }
 .msum-sig-img{ max-width:220px; max-height:80px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
 .msum-sig-empty{ font-size:11px; color:#9ca3af; }
 
+/* اعتماد "إعداد واعتماد" بضغطة واحدة (بدون توقيع يدوي) */
+.msum-approve-checkbox{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#152c33; cursor:pointer; }
+.msum-approve-checkbox input{ width:16px; height:16px; accent-color:var(--p); cursor:pointer; }
+.msum-approved-badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:9999px; background:#eafff0; color:#15803d; border:1px solid #86efac; }
+.msum-approved-badge i{ width:11px; height:11px; }
+
 /* ══════ حقل عنوان المهمة القابل للتعديل (منفصل عن الحقول المقفولة الرمادية) ══════ */
 .msum-edit-wrap{ border:1px solid var(--pb); background:#f0f8fd; border-radius:12px; padding:2px 12px; }
 .msum-edit-wrap .msum-growfield{ border:none; background:transparent; width:100%; padding:8px 0; }

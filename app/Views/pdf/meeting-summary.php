@@ -53,7 +53,7 @@
 
     <h2>الاعتماد</h2>
     <table class="grid">
-        <thead><tr><th>البيان</th><th>الاسم</th><th>الوظيفة</th><th>التوقيع</th><th>التاريخ</th></tr></thead>
+        <thead><tr><th>البيان</th><th>الاسم</th><th>الوظيفة</th><th>الاعتماد</th><th>التاريخ</th></tr></thead>
         <tbody>
             <?php if (empty($approvals)): ?>
                 <tr><td colspan="5" style="text-align:center;color:#9ca3af;">لا يوجد اعتماد مسجّل</td></tr>
@@ -62,7 +62,7 @@
                     <td><?= esc($ap['statement']) ?></td>
                     <td><?= esc($ap['signer_name']) ?></td>
                     <td><?= esc($ap['position']) ?></td>
-                    <td><?php if (!empty($ap['signature_data'])): ?><img class="sig-img" src="<?= esc($ap['signature_data']) ?>"><?php else: ?>—<?php endif; ?></td>
+                    <td><?= !empty($ap['signature_data']) ? '✓ معتمد' : '—' ?></td>
                     <td><?= esc($ap['approval_date'] ?: '—') ?></td>
                 </tr>
             <?php endforeach; endif; ?>

@@ -10,8 +10,8 @@
         الخدمة") بدل عرض الاثنتين دفعة وحدة (fallback بدون JS)
      2) تحديث حي لمعاينة الخطاب أثناء الكتابة
      3) طيّ/فرد كل قناة اتصال بالضغط على ترويستها
-     4) لوحة توقيع تفاعلية بـ canvas لخانة "المراجع الرئيسي" بخطوة
-        اتفاقية مستوى الخدمة (تحتاج جافاسكربت أساسًا)
+     4) اعتماد "المراجع الرئيسي" بخطوة اتفاقية مستوى الخدمة بضغطة واحدة
+        (checkbox بدل توقيع يدوي بـ canvas)
      5) تصدير PDF لمسودة الخطاب (خطوة 1) واتفاقية مستوى الخدمة (خطوة 2)
         قبل الحفظ
    ============================================================ */
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindDraftLetterExport();
   bindDraftAgreementExport();
   bindChannelToggles();
-  bindSignaturePad();
+  bindSignatureApproveCheckbox();
   bindStepNav();
 });
 
@@ -174,45 +174,14 @@ function bindChannelToggles() {
   });
 }
 
-/* ---------- 4) لوحة توقيع "المراجع الرئيسي" (نفس msumInitSignaturePad بالضبط) ---------- */
-function bindSignaturePad() {
-  const canvas = document.getElementById("p2SigPad");
-  const hint = document.getElementById("p2SigPadHint");
-  const clearBtn = document.getElementById("p2SigPadClear");
-  if (!canvas) return;
+/* ---------- 4) اعتماد "المراجع الرئيسي" بضغطة واحدة (بدون توقيع يدوي) ---------- */
+function bindSignatureApproveCheckbox() {
+  const checkbox = document.getElementById("p2SigApproveCheckbox");
+  const hiddenInput = document.getElementById("p2SigSignature");
+  if (!checkbox || !hiddenInput) return;
 
-  const ctx = canvas.getContext("2d");
-  ctx.strokeStyle = "#152c33";
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  let drawing = false, last = null;
-  const pointFromEvent = e => {
-    const rect = canvas.getBoundingClientRect();
-    const src = e.touches && e.touches.length ? e.touches[0] : e;
-    return { x: (src.clientX - rect.left) * (canvas.width / rect.width), y: (src.clientY - rect.top) * (canvas.height / rect.height) };
-  };
-  const start = e => { e.preventDefault(); drawing = true; last = pointFromEvent(e); if (hint) hint.style.display = "none"; };
-  const move = e => {
-    if (!drawing) return;
-    e.preventDefault();
-    const p = pointFromEvent(e);
-    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-    last = p;
-  };
-  const end = () => { drawing = false; };
-
-  canvas.addEventListener("mousedown", start);
-  canvas.addEventListener("mousemove", move);
-  window.addEventListener("mouseup", end);
-  canvas.addEventListener("touchstart", start, { passive: false });
-  canvas.addEventListener("touchmove", move, { passive: false });
-  canvas.addEventListener("touchend", end);
-
-  if (clearBtn) clearBtn.addEventListener("click", () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (hint) hint.style.display = "";
+  checkbox.addEventListener("change", () => {
+    hiddenInput.value = checkbox.checked ? "1" : "";
   });
 }
 
@@ -259,7 +228,6 @@ function bindDraftAgreementExport() {
       channels[key] = !!(checkbox && checkbox.checked);
       channelValues[key] = field ? field.value : "";
     });
-    const canvas = document.getElementById("p2SigPad");
     const sectionsCard = document.getElementById("wizSlaSectionsCard");
     let sections = [];
     try { sections = JSON.parse(sectionsCard.dataset.slaSections); } catch (e) {}
@@ -274,7 +242,7 @@ function bindDraftAgreementExport() {
         sections,
         sig_name: val("p2SigName"),
         sig_date: val("p2SigDate"),
-        sig_signature: canvas ? canvas.toDataURL("image/png") : "",
+        sig_signature: val("p2SigSignature"),
       }, "اتفاقية-مستوى-الخدمة.pdf");
     } catch (e) {
       alert(e.message || "تعذّر تصدير المستند");

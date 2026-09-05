@@ -193,6 +193,9 @@ table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3
 .wiz-sig-pad-clear:hover{ background:#fef2f2; }
 .wiz-sig-pad-clear i, .wiz-sig-pad-clear svg{ width:13px; height:13px; }
 
+.wiz-sig-approve-check{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--p); cursor:pointer; }
+.wiz-sig-approve-check input{ width:18px; height:18px; accent-color:var(--p); cursor:pointer; }
+
 .wiz-disclosure{ margin:0 20px 20px; padding:16px 18px; border-radius:12px; background:var(--pl); border:1px solid var(--pb); }
 .wiz-disclosure-title{ font-size:13px; font-weight:800; color:var(--pd); margin:0 0 8px; }
 .wiz-disclosure-text{ font-size:12px; line-height:1.9; color:#374151; margin:0; }
