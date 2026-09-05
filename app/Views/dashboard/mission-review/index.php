@@ -206,12 +206,12 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
       <div class="wiz-card-head" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
           <i data-lucide="folder-check"></i>
-          <div><h2>قائمة المستندات المطلوبة</h2></div>
+          <div><h2>قائمة الطلبات المطلوبة</h2></div>
         </div>
       </div>
       <div class="wiz-doc-footer" style="border-top:0;">
         <span class="wiz-doc-footer-count">تُدار الآن من صفحتها المستقلة</span>
-        <a class="dr-submit-btn" style="text-decoration:none;" href="<?= base_url('dashboard/document-requests') ?>?mission_id=<?= (int) $mission['id'] ?>"><i data-lucide="folder-check"></i> فتح قائمة المستندات</a>
+        <a class="dr-submit-btn" style="text-decoration:none;" href="<?= base_url('dashboard/document-requests') ?>?mission_id=<?= (int) $mission['id'] ?>"><i data-lucide="folder-check"></i> فتح قائمة الطلبات</a>
       </div>
     </div>
     <?php endif; ?>

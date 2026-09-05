@@ -28,7 +28,7 @@ $locked = !$selectedMissionId;
       <div class="wiz-card-head" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
           <i data-lucide="folder-check"></i>
-          <div><h2>قائمة المستندات المطلوبة</h2></div>
+          <div><h2>قائمة الطلبات المطلوبة</h2></div>
         </div>
         <?php if ($canAdd): ?>
         <details class="wiz-add-doc-details" id="drAddDetails" style="position:relative;">

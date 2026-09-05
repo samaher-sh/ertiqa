@@ -54,7 +54,7 @@ abstract class BaseController extends Controller
         return [
             'home'              => ['label' => 'الرئيسية',          'url' => base_url('dashboard'),                  'icon' => 'home'],
             'newTask'           => ['label' => 'بدء مهمة',           'url' => base_url('dashboard/new-task'),         'icon' => 'plus'],
-            'documentRequests'  => ['label' => 'قائمة المستندات',    'url' => base_url('dashboard/document-requests'), 'icon' => 'folder-check'],
+            'documentRequests'  => ['label' => 'قائمة الطلبات',      'url' => base_url('dashboard/document-requests'), 'icon' => 'folder-check'],
             'riskMatrix'        => ['label' => 'مصفوفة المخاطر',     'url' => base_url('dashboard/risk-matrix'),      'icon' => 'bar-chart-2'],
             'meetingSchedule'   => ['label' => 'جدولة اجتماع',       'url' => base_url('dashboard/meeting-schedule'), 'icon' => 'calendar-plus'],
             'meetingSummary'    => ['label' => 'ملخص اجتماع',        'url' => base_url('dashboard/meetings'),         'icon' => 'users'],
