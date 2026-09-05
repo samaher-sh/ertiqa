@@ -221,3 +221,8 @@ table.fr-doc-table td:last-child, table.fr-risk-table td:last-child, table.fr-me
 .fr-reject-btn:disabled{ opacity:.4; cursor:not-allowed; }
 .fr-reject-btn:not(:disabled):hover{ background:#b91c1c; }
 .fr-reject-btn i{ width:14px; height:14px; }
+
+/* قائمة "الملاحظات المضمَّنة بالتقرير النهائي" -- خيار تضاف/لا تضاف لكل ملاحظة */
+.fr-inclusion-list{ display:flex; flex-direction:column; gap:8px; padding:16px; }
+.fr-inclusion-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; border-radius:10px; background:#f8fbfd; border:1px solid #e9f2f5; flex-wrap:wrap; }
+.fr-inclusion-title{ font-size:13px; font-weight:600; color:#152c33; }

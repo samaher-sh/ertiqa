@@ -418,7 +418,11 @@ class PdfController extends BaseController
         $this->assertMissionAccess($mission);
 
         $report = (new ReportModel())->where('mission_id', $missionId)->first();
-        if (!$report || $report['status'] !== 'sent') {
+        // رئيس إدارة المراجعة الداخلية وحده يقدر يعاين المستند قبل الاعتماد
+        // الرسمي (وقت "بانتظار الاعتماد")، من قسم "قرار الرئيس" بصفحة المراحل --
+        // أي طرف آخر يبقى مقصورًا على النسخة المعتمدة فعليًا (status=sent) فقط
+        $allowedStatuses = session()->get('role_code') === 'audit_head' ? ['pending_signatures', 'sent'] : ['sent'];
+        if (!$report || !in_array($report['status'], $allowedStatuses, true)) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('التقرير غير معتمد بعد.');
         }
 
@@ -436,7 +440,12 @@ class PdfController extends BaseController
         $points    = $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [];
         $approvals = $meeting ? (new MeetingApprovalModel())->forMeeting($meeting['id']) : [];
 
-        $observations = (new AuditNoteModel())->forMission($missionId);
+        // add_to_report = 0 صراحة يستثني الملاحظة من المستند المصدَّر -- أي
+        // قيمة ثانية (فارغة/1) تبقى مضمَّنة افتراضيًا (نفس منطق AuditNoteModel)
+        $observations = array_values(array_filter(
+            (new AuditNoteModel())->forMission($missionId),
+            fn ($o) => (int) ($o['add_to_report'] ?? 1) !== 0
+        ));
 
         $html = view('pdf/final-report', [
             'mission'      => $mission,
