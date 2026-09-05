@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="<?= av('assets/css/wizard.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/observations.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/finalreports.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/missionreview.css') ?>">
 <?php $this->endSection() ?>
 
 <?php $this->section('content') ?>
@@ -35,7 +36,7 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
 <div class="flex flex-col gap-5">
   <?php if ($flash): ?><div class="obs-alert obs-alert-<?= $flashType ?>"><?= esc($flash) ?></div><?php endif; ?>
   <?php if ($report['status'] === 'draft' && !empty($report['head_rejection_note'])): ?>
-    <div class="obs-alert obs-alert-error"><strong>رفض رئيس إدارة المراجعة الداخلية التقرير وأرجعه للتعديل:</strong> <?= esc($report['head_rejection_note']) ?></div>
+    <div class="obs-alert obs-alert-error"><strong>طلب رئيس إدارة المراجعة الداخلية تعديل التقرير:</strong> <?= esc($report['head_rejection_note']) ?></div>
   <?php endif; ?>
 
   <div class="fr-topbar">
@@ -127,6 +128,40 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
   </div>
 
   <?php if ($isAuditHead && $report['status'] === 'pending_signatures'): ?>
+
+  <?php if (!empty($observations)): ?>
+  <div class="wiz-card" id="frInclusionCard">
+    <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">الملاحظات المضمَّنة بالتقرير النهائي</span></div>
+    <form method="post" action="<?= base_url('dashboard/reports/api/observations-inclusion') ?>" class="fr-decision-panel">
+      <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+      <input type="hidden" name="mission_id" value="<?= (int) $mission['id'] ?>">
+      <div class="fr-inclusion-list">
+        <?php foreach ($observations as $o): ?>
+          <?php $included = (int) ($o['add_to_report'] ?? 1) !== 0; ?>
+          <div class="fr-inclusion-row">
+            <span class="fr-inclusion-title"><?= esc($o['title'] ?: $o['ref_code']) ?></span>
+            <div class="mr-exists-toggle">
+              <label class="mr-exists-pill yes"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="1" <?= $included ? 'checked' : '' ?>> تضاف</label>
+              <label class="mr-exists-pill no"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="0" <?= !$included ? 'checked' : '' ?>> لا تضاف</label>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+      <div><button type="submit" class="fr-next-btn"><i data-lucide="save"></i> حفظ</button></div>
+    </form>
+  </div>
+  <?php endif; ?>
+
+  <div class="wiz-card" id="frPreviewCard">
+    <div class="wiz-card-head" style="justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="file-text"></i><span style="color:#fff;font-weight:700;font-size:14px;">معاينة التقرير النهائي</span></div>
+      <a class="fr-action-pdf-btn" style="text-decoration:none;" href="<?= base_url('dashboard/pdf/final-report/' . $mission['id']) ?>" title="تصدير PDF"><i data-lucide="file-down"></i> تصدير PDF</a>
+    </div>
+    <div class="fr-step-iframe-wrap">
+      <iframe src="<?= base_url('dashboard/pdf/final-report/' . $mission['id']) ?>?inline=1" class="fr-step-iframe" loading="lazy"></iframe>
+    </div>
+  </div>
+
   <div class="wiz-card" id="frDecisionCard">
     <div class="wiz-card-head"><i data-lucide="gavel"></i><span style="color:#fff;font-weight:700;font-size:14px;">قرار رئيس إدارة المراجعة الداخلية</span></div>
     <div class="fr-decision-row">
@@ -167,19 +202,19 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
       </details>
 
       <details class="fr-decision-details" name="frDecision">
-        <summary class="fr-decision-btn reject"><i data-lucide="x-circle"></i> رفض</summary>
+        <summary class="fr-decision-btn reject"><i data-lucide="pencil"></i> طلب تعديل</summary>
         <form method="post" action="<?= base_url('dashboard/reports/api/reject') ?>" class="fr-decision-panel">
           <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
           <input type="hidden" name="report_id" value="<?= (int) $report['id'] ?>">
 
           <div class="wiz-field">
-            <span class="wiz-label">سبب الرفض</span>
-            <textarea name="note" class="wiz-input fr-reject-textarea" rows="3" required placeholder="اكتب سبب الرفض هنا... سيظهر للمراجع عشان يعدّل التقرير"></textarea>
+            <span class="wiz-label">التعديلات المطلوبة</span>
+            <textarea name="note" class="wiz-input fr-reject-textarea" rows="3" required placeholder="اكتب التعديلات المطلوبة هنا... سترسل للمراجع عشان يعدّل التقرير"></textarea>
           </div>
 
           <div>
-            <button type="submit" class="fr-reject-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="x-circle"></i> رفض التقرير</button>
-            <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر الرفض</p><?php endif; ?>
+            <button type="submit" class="fr-reject-btn" <?= !$isLastStep ? 'disabled' : '' ?>><i data-lucide="pencil"></i> إرسال طلب التعديل</button>
+            <?php if (!$isLastStep): ?><p class="fr-step-hint" style="margin:6px 0 0;">تصفّح كل المراحل بالأعلى حتى "الملاحظات" لتفعيل زر طلب التعديل</p><?php endif; ?>
           </div>
         </form>
       </details>

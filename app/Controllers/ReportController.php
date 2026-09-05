@@ -191,6 +191,9 @@ class ReportController extends BaseController
             ? base_url('dashboard/pdf/mission-letter/' . $missionId) . '?inline=1'
             : ($stepUrl ? base_url($stepUrl) . '?mission_id=' . $missionId . '&embed=1' : null);
 
+        $isAuditHead = $roleCode === 'audit_head';
+        $observations = $isAuditHead ? (new AuditNoteModel())->forMission($missionId) : [];
+
         return view('dashboard/reports/show', [
             'navItems'     => $this->navItemsForCurrentSession(),
             'migratedKeys' => $this->migratedPageKeys(),
@@ -201,10 +204,30 @@ class ReportController extends BaseController
             'items'        => $items,
             'completion'   => $completion,
             'readOnlyViewer' => $readOnlyViewer,
-            'isAuditHead'  => $roleCode === 'audit_head',
+            'isAuditHead'  => $isAuditHead,
             'expandedStep' => $expandedStep,
             'stepEmbedUrl' => $stepEmbedUrl,
+            'observations' => $observations,
         ]);
+    }
+
+    /**
+     * POST /dashboard/reports/api/observations-inclusion — رئيس إدارة المراجعة
+     * الداخلية يحدّد أي الملاحظات تُضمَّن فعليًا بمستند PDF النهائي المصدَّر
+     * (add_to_report لكل ملاحظة) -- دفعة وحدة لكل ملاحظات المهمة
+     */
+    public function updateObservationsInclusion()
+    {
+        $missionId = (int) $this->request->getPost('mission_id');
+        $mission = $missionId ? $this->missionForParty($missionId) : null;
+        if (!$mission || session()->get('role_code') !== 'audit_head') {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية هذا الإجراء.');
+        }
+
+        $flags = $this->request->getPost('add_to_report') ?? [];
+        (new AuditNoteModel())->updateReportInclusion($missionId, is_array($flags) ? $flags : []);
+
+        return redirect()->to(base_url('dashboard/reports/' . $missionId) . '?step=6')->with('success', 'تم حفظ اختيار الملاحظات المضمَّنة بالتقرير.');
     }
 
     /**
@@ -435,24 +458,24 @@ class ReportController extends BaseController
 
         if (!$reportId || !$this->canApproveReport($reportId)) {
             if ($isJson) {
-                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية رفض هذا التقرير.']);
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية طلب تعديل هذا التقرير.']);
             }
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية رفض هذا التقرير.');
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية طلب تعديل هذا التقرير.');
         }
 
         $reportModel = new ReportModel();
         $report = $reportModel->find($reportId);
         if (!$report || $report['status'] !== 'pending_signatures') {
             if ($isJson) {
-                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر ترفضه.']);
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر تطلب تعديله.']);
             }
-            return redirect()->back()->with('error', 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر ترفضه.');
+            return redirect()->back()->with('error', 'لازم المراجع يرسل التقرير للمراجعة أولاً قبل ما تقدر تطلب تعديله.');
         }
         if (!$note) {
             if ($isJson) {
-                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب كتابة سبب الرفض.']);
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يجب كتابة التعديلات المطلوبة.']);
             }
-            return redirect()->back()->with('error', 'يجب كتابة سبب الرفض.');
+            return redirect()->back()->with('error', 'يجب كتابة التعديلات المطلوبة.');
         }
 
         $reportModel->update($reportId, ['status' => 'draft', 'head_rejection_note' => $note]);
@@ -468,8 +491,8 @@ class ReportController extends BaseController
             $notifier->notifyUsers(
                 $notifier->auditSideUserIds((int) $mission['id']),
                 'report_rejected',
-                'تقرير مرفوض من رئيس المراجعة',
-                'المهمة (' . $mission['mission_code'] . ') — تم رفض التقرير النهائي. سبب الرفض: ' . $note,
+                'طلب تعديل على التقرير النهائي من رئيس المراجعة',
+                'المهمة (' . $mission['mission_code'] . ') — رئيس إدارة المراجعة الداخلية طلب تعديل التقرير النهائي. التعديلات المطلوبة: ' . $note,
                 (int) $mission['id'],
                 base_url('dashboard/reports/' . (int) $mission['id'])
             );
@@ -478,7 +501,7 @@ class ReportController extends BaseController
         if ($isJson) {
             return $this->response->setJSON(['success' => true]);
         }
-        return redirect()->to(base_url('dashboard/reports/' . (int) $report['mission_id']))->with('success', 'تم رفض التقرير وإرجاعه للمراجع.');
+        return redirect()->to(base_url('dashboard/reports/' . (int) $report['mission_id']))->with('success', 'تم إرسال طلب التعديل للمراجع.');
     }
 
     /**

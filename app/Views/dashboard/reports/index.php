@@ -88,7 +88,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
               if ($approved) {
                   $statusLabel = 'معتمد'; $pillBg = '#f0fdf4'; $pillColor = '#1f5f7a'; $dotColor = '#3185b3';
               } elseif ($rejected) {
-                  $statusLabel = 'مرفوض'; $pillBg = '#fef2f2'; $pillColor = '#dc2626'; $dotColor = '#dc2626';
+                  $statusLabel = 'بحاجة تعديل'; $pillBg = '#fef2f2'; $pillColor = '#dc2626'; $dotColor = '#dc2626';
               } elseif ($r['status'] === 'pending_signatures') {
                   $statusLabel = 'بانتظار الاعتماد'; $pillBg = '#fef9ec'; $pillColor = '#b45309'; $dotColor = '#f59e0b';
               } else {
