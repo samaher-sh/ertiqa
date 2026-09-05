@@ -181,7 +181,7 @@
                 <?php if (empty($points)): ?>
                     <tr><td colspan="2" class="empty-row">لا توجد نقاط مسجّلة</td></tr>
                 <?php else: foreach ($points as $p): ?>
-                    <tr><td><?= nl2br(esc($p['point_text'])) ?></td><td><?= nl2br(esc($p['statement'] ?: '—')) ?></td></tr>
+                    <tr><td><?= nl2br(esc($p['point_text'])) ?></td><td><?= nl2br(esc($p['statement'] ?? '' ?: '—')) ?></td></tr>
                 <?php endforeach; endif; ?>
             </tbody>
         </table>
