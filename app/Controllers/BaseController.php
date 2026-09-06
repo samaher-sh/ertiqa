@@ -54,6 +54,7 @@ abstract class BaseController extends Controller
         return [
             'home'              => ['label' => 'الرئيسية',          'url' => base_url('dashboard'),                  'icon' => 'home'],
             'newTask'           => ['label' => 'بدء مهمة',           'url' => base_url('dashboard/new-task'),         'icon' => 'plus'],
+            'missionPlanning'   => ['label' => 'تخطيط المهمة',       'url' => base_url('dashboard/mission-planning'), 'icon' => 'clipboard-list'],
             'documentRequests'  => ['label' => 'قائمة الطلبات',      'url' => base_url('dashboard/document-requests'), 'icon' => 'folder-check'],
             'riskMatrix'        => ['label' => 'مصفوفة المخاطر',     'url' => base_url('dashboard/risk-matrix'),      'icon' => 'bar-chart-2'],
             'meetingSchedule'   => ['label' => 'جدولة اجتماع',       'url' => base_url('dashboard/meeting-schedule'), 'icon' => 'calendar-plus'],
@@ -76,7 +77,7 @@ abstract class BaseController extends Controller
         if ($isPresident) {
             $keys = ['home', 'finalReports'];
         } elseif ($isHrDept) {
-            $keys = ['home', 'newTask', 'documentRequests', 'meetingSchedule', 'meetingSummary', 'sentTasks', 'finalReports'];
+            $keys = ['home', 'missionPlanning', 'documentRequests', 'meetingSchedule', 'meetingSummary', 'sentTasks', 'finalReports'];
         } elseif ($isAuditHead) {
             $keys = ['home', 'finalReports', 'addUser'];
         }
@@ -111,7 +112,7 @@ abstract class BaseController extends Controller
      */
     protected function migratedPageKeys(): array
     {
-        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'home', 'addUser'];
+        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'missionPlanning', 'home', 'addUser'];
     }
 
     /**
