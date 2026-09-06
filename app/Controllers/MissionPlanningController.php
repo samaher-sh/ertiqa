@@ -113,6 +113,7 @@ class MissionPlanningController extends BaseController
             'participating_reviewers'  => $data['participating_reviewers'] ?? null,
             'mission_brief'            => $data['mission_brief'] ?? null,
             'previous_audits'          => $data['previous_audits'] ?? null,
+            'previous_audit_report_date' => ($data['previous_audit_report_date'] ?? null) ?: null,
             'regulatory_notes'         => $data['regulatory_notes'] ?? null,
             'audit_objectives'         => $data['audit_objectives'] ?? null,
             'scope_included'           => $data['scope_included'] ?? null,

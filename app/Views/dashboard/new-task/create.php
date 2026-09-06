@@ -323,7 +323,7 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
           <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div class="wiz-field">
               <label class="wiz-label">رقم المهمة</label>
-              <div class="msum-auto-field plain"><span class="val">سيُحدَّد بعد الحفظ</span></div>
+              <input name="mission_number" type="text" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="اتركه فاضيًا لتوليد رقم تلقائي" value="<?= esc($v('mission_number')) ?>">
             </div>
             <div class="wiz-field">
               <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
@@ -362,9 +362,15 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
               <label class="wiz-label">نبذة عن المهمة</label>
               <textarea name="mission_brief" rows="2" class="wiz-textarea plain" placeholder="عرض تقديم عن مشروع المراجعة والإدارة الخاضعة للمراجعة"><?= esc($v('mission_brief')) ?></textarea>
             </div>
-            <div class="wiz-field">
-              <label class="wiz-label">عمليات المراجعة السابقة</label>
-              <textarea name="previous_audits" rows="3" class="wiz-textarea plain" placeholder="رقم التقرير&#10;تاريخ إصدار التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea>
+            <div class="wiz-field" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+              <div>
+                <label class="wiz-label">عمليات المراجعة السابقة</label>
+                <textarea name="previous_audits" rows="3" class="wiz-textarea plain" placeholder="رقم التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea>
+              </div>
+              <div>
+                <label class="wiz-label">تاريخ إصدار التقرير</label>
+                <input name="previous_audit_report_date" type="date" class="wiz-input plain" value="<?= esc($v('previous_audit_report_date')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+              </div>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">ملاحظات الجهات الرقابية</label>
