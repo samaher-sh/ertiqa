@@ -225,6 +225,11 @@ class MissionController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
+            // نسجّل تفاصيل الخطأ الفعلي بسجلات السيرفر (غير ظاهرة للمستخدم) --
+            // بالإنتاج (DBDebug=false) فشل أي استعلام هنا ما يوقف التنفيذ ولا
+            // يطلع رسالة تفصيلية، فبدون هذا التسجيل ما فيه طريقة لمعرفة السبب
+            // الحقيقي (مثلًا عمود ناقص بجدول لم يُحدَّث بترحيل قاعدة بيانات جديد)
+            log_message('error', 'MissionController::store — فشل حفظ المهمة: ' . json_encode($db->error()));
             if ($isJson) {
                 return $this->response->setStatusCode(500)->setJSON([
                     'success' => false,
