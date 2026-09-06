@@ -117,9 +117,17 @@ function autoGrowTextarea(el) {
   if (!el) return;
   // نحفظ الارتفاع الطبيعي (المبني على rows= الأصلي) أول مرة، قبل أي تعديل --
   // بدونه، حقل فاضٍ (بدون قيمة، بس فيه placeholder) يصير scrollHeight بارتفاع
-  // سطر وحد تقريبًا، فيتقلّص الحقل لشكل ضيق مشوَّه بدل ارتفاعه الأصلي المقصود
+  // سطر وحد تقريبًا، فيتقلّص الحقل لشكل ضيق مشوَّه بدل ارتفاعه الأصلي المقصود.
+  // نحسبه من rows/line-height/padding/border بدل offsetHeight لأن حقول خطوة 3
+  // بمعالج "بدء مهمة" تكون داخل قسم display:none وقت التحميل (offsetHeight
+  // يرجّع صفر وقتها)، بينما القيم المحسوبة هذي متوفرة بغض النظر عن الظهور.
   if (el.dataset.autoGrowMinHeight === undefined) {
-    el.dataset.autoGrowMinHeight = String(el.offsetHeight || el.scrollHeight);
+    const cs = getComputedStyle(el);
+    const rows = parseInt(el.getAttribute("rows"), 10) || 1;
+    const lineHeight = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.2 || 20;
+    const paddingV = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    const borderV = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    el.dataset.autoGrowMinHeight = String(rows * lineHeight + paddingV + borderV);
   }
   const minHeight = parseFloat(el.dataset.autoGrowMinHeight) || 0;
   el.style.height = "auto";
