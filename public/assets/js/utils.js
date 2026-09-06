@@ -115,8 +115,15 @@ async function postForPdfDownload(path, body, filename) {
  */
 function autoGrowTextarea(el) {
   if (!el) return;
+  // نحفظ الارتفاع الطبيعي (المبني على rows= الأصلي) أول مرة، قبل أي تعديل --
+  // بدونه، حقل فاضٍ (بدون قيمة، بس فيه placeholder) يصير scrollHeight بارتفاع
+  // سطر وحد تقريبًا، فيتقلّص الحقل لشكل ضيق مشوَّه بدل ارتفاعه الأصلي المقصود
+  if (el.dataset.autoGrowMinHeight === undefined) {
+    el.dataset.autoGrowMinHeight = String(el.offsetHeight || el.scrollHeight);
+  }
+  const minHeight = parseFloat(el.dataset.autoGrowMinHeight) || 0;
   el.style.height = "auto";
-  el.style.height = el.scrollHeight + "px";
+  el.style.height = Math.max(el.scrollHeight, minHeight) + "px";
 }
 function bindAutoGrowTextareas(scope) {
   scope.querySelectorAll(".wiz-textarea, .msum-growfield").forEach(el => {
