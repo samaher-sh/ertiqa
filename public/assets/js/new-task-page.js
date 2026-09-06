@@ -25,49 +25,47 @@ document.addEventListener("DOMContentLoaded", () => {
   bindStepNav();
 });
 
-/* ---------- 1) تنقّل الخطوتين ---------- */
+/* ---------- 1) تنقّل الخطوات الثلاث (طلب المراجعة، اتفاقية مستوى الخدمة، تخطيط المهمة) ---------- */
 function bindStepNav() {
-  const step1 = document.getElementById("wizStep1");
-  const step2 = document.getElementById("wizStep2");
+  const steps = [document.getElementById("wizStep1"), document.getElementById("wizStep2"), document.getElementById("wizStep3")];
   const stepsHeader = document.getElementById("wizSteps");
-  if (!step1 || !step2 || !stepsHeader) return;
+  if (!steps[0] || !steps[1] || !steps[2] || !stepsHeader) return;
 
   const prevBtn = document.getElementById("wizPrevBtn");
   const nextBtn = document.getElementById("wizNextBtn");
   const sendBtn = document.getElementById("wizSendBtn");
-  const circle1 = document.getElementById("wizStepCircle1");
-  const circle2 = document.getElementById("wizStepCircle2");
-  const dots = stepsHeader.parentElement ? document.querySelectorAll(".wiz-dots [data-goto-step]") : [];
+  const circles = [document.getElementById("wizStepCircle1"), document.getElementById("wizStepCircle2"), document.getElementById("wizStepCircle3")];
   const stepLabels = stepsHeader.querySelectorAll(".wiz-step-label");
+  const LAST_PAGE = steps.length;
 
   let page = 1;
 
   function render() {
-    step1.style.display = page === 1 ? "" : "none";
-    step2.style.display = page === 2 ? "flex" : "none";
+    steps.forEach((el, i) => { el.style.display = page === i + 1 ? "flex" : "none"; });
+    steps[0].style.display = page === 1 ? "" : "none";
 
-    circle1.classList.toggle("current", page === 1);
-    circle1.classList.toggle("done", page > 1);
-    circle1.innerHTML = page > 1 ? '<i data-lucide="check"></i>' : "1";
-    circle2.classList.toggle("current", page === 2);
-    circle2.innerHTML = "2";
-    stepLabels[0].classList.toggle("current", page === 1);
-    stepLabels[0].classList.toggle("done", page > 1);
-    stepLabels[1].classList.toggle("current", page === 2);
+    circles.forEach((c, i) => {
+      const n = i + 1;
+      c.classList.toggle("current", page === n);
+      c.classList.toggle("done", page > n);
+      c.innerHTML = page > n ? '<i data-lucide="check"></i>' : String(n);
+      stepLabels[i].classList.toggle("current", page === n);
+      stepLabels[i].classList.toggle("done", page > n);
+    });
 
     document.querySelectorAll(".wiz-dots [data-goto-step]").forEach(d => {
       d.classList.toggle("current", Number(d.dataset.gotoStep) === page);
     });
 
     prevBtn.style.display = page === 1 ? "none" : "";
-    nextBtn.style.display = page === 2 ? "none" : "";
-    sendBtn.style.display = page === 2 ? "" : "none";
+    nextBtn.style.display = page === LAST_PAGE ? "none" : "";
+    sendBtn.style.display = page === LAST_PAGE ? "" : "none";
     /* sendBtn هو زر type="submit" الوحيد بالنموذج، فلو بقي مفعّلاً وهو مخفي
-       بخطوة 1 يصير "الزر الافتراضي" لأي إرسال ضمني (ضغط Enter بأي حقل نصي)،
-       فيرسل النموذج فارغًا بدون المرور على isPage1Valid() -- تعطيله هنا يمنع
-       هذا الإرسال العرَضي، وما يأثّر على النسخة بدون جافاسكربت (الزر هناك
-       يبقى مفعّلاً افتراضيًا لأنه ما فيه JS يشغّل هذا السطر أصلاً) */
-    sendBtn.disabled = page !== 2;
+       بخطوة سابقة يصير "الزر الافتراضي" لأي إرسال ضمني (ضغط Enter بأي حقل
+       نصي)، فيرسل النموذج فارغًا بدون المرور على isPage1Valid() -- تعطيله
+       هنا يمنع هذا الإرسال العرَضي، وما يأثّر على النسخة بدون جافاسكربت
+       (الزر هناك يبقى مفعّلاً افتراضيًا لأنه ما فيه JS يشغّل هذا السطر أصلاً) */
+    sendBtn.disabled = page !== LAST_PAGE;
 
     if (window.lucide) lucide.createIcons();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -78,27 +76,29 @@ function bindStepNav() {
     return !!(val("mainDeptSelect") && val("p1Target") && val("p1Procedure") && val("p1Reviewer") && val("p1Director") && val("p1Email") && val("p1Phone"));
   }
 
+  function canLeavePage1() {
+    if (!isPage1Valid()) {
+      alert("يرجى تعبئة كل الحقول المطلوبة بالخطوة الأولى أولاً.");
+      return false;
+    }
+    return true;
+  }
+
   document.querySelectorAll("[data-goto-step]").forEach(btn => {
     btn.addEventListener("click", () => {
       const target = Number(btn.dataset.gotoStep);
-      if (target === 2 && page === 1 && !isPage1Valid()) {
-        alert("يرجى تعبئة كل الحقول المطلوبة بالخطوة الأولى أولاً.");
-        return;
-      }
+      if (target > 1 && page === 1 && !canLeavePage1()) return;
       page = target;
       render();
     });
   });
 
   nextBtn.addEventListener("click", () => {
-    if (!isPage1Valid()) {
-      alert("يرجى تعبئة كل الحقول المطلوبة بالخطوة الأولى أولاً.");
-      return;
-    }
-    page = 2;
+    if (page === 1 && !canLeavePage1()) return;
+    page = Math.min(page + 1, LAST_PAGE);
     render();
   });
-  prevBtn.addEventListener("click", () => { page = 1; render(); });
+  prevBtn.addEventListener("click", () => { page = Math.max(page - 1, 1); render(); });
 
   render();
 }
@@ -116,18 +116,21 @@ function bindLivePreview() {
   };
 
   bind("p1Reviewer", "mReviewer", "...............");
+  bind("p1Reviewer", "p3ReviewerName", "—");
   bind("p1Email", "mEmail", "........................");
   bind("p1Phone", "mPhone", "........................");
 
   const targetSelect = $("p1Target");
   const mTarget = $("mTarget");
   const p2TargetName = $("p2TargetName");
+  const p3TargetName = $("p3TargetName");
   if (targetSelect) {
     targetSelect.addEventListener("change", () => {
       const opt = targetSelect.options[targetSelect.selectedIndex];
       const name = (opt && opt.value) ? opt.textContent : "";
       if (mTarget) mTarget.textContent = name || "الإدارة المستهدفة";
       if (p2TargetName) p2TargetName.textContent = name || "—";
+      if (p3TargetName) p3TargetName.textContent = name || "—";
     });
   }
 
