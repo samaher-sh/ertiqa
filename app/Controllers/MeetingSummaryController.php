@@ -219,7 +219,9 @@ class MeetingSummaryController extends BaseController
         $meeting = $meetingModel->findOrCreateForMission($missionId, $userId);
 
         $meetingModel->update($meeting['id'], [
-            'title'        => $data['title'] ?? null,
+            // title عمود NOT NULL بقاعدة البيانات -- لازم يفضل نص فاضٍ لو غاب من
+            // الطلب، أبدًا null (يتفادى DatabaseException: NOT NULL constraint)
+            'title'        => $data['title'] ?? '',
             'objective'    => $data['objective'] ?? null,
             'meeting_date' => ($data['date'] ?? null) ?: null,
             'meeting_time' => ($data['time'] ?? null) ?: null,
@@ -229,10 +231,12 @@ class MeetingSummaryController extends BaseController
         ]);
 
         $attendeeModel->replaceForMeeting($meeting['id'], $data['attendees'] ?? []);
-        $pointModel->replaceForMeeting($meeting['id'], $data['points'] ?? []);
 
-        // الاعتماد يظهر فقط لغير HR - نتحقق بالباك-إند برضو مو بس بالواجهة
+        // نص النقطة والإفادة يظهران للتعديل فقط لغير HR (ممثل الإدارة المستهدفة
+        // يرى الإفادة كنص للقراءة فقط) -- نتحقق بالباك-إند برضو مو بس بالواجهة،
+        // بنفس نمط الاعتماد بالأسفل
         if (!$flags['isHrUser']) {
+            $pointModel->replaceForMeeting($meeting['id'], $data['points'] ?? []);
             $approvalModel->replaceForMeeting($meeting['id'], $data['approvals'] ?? []);
         }
 

@@ -16,7 +16,7 @@ $locked = !$selectedMissionId;
 $canEditMeeting = !$allReadOnly;
 $canEditAttendance = !$allReadOnly;
 $canEditPointText = !$isHrUser && !$allReadOnly;
-$canEditStatement = !$allReadOnly;
+$canEditStatement = !$isHrUser && !$allReadOnly;
 $canEditHrResponse = $isHrUser;
 $canAddRemovePoints = !$isHrUser && !$allReadOnly;
 $hrOpinionLabels = ['agree' => 'موافق', 'reserved' => 'متحفظ'];
