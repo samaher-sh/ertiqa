@@ -90,6 +90,10 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 .obs-form-save{ display:flex; align-items:center; gap:8px; padding:8px 20px; border-radius:12px; font-size:13px; font-weight:700; background:rgba(255,255,255,.18); color:#fff; border:1.5px solid rgba(255,255,255,.4); }
 .obs-form-save i{ width:15px; height:15px; }
 .obs-form-body{ padding:24px; display:flex; flex-direction:column; gap:20px; }
+.obs-form-footer{ flex-shrink:0; padding:16px 24px; display:flex; justify-content:flex-end; border-top:1px solid #e2e8f0; background:#f8fafc; }
+.obs-form-save-bottom{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; background:var(--p); color:#fff; border:none; cursor:pointer; }
+.obs-form-save-bottom:hover{ background:var(--pd); }
+.obs-form-save-bottom i{ width:15px; height:15px; }
 .obs-grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .obs-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .obs-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
