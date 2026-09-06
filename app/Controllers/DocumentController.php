@@ -12,7 +12,7 @@ class DocumentController extends BaseController
 {
     /** يسمح فقط بامتدادات آمنة ومعقولة لمرفقات الاجتماعات */
     private const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
-    private const MAX_SIZE_KB = 10240; // 10 ميجا
+    private const MAX_SIZE_KB = 50000; // 50 ميجا
 
     /**
      * رئيس إدارة المراجعة الداخلية طرف ضمنيًا بكل مهام إدارته (audit_department_id)
@@ -75,7 +75,7 @@ class DocumentController extends BaseController
         }
 
         if ($file->getSizeByUnit('kb') > self::MAX_SIZE_KB) {
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'حجم الملف أكبر من الحد المسموح (10 ميجا).']);
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'حجم الملف أكبر من الحد المسموح (50 ميجا).']);
         }
 
         $ext = strtolower($file->getClientExtension());

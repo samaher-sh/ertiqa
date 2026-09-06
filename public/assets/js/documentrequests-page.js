@@ -13,6 +13,10 @@
         مرئي إن الاختيار نجح فعلًا -- تُرفع الملفات صح وقت "إرسال المستندات"
         حتى بدون هذا التحديث، هو مجرّد مؤشر بصري)
      3) حذف فوري لمرفق واحد من القائمة (AJAX) بدل ما يضطر يستبدل كل الملفات
+     4) تراكم اختيار الملفات (bindAccumulatingFileInput بـ utils.js) -- بدون
+        هذا الملف كل فتحة لنافذة اختيار الملفات تستبدل الاختيار السابق كليًا
+        (سلوك المتصفح الافتراضي)، فيضيع أي ملف اختير قبل فتحة لاحقة إذا كان
+        المستخدم يرفق الملفات على دفعات قبل "إرسال المستندات"
    ============================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.querySelectorAll('input[type="file"]').forEach((input) => {
+    bindAccumulatingFileInput(input);
     input.addEventListener("change", () => {
       const label = document.querySelector(`label[for="${input.id}"]`);
       const span = label ? label.querySelector("span") : null;

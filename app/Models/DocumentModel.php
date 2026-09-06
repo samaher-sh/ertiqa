@@ -18,7 +18,7 @@ class DocumentModel extends Model
     ];
 
     private const ALLOWED_EXT = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
-    private const MAX_SIZE_KB = 10240; // 10 ميجا
+    private const MAX_SIZE_KB = 50000; // 50 ميجا
 
     public function forRelated(string $relatedType, int $relatedId): array
     {
@@ -40,7 +40,7 @@ class DocumentModel extends Model
             return ['success' => false, 'message' => 'لم يتم اختيار ملف صحيح.'];
         }
         if ($file->getSizeByUnit('kb') > self::MAX_SIZE_KB) {
-            return ['success' => false, 'message' => 'حجم الملف أكبر من الحد المسموح (10 ميجا).'];
+            return ['success' => false, 'message' => 'حجم الملف أكبر من الحد المسموح (50 ميجا).'];
         }
         $ext = strtolower($file->getClientExtension());
         if (!in_array($ext, self::ALLOWED_EXT, true)) {
