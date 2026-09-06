@@ -60,15 +60,26 @@ class MissionController extends BaseController
             'reviewer_phone' => 'required|min_length[8]',
             'director_name'  => 'permit_empty|min_length[3]',
         ];
+        $errorMessages = [
+            'main_dept_id'   => ['required' => 'يرجى اختيار الإدارة.', 'integer' => 'يرجى اختيار الإدارة.'],
+            'target_dept_id' => ['required' => 'يرجى اختيار الإدارة المستهدفة.', 'integer' => 'يرجى اختيار الإدارة المستهدفة.'],
+            'year'           => ['required' => 'يرجى اختيار السنة.'],
+            'procedure'      => ['required' => 'يرجى إدخال المراد مناقشته في الاجتماع.', 'min_length' => 'المراد مناقشته في الاجتماع يجب أن يكون 3 أحرف على الأقل.'],
+            'reviewer_name'  => ['required' => 'يرجى إدخال اسم المراجع الرئيسي.', 'min_length' => 'اسم المراجع الرئيسي يجب أن يكون 3 أحرف على الأقل.'],
+            'reviewer_email' => ['required' => 'يرجى إدخال البريد الإلكتروني.', 'valid_email' => 'يرجى إدخال بريد إلكتروني صحيح.'],
+            'reviewer_phone' => ['required' => 'يرجى إدخال رقم الجوال.', 'min_length' => 'رقم الجوال يجب أن يكون 8 أرقام على الأقل.'],
+            'director_name'  => ['min_length' => 'اسم المدير يجب أن يكون 3 أحرف على الأقل إن أُدخل.'],
+        ];
 
-        if (!$this->validateData($data ?? [], $rules)) {
+        if (!$this->validateData($data ?? [], $rules, $errorMessages)) {
             if ($isJson) {
                 return $this->response->setStatusCode(422)->setJSON([
                     'success' => false,
                     'errors'  => $this->validator->getErrors(),
                 ]);
             }
-            return redirect()->back()->withInput()->with('error', 'يرجى تعبئة كل الحقول المطلوبة بشكل صحيح.');
+            $detail = implode(' — ', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('error', 'يرجى تعبئة كل الحقول المطلوبة بشكل صحيح: ' . $detail);
         }
 
         $deptModel = new DepartmentModel();
