@@ -250,13 +250,14 @@ class MissionChatController extends BaseController
         return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }
 
-    /** POST /dashboard/meeting-schedule/api/cancel — إلغاء اقتراح موعد لم يُؤكَّد بعد (بالطرف الثاني) */
+    /** POST /dashboard/meeting-schedule/api/cancel — رفض اقتراح موعد لم يُؤكَّد بعد لأجل إعادة الجدولة (بالطرف الثاني) */
     public function cancel()
     {
         $isJson = $this->isJsonRequest();
         $data = $isJson ? $this->request->getJSON(true) : $this->request->getPost();
         $missionId = (int) ($data['mission_id'] ?? 0);
         $messageId = (int) ($data['message_id'] ?? 0);
+        $reschedule = !empty($data['reschedule']);
         $userId    = (int) session()->get('user_id');
         if (!$isJson && $missionId) {
             $this->assertMissionAccess($missionId);
@@ -284,7 +285,7 @@ class MissionChatController extends BaseController
         $chatModel->insert([
             'mission_id' => $missionId,
             'sender_id'  => $userId,
-            'message'    => 'تم إلغاء هذا الموعد المقترح',
+            'message'    => $reschedule ? 'تم رفض الموعد المقترح لإعادة الجدولة' : 'تم إلغاء هذا الموعد المقترح',
             'type'       => 'cancelled',
             'created_at' => date('Y-m-d H:i:s'),
         ]);
@@ -293,7 +294,10 @@ class MissionChatController extends BaseController
         (new AuditLogModel())->log($missionId, $userId, 'meeting_cancelled', 'meeting', null, $detail);
 
         if ($isJson) {
-            return $this->response->setJSON(['success' => true]);
+            return $this->response->setJSON(['success' => true, 'reschedule' => $reschedule]);
+        }
+        if ($reschedule) {
+            session()->setFlashdata('openPropose', true);
         }
         return redirect()->to(base_url('dashboard/meeting-schedule?mission_id=' . $missionId));
     }

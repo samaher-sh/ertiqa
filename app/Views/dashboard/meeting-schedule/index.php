@@ -12,6 +12,7 @@
 $flash = session()->getFlashdata('success') ?? session()->getFlashdata('error');
 $flashType = session()->getFlashdata('success') ? 'success' : 'error';
 $locked = !$selectedMissionId;
+$openPropose = (bool) session()->getFlashdata('openPropose');
 
 $lastConfirmedIndex = -1;
 if ($meeting && ($meeting['status'] ?? '') === 'scheduled') {
@@ -71,7 +72,8 @@ if ($meeting && ($meeting['status'] ?? '') === 'scheduled') {
                         <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
                         <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
                         <input type="hidden" name="message_id" value="<?= (int) $m['id'] ?>">
-                        <button type="submit" class="mc-cancel-btn"><i data-lucide="x"></i> إلغاء الموعد</button>
+                        <input type="hidden" name="reschedule" value="1">
+                        <button type="submit" class="mc-reschedule-btn"><i data-lucide="calendar-clock"></i> إعادة جدولة</button>
                       </form>
                     </div>
                   <?php else: ?>
@@ -113,7 +115,7 @@ if ($meeting && ($meeting['status'] ?? '') === 'scheduled') {
 
       <div class="mc-compose">
         <div class="mc-compose-row">
-          <details id="mcProposeDetails" class="mc-propose-details">
+          <details id="mcProposeDetails" class="mc-propose-details" <?= $openPropose ? 'open' : '' ?>>
             <summary class="mc-propose-btn" title="اقترح موعد"><i data-lucide="calendar-plus"></i></summary>
             <form method="post" action="<?= base_url('dashboard/meeting-schedule/api/propose') ?>" class="mc-propose-form">
               <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
