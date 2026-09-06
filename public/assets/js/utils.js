@@ -106,6 +106,29 @@ async function postForPdfDownload(path, body, filename) {
 }
 
 /**
+ * كل حقول النص الطويل (.wiz-textarea, .msum-growfield) تكبر تلقائيًا حسب
+ * المحتوى بدل ما يبقى ارتفاعها ثابت -- بدون هذا، أي نص يفيض عن الارتفاع
+ * الثابت يختفي فعليًا (الحقول أصلًا resize:none + overflow-y:hidden بالتصميم)
+ * بدل ما يظهر أو حتى يقدر المستخدم يمرّر لرؤيته. يُستدعى تلقائيًا لكل صفحة
+ * حقيقية (utils.js يُحمَّل أولًا بكل صفحة)، وأي كود يضيف حقول جديدة ديناميكيًا
+ * بعد التحميل (صفوف مضافة بجافاسكربت) يستدعي bindAutoGrowTextareas(newRow) يدويًا.
+ */
+function autoGrowTextarea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+function bindAutoGrowTextareas(scope) {
+  scope.querySelectorAll(".wiz-textarea, .msum-growfield").forEach(el => {
+    if (el.dataset.autoGrowBound === "1") return;
+    el.dataset.autoGrowBound = "1";
+    autoGrowTextarea(el);
+    el.addEventListener("input", () => autoGrowTextarea(el));
+  });
+}
+document.addEventListener("DOMContentLoaded", () => bindAutoGrowTextareas(document));
+
+/**
  * يخلي حقل <input type="file" multiple> يتراكم فيه الاختيار عبر كذا فتحة
  * لنافذة اختيار الملفات، بدل السلوك الافتراضي بالمتصفح (كل فتحة تستبدل
  * الاختيار السابق كليًا فيضيع أي ملف مختار قبلها لو المستخدم رجع فتح
