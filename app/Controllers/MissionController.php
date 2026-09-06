@@ -113,7 +113,20 @@ class MissionController extends BaseController
         $slaModel          = new ServiceAgreementModel();
         $slaResponseModel  = new ServiceAgreementResponseModel();
 
-        $missionCode = $missionModel->generateMissionCode($mainDept['name_ar']);
+        // رقم المهمة خانة يدوية اختيارية بخطوة "تخطيط المهمة" -- لو تُركت فاضية
+        // نولّد رقمًا تلقائيًا زي ما كان الحال دائمًا، ولو كُتب رقم يدوي نتأكد
+        // أولًا إنه غير مستخدم (mission_code فريد بقاعدة البيانات أصلًا)
+        $manualMissionNumber = trim((string) ($data['mission_number'] ?? ''));
+        if ($manualMissionNumber !== '' && $missionModel->where('mission_code', $manualMissionNumber)->first()) {
+            if ($isJson) {
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'رقم المهمة هذا مستخدم بالفعل، يرجى اختيار رقم آخر.',
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', 'رقم المهمة هذا مستخدم بالفعل، يرجى اختيار رقم آخر.');
+        }
+        $missionCode = $manualMissionNumber !== '' ? $manualMissionNumber : $missionModel->generateMissionCode($mainDept['name_ar']);
 
         $db = \Config\Database::connect();
         $db->transStart();
@@ -185,6 +198,7 @@ class MissionController extends BaseController
             'participating_reviewers'  => $data['participating_reviewers'] ?? null,
             'mission_brief'            => $data['mission_brief'] ?? null,
             'previous_audits'          => $data['previous_audits'] ?? null,
+            'previous_audit_report_date' => ($data['previous_audit_report_date'] ?? null) ?: null,
             'regulatory_notes'         => $data['regulatory_notes'] ?? null,
             'audit_objectives'         => $data['audit_objectives'] ?? null,
             'scope_included'           => $data['scope_included'] ?? null,
