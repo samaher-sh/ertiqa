@@ -46,15 +46,15 @@
 /* white-space:nowrap يمنع انكسار جملة الزر بمنتصفها؛ flex:1 مع min-width:auto (القيمة
    الافتراضية) يخلي أقل عرض ممكن للزر يساوي عرض نصه كامل بسطر وحد (مو أصغر)، فلو ما
    كفت المساحة يلف الزر كامل لسطر جديد (flex-wrap) بدل ما ينكسر النص جوّاه */
-.mc-confirm-btn, .mc-cancel-btn{
+.mc-confirm-btn, .mc-reschedule-btn{
   display:flex; align-items:center; justify-content:center; gap:6px; flex:1;
   padding:10px 16px; border-radius:10px; border:none;
   font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
 }
 .mc-confirm-btn{ background:var(--p); color:#fff; }
-.mc-cancel-btn{ background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
-.mc-confirm-btn i, .mc-cancel-btn i{ width:14px; height:14px; }
-.mc-confirm-btn:disabled, .mc-cancel-btn:disabled{ opacity:.6; cursor:not-allowed; }
+.mc-reschedule-btn{ background:var(--pl); color:var(--pd); border:1px solid var(--pb); }
+.mc-confirm-btn i, .mc-reschedule-btn i{ width:14px; height:14px; }
+.mc-confirm-btn:disabled, .mc-reschedule-btn:disabled{ opacity:.6; cursor:not-allowed; }
 .mc-waiting-hint{ display:block; margin-top:8px; font-size:12px; color:#9ca3af; text-align:center; }
 
 .mc-bubble-confirmed{

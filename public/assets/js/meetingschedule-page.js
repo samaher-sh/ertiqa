@@ -16,6 +16,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!body) return;
   body.scrollTop = body.scrollHeight;
 
+  const proposeDetails = document.getElementById("mcProposeDetails");
+  if (proposeDetails && proposeDetails.open) {
+    const dateInput = proposeDetails.querySelector('input[name="date"]');
+    if (dateInput) dateInput.focus();
+  }
+
   const missionId = body.dataset.missionId;
   const myUserId = body.dataset.myUserId;
   if (!missionId || missionId === "0") return;
@@ -62,7 +68,7 @@ function renderChatBubble(m, isMine, showCancelConfirmed, missionId) {
         ${!isMine ? `
           <div class="mc-proposal-actions">
             <button type="button" class="mc-confirm-btn" data-confirm-msg="${m.id}"><i data-lucide="check"></i> تأكيد الموعد</button>
-            <button type="button" class="mc-cancel-btn" data-cancel-msg="${m.id}"><i data-lucide="x"></i> إلغاء الموعد</button>
+            <button type="button" class="mc-reschedule-btn" data-reschedule-msg="${m.id}"><i data-lucide="calendar-clock"></i> إعادة جدولة</button>
           </div>
         ` : `<span class="mc-waiting-hint">بانتظار تأكيد الطرف الآخر</span>`}
         <span class="mc-bubble-time">${escapeHtml(time)}</span>
@@ -120,8 +126,8 @@ function renderChatBodyInto(body, messages, meeting, myUserId, missionId) {
   body.querySelectorAll("[data-confirm-msg]").forEach(btn => {
     btn.addEventListener("click", () => mcPostAction("confirm", missionId, { message_id: btn.dataset.confirmMsg }, myUserId));
   });
-  body.querySelectorAll("[data-cancel-msg]").forEach(btn => {
-    btn.addEventListener("click", () => mcPostAction("cancel", missionId, { message_id: btn.dataset.cancelMsg }, myUserId));
+  body.querySelectorAll("[data-reschedule-msg]").forEach(btn => {
+    btn.addEventListener("click", () => mcPostAction("cancel", missionId, { message_id: btn.dataset.rescheduleMsg, reschedule: 1 }, myUserId, true));
   });
   body.querySelectorAll("[data-cancel-confirmed]").forEach(btn => {
     btn.addEventListener("click", () => mcPostAction("cancel-confirmed", missionId, {}, myUserId));
@@ -130,11 +136,22 @@ function renderChatBodyInto(body, messages, meeting, myUserId, missionId) {
   if (wasAtBottom) body.scrollTop = body.scrollHeight;
 }
 
-async function mcPostAction(action, missionId, extra, myUserId) {
+async function mcPostAction(action, missionId, extra, myUserId, openProposeAfter) {
   try {
     await apiPost(base + "/dashboard/meeting-schedule/api/" + action, Object.assign({ mission_id: missionId }, extra));
     await pollMessages(missionId, myUserId);
+    if (openProposeAfter) mcOpenProposePanel();
   } catch (e) {
     alert(e.message || "تعذّر إتمام العملية");
   }
+}
+
+/* يفتح لوحة "اقترح موعد" ويركّز حقل التاريخ -- يُستخدم بعد "إعادة جدولة"
+   عشان المستخدم يقترح موعدًا بديلًا فورًا بدون خطوة إضافية */
+function mcOpenProposePanel() {
+  const details = document.getElementById("mcProposeDetails");
+  if (!details) return;
+  details.open = true;
+  const dateInput = details.querySelector('input[name="date"]');
+  if (dateInput) dateInput.focus();
 }
