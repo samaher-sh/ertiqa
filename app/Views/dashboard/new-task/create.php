@@ -28,6 +28,17 @@ $channelsMeta = [
     'memo'  => ['المذكرات الداخلية', 'textarea', 'message-square', 'أدخل تفاصيل المذكرات الداخلية'],
     'phone' => ['الهاتف الداخلي', 'tel', 'phone', 'أدخل رقم الهاتف الداخلي'],
 ];
+
+$oldMilestones = old('milestones');
+$milestoneRows = [];
+foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
+    $milestoneRows[] = [
+        'label' => $oldMilestones[$i]['label'] ?? $defaultLabel,
+        'date'  => $oldMilestones[$i]['date'] ?? '',
+        'days'  => $oldMilestones[$i]['days'] ?? '',
+        'note'  => $oldMilestones[$i]['note'] ?? '',
+    ];
+}
 ?>
 <div class="flex flex-col gap-4">
   <?php if ($errorMsg): ?><div class="obs-alert obs-alert-error"><?= esc($errorMsg) ?></div><?php endif; ?>
@@ -44,6 +55,13 @@ $channelsMeta = [
       <button type="button" class="wiz-step-btn" data-goto-step="2">
         <span class="wiz-step-circle" id="wizStepCircle2">2</span>
         <span class="wiz-step-label">اتفاقية مستوى الخدمة</span>
+      </button>
+      <span class="wiz-step-line"></span>
+    </div>
+    <div class="wiz-step">
+      <button type="button" class="wiz-step-btn" data-goto-step="3">
+        <span class="wiz-step-circle" id="wizStepCircle3">3</span>
+        <span class="wiz-step-label">تخطيط المهمة</span>
       </button>
     </div>
   </div>
@@ -295,6 +313,135 @@ $channelsMeta = [
           </div>
         </div>
       </div>
+
+      <div id="wizStep3" style="display:none;flex-direction:column;gap:20px;">
+        <div class="wiz-card">
+          <div class="wiz-card-head">
+            <i data-lucide="clipboard-list"></i>
+            <h2 style="margin:0;">مذكرة تخطيط المهمة</h2>
+          </div>
+          <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="wiz-field">
+              <label class="wiz-label">رقم المهمة</label>
+              <div class="msum-auto-field plain"><span class="val">سيُحدَّد بعد الحفظ</span></div>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
+              <div class="msum-auto-field plain"><span class="val" id="p3TargetName"><?= esc($targetName ?: '—') ?></span></div>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">تاريخ بدأ المشروع</label>
+              <input name="project_start_date" type="date" class="wiz-input plain" value="<?= esc($v('project_start_date')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">مدير الإدارة الخاضعة للمراجعة</label>
+              <input name="target_dept_manager_name" type="text" data-mask="letters" class="wiz-input plain" placeholder="الاسم كاملاً" value="<?= esc($v('target_dept_manager_name')) ?>">
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">عدد أيام التنفيذ ( خطة المراجعة)</label>
+              <input name="plan_execution_days" type="text" class="wiz-input plain" value="<?= esc($v('plan_execution_days')) ?>">
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">المراجع الرئيسي</label>
+              <div class="msum-auto-field plain"><span class="val" id="p3ReviewerName"><?= esc($reviewerName ?: '—') ?></span></div>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">عدد أيام التنفيذ ( المقترحة)</label>
+              <input name="proposed_execution_days" type="text" class="wiz-input plain" value="<?= esc($v('proposed_execution_days')) ?>">
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">المراجعين المشاركين</label>
+              <input name="participating_reviewers" type="text" class="wiz-input plain" value="<?= esc($v('participating_reviewers')) ?>">
+            </div>
+          </div>
+        </div>
+
+        <div class="wiz-card">
+          <div class="wiz-card-body" style="display:flex;flex-direction:column;gap:16px;">
+            <div class="wiz-field">
+              <label class="wiz-label">نبذة عن المهمة</label>
+              <textarea name="mission_brief" rows="2" class="wiz-textarea plain" placeholder="عرض تقديم عن مشروع المراجعة والإدارة الخاضعة للمراجعة"><?= esc($v('mission_brief')) ?></textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">عمليات المراجعة السابقة</label>
+              <textarea name="previous_audits" rows="3" class="wiz-textarea plain" placeholder="رقم التقرير&#10;تاريخ إصدار التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">ملاحظات الجهات الرقابية</label>
+              <textarea name="regulatory_notes" rows="2" class="wiz-textarea plain" placeholder="نبذة عن الملاحظات حسب توفرها."><?= esc($v('regulatory_notes')) ?></textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">أهداف المراجعة</label>
+              <textarea name="audit_objectives" rows="4" class="wiz-textarea plain" placeholder="أهداف المراجعة&#10;الهدف الأول: &#10;الهدف الثاني: &#10;..."><?= esc($v('audit_objectives')) ?></textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">نطاق المراجعة</label>
+              <textarea name="scope_included" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع يتضمن التالي: &#10;.......&#10;......."><?= esc($v('scope_included')) ?></textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">النطاق المستثنى من المراجعة</label>
+              <textarea name="scope_excluded" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع لن يشمل التالي: &#10;...&#10;..."><?= esc($v('scope_excluded')) ?></textarea>
+            </div>
+            <div class="wiz-field">
+              <label class="wiz-label">الإجراءات الفرعية المشمولة بالمراجعة</label>
+              <textarea name="sub_procedures" rows="2" class="wiz-textarea plain" placeholder="...&#10;..."><?= esc($v('sub_procedures')) ?></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="wiz-card">
+          <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">النقاط الهامة في المراجعة</span></div>
+          <div class="wiz-table-wrap">
+            <table class="wiz-table">
+              <thead><tr>
+                <th style="width:40px;">#</th><th>تخطيط المهمة</th><th style="width:150px;">التاريخ</th><th style="width:150px;">عدد الأيام المطلوبة</th><th>ملاحظة</th>
+              </tr></thead>
+              <tbody>
+                <?php foreach ($milestoneRows as $i => $m): ?>
+                  <tr>
+                    <td style="text-align:center;"><?= $i + 1 ?></td>
+                    <td>
+                      <?php if ($i < 4): ?>
+                        <input type="hidden" name="milestones[<?= $i ?>][label]" value="<?= esc($m['label']) ?>">
+                        <span><?= esc($m['label']) ?></span>
+                      <?php else: ?>
+                        <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="نقطة إضافية..." value="<?= esc($m['label']) ?>">
+                      <?php endif; ?>
+                    </td>
+                    <td><input type="date" name="milestones[<?= $i ?>][date]" class="wiz-input plain" value="<?= esc($m['date']) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
+                    <td><input type="text" name="milestones[<?= $i ?>][days]" class="wiz-input plain" value="<?= esc($m['days']) ?>"></td>
+                    <td><input type="text" name="milestones[<?= $i ?>][note]" class="wiz-input plain" value="<?= esc($m['note']) ?>"></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="wiz-card">
+          <div class="wiz-card-head"><i data-lucide="check-check"></i><span style="color:#fff;font-weight:700;font-size:14px;">الاعتماد</span></div>
+          <div class="wiz-card-body" style="display:flex;flex-direction:column;gap:16px;">
+            <p class="wiz-p" style="margin:0;">تم الاجتماع الداخلي فريق العمل بتاريخ (..................) كأحد مخرجات مرحلة التخطيط للمهمة، وبناء عليه تم الاتفاق على ما تم ذكره أعلاه.</p>
+            <div class="wiz-table-wrap">
+              <table class="wiz-table">
+                <thead><tr><th style="width:160px;"></th><th>المسمى الوظيفي</th><th>الاسم</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>الاعداد</td>
+                    <td><input type="text" name="prepared_by_title" class="wiz-input plain" value="<?= esc($v('prepared_by_title')) ?>"></td>
+                    <td><input type="text" name="prepared_by_name" data-mask="letters" class="wiz-input plain" value="<?= esc($v('prepared_by_name')) ?>"></td>
+                  </tr>
+                  <tr>
+                    <td>الاعتماد</td>
+                    <td><input type="text" name="approved_by_title" class="wiz-input plain" value="<?= esc($v('approved_by_title')) ?>"></td>
+                    <td><input type="text" name="approved_by_name" data-mask="letters" class="wiz-input plain" value="<?= esc($v('approved_by_name')) ?>"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="wiz-nav">
@@ -304,6 +451,7 @@ $channelsMeta = [
       <div class="wiz-dots">
         <button type="button" class="wiz-dot current" data-goto-step="1"></button>
         <button type="button" class="wiz-dot" data-goto-step="2"></button>
+        <button type="button" class="wiz-dot" data-goto-step="3"></button>
       </div>
       <button type="button" class="wiz-btn wiz-btn-primary" id="wizNextBtn">التالي<i data-lucide="chevron-left"></i></button>
       <button type="submit" class="wiz-btn wiz-btn-success" id="wizSendBtn" style="min-width:150px;justify-content:center;display:none;"><i data-lucide="check"></i>إرسال المهمة</button>

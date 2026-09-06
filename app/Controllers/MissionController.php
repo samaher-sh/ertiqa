@@ -7,6 +7,8 @@ use App\Models\MissionStageHistoryModel;
 use App\Models\DepartmentModel;
 use App\Models\ServiceAgreementModel;
 use App\Models\ServiceAgreementResponseModel;
+use App\Models\MissionPlanningModel;
+use App\Models\MissionPlanningMilestoneModel;
 use App\Models\AuditLogModel;
 
 class MissionController extends BaseController
@@ -34,6 +36,7 @@ class MissionController extends BaseController
             'subDepts'       => $subDepts,
             'selectedDeptId' => $selectedDeptId,
             'slaSections'    => $this->slaSectionsSnapshot(),
+            'milestoneDefaultLabels' => MissionPlanningMilestoneModel::DEFAULT_ROW_LABELS,
             'years'          => ['2024', '2025', '2026', '2027'],
         ]);
     }
@@ -169,6 +172,30 @@ class MissionController extends BaseController
             }
         }
         $slaResponseModel->insertBatch($responseRows);
+
+        // خطوة 3 بالمعالج (تخطيط المهمة) -- كل حقولها اختيارية، تُحفَظ بأي حالة
+        // (فاضية أو معبَّأة) نفس مبدأ اتفاقية مستوى الخدمة أعلاه
+        $planningModel = new MissionPlanningModel();
+        $planningId = $planningModel->insert([
+            'mission_id'               => $missionId,
+            'project_start_date'       => ($data['project_start_date'] ?? null) ?: null,
+            'plan_execution_days'      => $data['plan_execution_days'] ?? null,
+            'proposed_execution_days'  => $data['proposed_execution_days'] ?? null,
+            'target_dept_manager_name' => $data['target_dept_manager_name'] ?? null,
+            'participating_reviewers'  => $data['participating_reviewers'] ?? null,
+            'mission_brief'            => $data['mission_brief'] ?? null,
+            'previous_audits'          => $data['previous_audits'] ?? null,
+            'regulatory_notes'         => $data['regulatory_notes'] ?? null,
+            'audit_objectives'         => $data['audit_objectives'] ?? null,
+            'scope_included'           => $data['scope_included'] ?? null,
+            'scope_excluded'           => $data['scope_excluded'] ?? null,
+            'sub_procedures'           => $data['sub_procedures'] ?? null,
+            'prepared_by_name'         => $data['prepared_by_name'] ?? null,
+            'prepared_by_title'        => $data['prepared_by_title'] ?? null,
+            'approved_by_name'         => $data['approved_by_name'] ?? null,
+            'approved_by_title'        => $data['approved_by_title'] ?? null,
+        ], true);
+        (new MissionPlanningMilestoneModel())->replaceForPlanning((int) $planningId, $data['milestones'] ?? []);
 
         $db->transComplete();
 
