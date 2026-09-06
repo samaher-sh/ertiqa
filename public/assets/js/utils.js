@@ -106,6 +106,45 @@ async function postForPdfDownload(path, body, filename) {
 }
 
 /**
+ * يخلي حقل <input type="file" multiple> يتراكم فيه الاختيار عبر كذا فتحة
+ * لنافذة اختيار الملفات، بدل السلوك الافتراضي بالمتصفح (كل فتحة تستبدل
+ * الاختيار السابق كليًا فيضيع أي ملف مختار قبلها لو المستخدم رجع فتح
+ * النافذة مرة ثانية لإضافة ملف إضافي قبل الإرسال/الحفظ النهائي).
+ * ملف بنفس الاسم والحجم يستبدل النسخة السابقة (تحديث)، غير كذا يُضاف للقائمة.
+ * القائمة المتراكمة تُخزَّن على العنصر نفسه (input._accumulatedFiles) عشان
+ * أي كود خارجي (مثل زر "إزالة" بمعاينة الملفات) يقدر يتعامل معها مباشرة عبر
+ * removeFromAccumulatingFileInput() بدل ما يعيد بناء input.files من نفسه ويكسر
+ * التزامن. لازم تُستدعى قبل أي addEventListener("change", ...) ثانية على نفس
+ * الحقل، عشان تلك المستمعات تقرأ القائمة المجمَّعة الصحيحة من input.files.
+ */
+function bindAccumulatingFileInput(input) {
+  if (!input || input.dataset.accumulating === "1") return;
+  input.dataset.accumulating = "1";
+  input._accumulatedFiles = [];
+
+  input.addEventListener("change", () => {
+    Array.from(input.files || []).forEach(f => {
+      const idx = input._accumulatedFiles.findIndex(existing => existing.name === f.name && existing.size === f.size);
+      if (idx !== -1) input._accumulatedFiles[idx] = f; else input._accumulatedFiles.push(f);
+    });
+    rebuildAccumulatingFileInput(input);
+  });
+}
+
+/** يزيل ملفًا واحدًا (بالفهرس) من حقل مُهيَّأ بـ bindAccumulatingFileInput() */
+function removeFromAccumulatingFileInput(input, index) {
+  if (!input || !input._accumulatedFiles) return;
+  input._accumulatedFiles.splice(index, 1);
+  rebuildAccumulatingFileInput(input);
+}
+
+function rebuildAccumulatingFileInput(input) {
+  const dt = new DataTransfer();
+  input._accumulatedFiles.forEach(f => dt.items.add(f));
+  input.files = dt.files;
+}
+
+/**
  * تحديد نوع القيمة أثناء الكتابة لحقول name/phone/email (نفس فلاتر p1Reviewer/
  * p1Phone/p1Email بـ wizard.js ومرادفاتها بـ missionreview.js الأصليتين بالضبط)
  * -- يشتغل تلقائيًا على أي حقل عليه data-mask بأي صفحة حقيقية (mvc-layout.js

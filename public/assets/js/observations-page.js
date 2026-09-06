@@ -308,12 +308,17 @@ function bindObsAttachUpload() {
    الملاحظة الجديدة ما عندها id بعد، فما تُرفع الملفات فورًا (بخلاف صفحتَي
    العرض/التعديل) -- تبقى بحقل input عادي وتُرفع دفعة وحدة مع الحفظ نفسه
    (ObservationController::save())؛ هذي الدالة تحسين بصري بحت (تعرض أسماء
-   الملفات المختارة + تسمح بإزالة واحد منها قبل الحفظ) -- بدون هذا الملف
-   الحقل يشتغل زي أي input file عادي (المتصفح نفسه يعرض عدد/اسم الملفات) */
+   الملفات المختارة + تسمح بإزالة واحد منها قبل الحفظ)، وتُفعّل تراكم
+   الاختيار عبر كذا فتحة لنافذة اختيار الملفات (bindAccumulatingFileInput
+   بـ utils.js) -- بدون هذا الملف الحقل يشتغل زي أي input file عادي (يعرض
+   عدد/اسم الملفات فقط)، لكن كل فتحة تستبدل الاختيار السابق كليًا (سلوك
+   المتصفح الافتراضي) */
 function bindObsNewAttachPreview() {
   const input = document.getElementById("obsNewAttachInput");
   const list = document.getElementById("obsNewAttachPreviewList");
   if (!input || !list) return;
+
+  bindAccumulatingFileInput(input);
 
   const render = () => {
     list.innerHTML = "";
@@ -335,10 +340,7 @@ function bindObsNewAttachPreview() {
   list.addEventListener("click", e => {
     const btn = e.target.closest("[data-remove-index]");
     if (!btn) return;
-    const idx = Number(btn.dataset.removeIndex);
-    const dt = new DataTransfer();
-    Array.from(input.files).forEach((file, i) => { if (i !== idx) dt.items.add(file); });
-    input.files = dt.files;
+    removeFromAccumulatingFileInput(input, Number(btn.dataset.removeIndex));
     render();
   });
 }

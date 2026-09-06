@@ -47,3 +47,23 @@ Options -Indexes
 # Disable server signature start
 ServerSignature Off
 # Disable server signature end
+
+# ----------------------------------------------------------------------
+# حد أقصى لحجم الملفات المرفوعة (50 ميجا) -- مطبَّق أيضًا داخل التطبيق نفسه
+# (DocumentController/DocumentModel::MAX_SIZE_KB) لكن upload_max_filesize/
+# post_max_size حدود PHP نفسه تُرفض قبل ما يوصل الطلب للتطبيق إطلاقًا، فلازم
+# تُرفع من هنا كمان. تعمل فقط لو الاستضافة تشغّل Apache مع mod_php (تُتجاهَل
+# بأمان بأي إعداد ثاني -- php-fpm/CGI يقرأ public/.user.ini بدلًا من هذا)
+# ----------------------------------------------------------------------
+<IfModule mod_php.c>
+	php_value upload_max_filesize 50M
+	php_value post_max_size 250M
+</IfModule>
+<IfModule mod_php7.c>
+	php_value upload_max_filesize 50M
+	php_value post_max_size 250M
+</IfModule>
+<IfModule mod_php8.c>
+	php_value upload_max_filesize 50M
+	php_value post_max_size 250M
+</IfModule>
