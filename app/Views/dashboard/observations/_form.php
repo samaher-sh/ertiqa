@@ -28,9 +28,7 @@ $errorMsg = session()->getFlashdata('error');
       <a class="obs-form-back" href="<?= esc($backUrl) ?>"><i data-lucide="chevron-right"></i></a>
       <h3 class="obs-form-title"><?= $isEdit ? 'تعديل الملاحظة' : 'إضافة ملاحظة جديدة' ?></h3>
     </div>
-    <div style="display:flex;gap:8px;">
-      <button type="submit" form="obsForm" class="obs-form-save"><i data-lucide="check"></i> حفظ واعتماد</button>
-    </div>
+    <div style="display:flex;gap:8px;"></div>
   </div>
 
   <div class="obs-form-body">
@@ -116,5 +114,9 @@ $errorMsg = session()->getFlashdata('error');
           'canUpload'     => true,
       ]) ?>
     <?php endif; ?>
+  </div>
+
+  <div class="obs-form-footer">
+    <button type="submit" form="obsForm" class="obs-form-save-bottom"><i data-lucide="check"></i> حفظ</button>
   </div>
 </div>

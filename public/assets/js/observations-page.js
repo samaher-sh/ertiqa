@@ -23,7 +23,62 @@ document.addEventListener("DOMContentLoaded", () => {
   bindObsAttachUpload();
   bindObsAttachListActions();
   bindObsNewAttachPreview();
+  bindObsRowMenus();
 });
+
+/* ---------- قائمة إجراءات كل صف (⋮) ----------
+   .obs-table-wrap عنده overflow-x:auto عشان يسمح بتمرير الجدول أفقيًا
+   بالشاشات الصغيرة، لكن هذا يخلي المتصفح يقصّ (clip) أي عنصر يفيض عن
+   حدود الجدول رأسيًا أيضًا -- فقائمة الإجراءات (.obs-menu-dropdown) اللي
+   أصلًا position:absolute تنقص/تنقطع لو الصف قريب من أسفل الجدول، ويحتاج
+   المستخدم يمرّر داخل الجدول نفسه عشان يشوفها كاملة. الحل: عند فتح القائمة
+   نحوّلها لـ position:fixed بإحداثيات محسوبة من مكان الزر الفعلي على
+   الشاشة (getBoundingClientRect) -- position:fixed ما يتأثر بقصّ overflow
+   لأي عنصر أب، فتظهر القائمة كاملة دائمًا بدون أي حاجة للتمرير. */
+function bindObsRowMenus() {
+  const table = document.getElementById("obsTable");
+  if (!table) return;
+  const menus = Array.from(table.querySelectorAll(".obs-menu-native"));
+  if (menus.length === 0) return;
+
+  function closeMenu(details) {
+    details.open = false;
+    const dropdown = details.querySelector(".obs-menu-dropdown");
+    if (dropdown) { dropdown.style.position = ""; dropdown.style.top = ""; dropdown.style.left = ""; }
+  }
+
+  menus.forEach(details => {
+    const dropdown = details.querySelector(".obs-menu-dropdown");
+    const summary = details.querySelector("summary");
+    if (!dropdown || !summary) return;
+
+    details.addEventListener("toggle", () => {
+      if (!details.open) {
+        dropdown.style.position = "";
+        dropdown.style.top = "";
+        dropdown.style.left = "";
+        return;
+      }
+      menus.forEach(other => { if (other !== details && other.open) closeMenu(other); });
+
+      const btnRect = summary.getBoundingClientRect();
+      const dropdownHeight = dropdown.offsetHeight;
+      const openUpward = window.innerHeight - btnRect.bottom < dropdownHeight + 12 && btnRect.top > dropdownHeight;
+
+      dropdown.style.position = "fixed";
+      dropdown.style.left = Math.max(8, btnRect.right - dropdown.offsetWidth) + "px";
+      dropdown.style.top = (openUpward ? btnRect.top - dropdownHeight - 4 : btnRect.bottom + 4) + "px";
+    });
+  });
+
+  document.addEventListener("click", e => {
+    menus.forEach(details => {
+      if (details.open && !details.contains(e.target)) closeMenu(details);
+    });
+  });
+  document.querySelector(".obs-table-wrap")?.addEventListener("scroll", () => menus.forEach(d => { if (d.open) closeMenu(d); }));
+  window.addEventListener("resize", () => menus.forEach(d => { if (d.open) closeMenu(d); }));
+}
 
 /* ---------- فلاتر قائمة الملاحظات ---------- */
 function bindObsFilters() {
