@@ -10,4 +10,3 @@
 .rec-form{ padding:20px; display:flex; flex-direction:column; gap:20px; }
 .rec-item{ display:flex; flex-direction:column; gap:12px; padding-bottom:20px; border-bottom:1px solid #eef4f6; }
 .rec-item:last-of-type{ border-bottom:none; padding-bottom:0; }
-.rec-item-title{ font-weight:800; font-size:13px; color:#152c33; margin:0; }
