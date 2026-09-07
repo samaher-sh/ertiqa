@@ -17,6 +17,7 @@ class AuditNoteModel extends Model
         'reason_text', 'impact_text', 'recommendations_text', 'add_to_report',
         'reviewer_signature_user_id', 'team_head_signature_user_id',
         'reviewer_signed_at', 'team_head_signed_at', 'created_by',
+        'kamc_targets_link', 'health_transformation_targets_link', 'dept_response_plan',
     ];
 
     public function forMission(int $missionId): array
@@ -48,6 +49,26 @@ class AuditNoteModel extends Model
             $id = (int) $id;
             if (!in_array($id, $ownIds, true)) continue;
             $this->update($id, ['add_to_report' => (int) $flag]);
+        }
+    }
+
+    /**
+     * تحديث دفعة وحدة لحقول قسم "بعد اعتماد الرئيس" (الربط بمستهدفات المدينة
+     * الطبية/التحول الصحي الوطني، رد الإدارة) لكل ملاحظة تابعة فعليًا لمهمة
+     * معيّنة -- $rows = [id => ['kamc' => ..., 'health' => ..., 'response' => ...]].
+     * يتجاهل أي id مو تابع لهذي المهمة (نفس حماية updateReportInclusion أعلاه)
+     */
+    public function updateFinalReportFields(int $missionId, array $rows): void
+    {
+        $ownIds = array_map('intval', array_column($this->where('mission_id', $missionId)->select('id')->findAll(), 'id'));
+        foreach ($rows as $id => $fields) {
+            $id = (int) $id;
+            if (!in_array($id, $ownIds, true)) continue;
+            $this->update($id, [
+                'kamc_targets_link'                  => $fields['kamc'] ?? null,
+                'health_transformation_targets_link' => $fields['health'] ?? null,
+                'dept_response_plan'                 => $fields['response'] ?? null,
+            ]);
         }
     }
 
