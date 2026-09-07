@@ -73,8 +73,9 @@ class ObservationController extends BaseController
 
             // رئيس إدارة المراجعة الداخلية فقط: يحدّد أي الملاحظات تُضمَّن بالتقرير
             // النهائي (نفس البطاقة اللي كانت مضمَّنة بصفحة "التقرير النهائي" سابقًا،
-            // انتقلت لهنا) -- تظهر فقط أثناء نافذة مراجعته (status=pending_signatures)
-            $showInclusionCard = $isAuditHead && ($report['status'] ?? null) === 'pending_signatures' && !empty($items);
+            // انتقلت لهنا) -- تظهر دائمًا له طالما فيه ملاحظات، بغض النظر عن حالة
+            // التقرير (بطلب مباشر: يقدر يحدد اختياره بأي وقت قبل وصول التقرير له)
+            $showInclusionCard = $isAuditHead && !empty($items);
 
             // قسم "بعد اعتماد الرئيس" -- يظهر فقط لو رئيس إدارة المراجعة الداخلية
             // اعتمد التقرير النهائي لهذي المهمة فعليًا (reports.head_approved_at)،
