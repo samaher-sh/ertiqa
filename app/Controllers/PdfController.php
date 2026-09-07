@@ -9,9 +9,6 @@ use App\Models\MeetingModel;
 use App\Models\MeetingAttendeeModel;
 use App\Models\MeetingSummaryPointModel;
 use App\Models\MeetingApprovalModel;
-use App\Models\ServiceAgreementModel;
-use App\Models\ServiceAgreementResponseModel;
-use App\Models\DocumentRequestModel;
 use App\Models\AuditNoteModel;
 use App\Models\ReportModel;
 use Mpdf\Mpdf;
@@ -20,13 +17,14 @@ class PdfController extends BaseController
 {
     /**
      * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
-     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف
+     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. $orientation='L'
+     * يطلع الصفحة بالعرض (نفس اتجاه نموذج "تقرير المراجعة" الرسمي) بدل الطول الافتراضي
      */
-    private function makeMpdf(): Mpdf
+    private function makeMpdf(string $orientation = 'P'): Mpdf
     {
         return new Mpdf([
             'mode'            => 'utf-8',
-            'format'          => 'A4',
+            'format'          => $orientation === 'L' ? 'A4-L' : 'A4',
             'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
             'directionality'  => 'rtl',
             'margin_left'     => 15,
@@ -430,16 +428,6 @@ class PdfController extends BaseController
         $targetDept = $deptModel->find($mission['target_department_id']);
         $mainDept   = $deptModel->find($mission['audit_department_id']);
 
-        $agreement    = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
-        $slaResponses = (new ServiceAgreementResponseModel())->forMission($missionId);
-        $docRequests  = (new DocumentRequestModel())->forMissionWithResponses($missionId);
-        $riskItems    = (new RiskMatrixItemModel())->forMission($missionId);
-
-        $meeting   = (new MeetingModel())->firstForMission($missionId);
-        $attendees = $meeting ? (new MeetingAttendeeModel())->forMeeting($meeting['id']) : [];
-        $points    = $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [];
-        $approvals = $meeting ? (new MeetingApprovalModel())->forMeeting($meeting['id']) : [];
-
         // تُضمَّن الملاحظة بالمستند المصدَّر فقط لو رئيس إدارة المراجعة الداخلية
         // اختار "تضاف" صراحة (add_to_report = 1) بصفحة الملاحظات -- الحالة
         // الافتراضية (فارغة، لم يُقرَّر بعد) تُستثنى، مو تُضمَّن تلقائيًا
@@ -453,18 +441,11 @@ class PdfController extends BaseController
             'targetDept'   => $targetDept,
             'mainDept'     => $mainDept,
             'report'       => $report,
-            'agreement'    => $agreement,
-            'slaResponses' => $slaResponses,
-            'docRequests'  => $docRequests,
-            'riskItems'    => $riskItems,
-            'meeting'      => $meeting,
-            'attendees'    => $attendees,
-            'points'       => $points,
-            'approvals'    => $approvals,
             'observations' => $observations,
         ]);
 
-        $mpdf = $this->makeMpdf();
+        // نموذج "تقرير المراجعة" الرسمي بالعرض (Landscape) بدل الطول الافتراضي
+        $mpdf = $this->makeMpdf('L');
         $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '');
         $this->applyRunningFooter($mpdf, $mission['mission_code']);
         $this->streamPdf($mpdf, $html, 'تقرير-نهائي-' . $mission['mission_code'] . '.pdf');
