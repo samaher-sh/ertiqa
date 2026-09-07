@@ -77,11 +77,9 @@ $reportApproved = (bool) ($report['head_approved_at'] ?? null);
           <form method="post" action="<?= base_url('dashboard/recommendations/api/save') ?>" class="rec-form">
             <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
             <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
-            <?php foreach ($items as $i => $obs): ?>
+            <?php foreach ($items as $obs): ?>
               <?php $status = $obs['fulfillment_status'] ?? null; ?>
               <div class="rec-item">
-                <p class="rec-item-title">الملاحظة بالتقرير (<?= $i + 1 ?>)</p>
-
                 <div class="wiz-field">
                   <label class="wiz-label">نص الملاحظة</label>
                   <div class="obs-auto-field" style="white-space:pre-wrap;height:auto;min-height:42px;padding:10px 12px;"><?= esc($obs['observation_text'] ?: ($obs['title'] ?: $obs['ref_code'])) ?></div>
