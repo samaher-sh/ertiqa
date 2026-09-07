@@ -79,7 +79,7 @@ abstract class BaseController extends Controller
         } elseif ($isHrDept) {
             $keys = ['home', 'missionPlanning', 'documentRequests', 'meetingSchedule', 'meetingSummary', 'sentTasks', 'finalReports'];
         } elseif ($isAuditHead) {
-            $keys = ['home', 'finalReports', 'addUser'];
+            $keys = ['home', 'observations', 'finalReports', 'addUser'];
         }
 
         $result = [];
