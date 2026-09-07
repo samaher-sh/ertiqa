@@ -61,6 +61,7 @@ abstract class BaseController extends Controller
             'meetingSummary'    => ['label' => 'ملخص اجتماع',        'url' => base_url('dashboard/meetings'),         'icon' => 'users'],
             'observations'      => ['label' => 'الملاحظات',          'url' => base_url('dashboard/observations'),     'icon' => 'book-open'],
             'finalReports'      => ['label' => 'تقرير نهائي',        'url' => base_url('dashboard/reports'),          'icon' => 'file-text'],
+            'recommendations'   => ['label' => 'التوصيات',           'url' => base_url('dashboard/recommendations'),  'icon' => 'clipboard-check'],
             'sentTasks'         => ['label' => 'المراسلات المشتركة', 'url' => base_url('dashboard/sent-tasks'),       'icon' => 'send'],
             'addUser'           => ['label' => 'إضافة مستخدم',       'url' => base_url('dashboard/users/create'),     'icon' => 'user-plus'],
         ];
@@ -77,9 +78,9 @@ abstract class BaseController extends Controller
         if ($isPresident) {
             $keys = ['home', 'finalReports'];
         } elseif ($isHrDept) {
-            $keys = ['home', 'missionPlanning', 'documentRequests', 'meetingSchedule', 'meetingSummary', 'sentTasks', 'finalReports'];
+            $keys = ['home', 'missionPlanning', 'documentRequests', 'meetingSchedule', 'meetingSummary', 'sentTasks', 'finalReports', 'recommendations'];
         } elseif ($isAuditHead) {
-            $keys = ['home', 'observations', 'finalReports', 'addUser'];
+            $keys = ['home', 'observations', 'finalReports', 'recommendations', 'addUser'];
         }
 
         $result = [];
@@ -112,7 +113,7 @@ abstract class BaseController extends Controller
      */
     protected function migratedPageKeys(): array
     {
-        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'missionPlanning', 'home', 'addUser'];
+        return ['observations', 'riskMatrix', 'meetingSummary', 'documentRequests', 'meetingSchedule', 'sentTasks', 'finalReports', 'newTask', 'missionPlanning', 'home', 'addUser', 'recommendations'];
     }
 
     /**

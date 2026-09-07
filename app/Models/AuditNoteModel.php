@@ -18,6 +18,7 @@ class AuditNoteModel extends Model
         'reviewer_signature_user_id', 'team_head_signature_user_id',
         'reviewer_signed_at', 'team_head_signed_at', 'created_by',
         'kamc_targets_link', 'health_transformation_targets_link', 'dept_response_plan',
+        'dept_reply', 'fulfillment_status', 'fulfillment_requirement',
     ];
 
     public function forMission(int $missionId): array
@@ -68,6 +69,39 @@ class AuditNoteModel extends Model
                 'kamc_targets_link'                  => $fields['kamc'] ?? null,
                 'health_transformation_targets_link' => $fields['health'] ?? null,
                 'dept_response_plan'                 => $fields['response'] ?? null,
+            ]);
+        }
+    }
+
+    /**
+     * تحديث دفعة وحدة لحقل "رد الجهة" بصفحة "التوصيات" -- تعبّئه الإدارة
+     * الخاضعة للمراجعة حصرًا. $replies = [id => 'نص رد الجهة']. نفس حماية
+     * updateReportInclusion (يتجاهل أي id مو تابع فعليًا لهذي المهمة)
+     */
+    public function updateDeptReplies(int $missionId, array $replies): void
+    {
+        $ownIds = array_map('intval', array_column($this->where('mission_id', $missionId)->select('id')->findAll(), 'id'));
+        foreach ($replies as $id => $reply) {
+            $id = (int) $id;
+            if (!in_array($id, $ownIds, true)) continue;
+            $this->update($id, ['dept_reply' => $reply]);
+        }
+    }
+
+    /**
+     * تحديث دفعة وحدة لحقلي "الحالة" و"المطلوب لاستيفاء الملاحظة" بصفحة
+     * "التوصيات" -- يعبّئهما عضو المراجعة حصرًا. $rows = [id => ['status' =>
+     * 'fulfilled'|'not_fulfilled'|'', 'requirement' => '...']]
+     */
+    public function updateFollowUpFields(int $missionId, array $rows): void
+    {
+        $ownIds = array_map('intval', array_column($this->where('mission_id', $missionId)->select('id')->findAll(), 'id'));
+        foreach ($rows as $id => $fields) {
+            $id = (int) $id;
+            if (!in_array($id, $ownIds, true)) continue;
+            $this->update($id, [
+                'fulfillment_status'      => ($fields['status'] ?? '') ?: null,
+                'fulfillment_requirement' => $fields['requirement'] ?? null,
             ]);
         }
     }
