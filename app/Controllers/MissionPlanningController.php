@@ -123,6 +123,7 @@ class MissionPlanningController extends BaseController
             'prepared_by_title'        => $data['prepared_by_title'] ?? null,
             'approved_by_name'         => $data['approved_by_name'] ?? null,
             'approved_by_title'        => $data['approved_by_title'] ?? null,
+            'team_meeting_date'        => ($data['team_meeting_date'] ?? null) ?: null,
         ]);
         (new MissionPlanningMilestoneModel())->replaceForPlanning((int) $planning['id'], $data['milestones'] ?? []);
 
