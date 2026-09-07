@@ -45,7 +45,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
         </div>
       </div>
 
-      <?php if (!$isAuditMember): ?><div id="obsFiltersMount"></div><?php endif; ?>
+      <?php if (!$isAuditMember && !$isAuditHead): ?><div id="obsFiltersMount"></div><?php endif; ?>
 
       <?php if (empty($items)): ?>
         <div class="obs-empty" id="obsEmptyState">
