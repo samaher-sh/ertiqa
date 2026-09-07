@@ -7,6 +7,7 @@ use App\Models\MissionStageHistoryModel;
 use App\Models\AuditLogModel;
 use App\Models\MissionModel;
 use App\Models\DocumentModel;
+use App\Models\ReportModel;
 
 class ObservationController extends BaseController
 {
@@ -58,9 +59,20 @@ class ObservationController extends BaseController
 
         $mission = null;
         $items = [];
+        $reportApproved = false;
+        $approvedItems = [];
         if ($missionId) {
             $mission = $this->assertMissionAccess($missionId);
             $items = (new AuditNoteModel())->forMission($missionId);
+
+            // قسم "بعد اعتماد الرئيس" -- يظهر فقط لو رئيس إدارة المراجعة الداخلية
+            // اعتمد التقرير النهائي لهذي المهمة فعليًا (reports.head_approved_at)،
+            // وفقط للملاحظات المضمَّنة فعليًا بالتقرير (add_to_report != 0)
+            $report = (new ReportModel())->where('mission_id', $missionId)->first();
+            $reportApproved = (bool) ($report['head_approved_at'] ?? null);
+            if ($reportApproved) {
+                $approvedItems = array_values(array_filter($items, fn($i) => (int) ($i['add_to_report'] ?? 1) !== 0));
+            }
         }
 
         $roleCode = session()->get('role_code');
@@ -78,6 +90,9 @@ class ObservationController extends BaseController
             'isAuditMember'     => $roleCode === 'audit_member',
             'isAuditHead'       => $roleCode === 'audit_head',
             'embed'             => $embed,
+            'reportApproved'    => $reportApproved,
+            'approvedItems'     => $approvedItems,
+            'canEditFinalReportFields' => !$this->roleFlags()['obsReadOnly'] && !$embed,
         ]));
     }
 
@@ -290,5 +305,25 @@ class ObservationController extends BaseController
         }
         (new AuditNoteModel())->update($id, ['status' => $status]);
         return $this->response->setJSON(['success' => true]);
+    }
+
+    /**
+     * POST /dashboard/observations/api/save-final-report-fields — حفظ دفعة
+     * وحدة لحقول قسم "بعد اعتماد الرئيس" (الربط بمستهدفات المدينة الطبية/
+     * التحول الصحي الوطني، رد الإدارة) لكل ملاحظات مهمة معيّنة معًا
+     */
+    public function saveFinalReportFields()
+    {
+        if ($this->roleFlags()['obsReadOnly']) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('ليس لديك صلاحية التعديل.');
+        }
+
+        $missionId = (int) $this->request->getPost('mission_id');
+        $this->assertMissionAccess($missionId);
+
+        $rows = $this->request->getPost('report_fields') ?? [];
+        (new AuditNoteModel())->updateFinalReportFields($missionId, is_array($rows) ? $rows : []);
+
+        return redirect()->to(base_url('dashboard/observations') . '?mission_id=' . $missionId)->with('success', 'تم حفظ البيانات بنجاح.');
     }
 }

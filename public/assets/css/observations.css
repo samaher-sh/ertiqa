@@ -94,6 +94,12 @@ table.obs-table tbody tr:hover{ background:#f0f9ff !important; }
 .obs-form-save-bottom{ display:flex; align-items:center; gap:8px; padding:10px 24px; border-radius:12px; font-size:13px; font-weight:700; background:var(--p); color:#fff; border:none; cursor:pointer; }
 .obs-form-save-bottom:hover{ background:var(--pd); }
 .obs-form-save-bottom i{ width:15px; height:15px; }
+/* ===== قسم "بعد اعتماد الرئيس" (الربط بالمستهدفات/رد الإدارة) ===== */
+.obs-frf-form{ padding:20px; display:flex; flex-direction:column; gap:20px; }
+.obs-frf-item{ display:flex; flex-direction:column; gap:12px; padding-bottom:20px; border-bottom:1px solid #eef4f6; }
+.obs-frf-item:last-of-type{ border-bottom:none; padding-bottom:0; }
+.obs-frf-item-title{ font-weight:700; font-size:13px; color:#152c33; margin:0; }
+.obs-frf-form .obs-form-save-bottom{ align-self:flex-start; }
 .obs-grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .obs-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .obs-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }

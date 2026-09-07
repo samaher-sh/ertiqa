@@ -97,6 +97,44 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
         </div>
       <?php endif; ?>
     </div>
+
+    <?php if ($reportApproved && !empty($approvedItems)): ?>
+      <div class="obs-list-card">
+        <div class="obs-list-header">
+          <div class="obs-list-header-left">
+            <i data-lucide="check-circle"></i>
+            <span class="obs-list-title">بيانات ما بعد اعتماد الرئيس</span>
+          </div>
+          <?php if (!$canEditFinalReportFields): ?>
+            <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
+          <?php endif; ?>
+        </div>
+        <form method="post" action="<?= base_url('dashboard/observations/api/save-final-report-fields') ?>" class="obs-frf-form">
+          <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+          <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
+          <?php foreach ($approvedItems as $obs): ?>
+            <div class="obs-frf-item">
+              <p class="obs-frf-item-title"><?= esc($obs['title']) ?></p>
+              <div class="wiz-field">
+                <label class="wiz-label">الربط بمستهدفات المدينة الطبية</label>
+                <textarea name="report_fields[<?= (int) $obs['id'] ?>][kamc]" rows="2" class="wiz-textarea plain" <?= $canEditFinalReportFields ? '' : 'readonly' ?>><?= esc($obs['kamc_targets_link'] ?? '') ?></textarea>
+              </div>
+              <div class="wiz-field">
+                <label class="wiz-label">الربط بمستهدفات التحول الصحي الوطني</label>
+                <textarea name="report_fields[<?= (int) $obs['id'] ?>][health]" rows="2" class="wiz-textarea plain" <?= $canEditFinalReportFields ? '' : 'readonly' ?>><?= esc($obs['health_transformation_targets_link'] ?? '') ?></textarea>
+              </div>
+              <div class="wiz-field">
+                <label class="wiz-label">رد الإدارة (خطة تنفيذ التوصيات)</label>
+                <textarea name="report_fields[<?= (int) $obs['id'] ?>][response]" rows="2" class="wiz-textarea plain" <?= $canEditFinalReportFields ? '' : 'readonly' ?>><?= esc($obs['dept_response_plan'] ?? '') ?></textarea>
+              </div>
+            </div>
+          <?php endforeach; ?>
+          <?php if ($canEditFinalReportFields): ?>
+            <button type="submit" class="obs-form-save-bottom"><i data-lucide="save"></i> حفظ</button>
+          <?php endif; ?>
+        </form>
+      </div>
+    <?php endif; ?>
   </div>
 </div>
 <?php $this->endSection() ?>
