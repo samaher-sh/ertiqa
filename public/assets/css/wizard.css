@@ -158,10 +158,17 @@ table.wiz-table-spacious td{ padding:16px 22px; vertical-align:middle; }
 table.wiz-table-spacious td.wiz-table-row-label{ font-weight:700; color:var(--pd); background:#f8fbfd; text-align:center; }
 
 /* جدول "البند / التفاصيل" (نبذة عن المهمة ← الإجراءات الفرعية المشمولة
-   بالمراجعة) -- عمود أول ثابت العرض للتسميات، الثاني يمتد لباقي حقول النموذج */
-table.wiz-table-fields td{ padding:14px 18px; vertical-align:top; }
-table.wiz-table-fields td.wiz-table-row-label{ width:220px; font-weight:700; color:var(--pd); background:#f8fbfd; }
-table.wiz-table-fields td .wiz-input, table.wiz-table-fields td .wiz-textarea{ width:100%; }
+   بالمراجعة) -- عمود أول ثابت العرض للتسميات، الثاني يمتد لباقي حقول النموذج.
+   شكل جدول حقيقي (تخطيط صفوف متبادل الألوان + حقول بلا حدود ظاهرة إلا وقت
+   التركيز) بدل قائمة بطاقات نصية كبيرة، عشان يبين كجدول مضغوط لا كنموذج */
+table.wiz-table-fields{ table-layout:fixed; }
+table.wiz-table-fields td{ padding:10px 18px; vertical-align:middle; border-bottom:1px solid #eef3f5; }
+table.wiz-table-fields tr:nth-child(even) td{ background:#fafcfd; }
+table.wiz-table-fields tr:nth-child(even) td.wiz-table-row-label{ background:#f3f8fb; }
+table.wiz-table-fields td.wiz-table-row-label{ width:220px; font-weight:700; font-size:12px; color:var(--pd); background:#f8fbfd; border-left:1px solid #dde7ea; }
+table.wiz-table-fields td .wiz-input, table.wiz-table-fields td .wiz-textarea{ width:100%; background:transparent; border-color:transparent; padding:6px 4px; }
+table.wiz-table-fields td .wiz-input:focus, table.wiz-table-fields td .wiz-textarea:focus{ background:#fff; border-color:var(--p); box-shadow:none; }
+table.wiz-table-fields td .wiz-textarea{ min-height:32px; }
 .wiz-sla-section-row td{ padding:12px 20px; font-weight:800; font-size:11px; background:var(--pl); color:var(--pd); border-bottom:1px solid var(--pb); border-right:3px solid var(--p); letter-spacing:.01em; }
 .wiz-sla-section-row .num{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:6px; background:var(--p); color:#fff; font-size:10px; font-weight:800; margin-left:8px; }
 .wiz-sla-row td{ padding:16px 20px; }
