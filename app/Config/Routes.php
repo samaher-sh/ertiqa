@@ -80,6 +80,8 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->post('reports/api/approve',         'ReportController::approve');
     $routes->post('reports/api/reject',          'ReportController::reject');
     $routes->post('reports/api/observations-inclusion', 'ReportController::updateObservationsInclusion');
+    $routes->get('recommendations',              'RecommendationController::index');
+    $routes->post('recommendations/api/save',    'RecommendationController::save');
     $routes->get('sent-tasks',                   'SentTasksController::index');
     $routes->get('sent-tasks/(:num)',             'SentTasksController::show/$1');
     $routes->get('sent-tasks/api/timeline',      'SentTasksController::timeline');
