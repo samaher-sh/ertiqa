@@ -359,14 +359,15 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
         <div class="wiz-card">
           <div class="wiz-table-wrap">
             <table class="wiz-table wiz-table-fields">
+              <thead><tr><th style="width:220px;">البند</th><th>التفاصيل</th></tr></thead>
               <tbody>
                 <tr>
                   <td class="wiz-table-row-label">نبذة عن المهمة</td>
-                  <td><textarea name="mission_brief" rows="2" class="wiz-textarea plain" placeholder="عرض تقديم عن مشروع المراجعة والإدارة الخاضعة للمراجعة"><?= esc($v('mission_brief')) ?></textarea></td>
+                  <td><textarea name="mission_brief" rows="1" class="wiz-textarea plain" placeholder="عرض تقديم عن مشروع المراجعة والإدارة الخاضعة للمراجعة"><?= esc($v('mission_brief')) ?></textarea></td>
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">عمليات المراجعة السابقة</td>
-                  <td><textarea name="previous_audits" rows="3" class="wiz-textarea plain" placeholder="رقم التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea></td>
+                  <td><textarea name="previous_audits" rows="2" class="wiz-textarea plain" placeholder="رقم التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea></td>
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">تاريخ إصدار التقرير</td>
@@ -374,23 +375,23 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">ملاحظات الجهات الرقابية</td>
-                  <td><textarea name="regulatory_notes" rows="2" class="wiz-textarea plain" placeholder="نبذة عن الملاحظات حسب توفرها."><?= esc($v('regulatory_notes')) ?></textarea></td>
+                  <td><textarea name="regulatory_notes" rows="1" class="wiz-textarea plain" placeholder="نبذة عن الملاحظات حسب توفرها."><?= esc($v('regulatory_notes')) ?></textarea></td>
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">أهداف المراجعة</td>
-                  <td><textarea name="audit_objectives" rows="4" class="wiz-textarea plain" placeholder="أهداف المراجعة&#10;الهدف الأول: &#10;الهدف الثاني: &#10;..."><?= esc($v('audit_objectives')) ?></textarea></td>
+                  <td><textarea name="audit_objectives" rows="3" class="wiz-textarea plain" placeholder="أهداف المراجعة&#10;الهدف الأول: &#10;الهدف الثاني: &#10;..."><?= esc($v('audit_objectives')) ?></textarea></td>
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">نطاق المراجعة</td>
-                  <td><textarea name="scope_included" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع يتضمن التالي: &#10;.......&#10;......."><?= esc($v('scope_included')) ?></textarea></td>
+                  <td><textarea name="scope_included" rows="2" class="wiz-textarea plain" placeholder="نطاق المشروع يتضمن التالي: &#10;.......&#10;......."><?= esc($v('scope_included')) ?></textarea></td>
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">النطاق المستثنى من المراجعة</td>
-                  <td><textarea name="scope_excluded" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع لن يشمل التالي: &#10;...&#10;..."><?= esc($v('scope_excluded')) ?></textarea></td>
+                  <td><textarea name="scope_excluded" rows="2" class="wiz-textarea plain" placeholder="نطاق المشروع لن يشمل التالي: &#10;...&#10;..."><?= esc($v('scope_excluded')) ?></textarea></td>
                 </tr>
                 <tr>
                   <td class="wiz-table-row-label">الإجراءات الفرعية المشمولة بالمراجعة</td>
-                  <td><textarea name="sub_procedures" rows="2" class="wiz-textarea plain" placeholder="...&#10;..."><?= esc($v('sub_procedures')) ?></textarea></td>
+                  <td><textarea name="sub_procedures" rows="1" class="wiz-textarea plain" placeholder="...&#10;..."><?= esc($v('sub_procedures')) ?></textarea></td>
                 </tr>
               </tbody>
             </table>
