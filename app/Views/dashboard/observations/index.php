@@ -128,7 +128,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
         <div class="obs-list-header">
           <div class="obs-list-header-left">
             <i data-lucide="check-circle"></i>
-            <span class="obs-list-title">بيانات ما بعد اعتماد الرئيس</span>
+            <span class="obs-list-title">الملاحظات المعتمدة</span>
           </div>
           <?php if (!$canEditFinalReportFields): ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
@@ -139,7 +139,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
           <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
           <?php foreach ($approvedItems as $obs): ?>
             <div class="obs-frf-item">
-              <p class="obs-frf-item-title"><?= esc($obs['title']) ?></p>
+              <p class="obs-frf-item-title"><?= esc($obs['title'] ?: $obs['ref_code']) ?></p>
               <div class="wiz-field">
                 <label class="wiz-label">الربط بمستهدفات المدينة الطبية</label>
                 <textarea name="report_fields[<?= (int) $obs['id'] ?>][kamc]" rows="2" class="wiz-textarea plain" <?= $canEditFinalReportFields ? '' : 'readonly' ?>><?= esc($obs['kamc_targets_link'] ?? '') ?></textarea>
