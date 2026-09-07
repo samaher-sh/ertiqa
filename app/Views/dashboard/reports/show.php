@@ -128,29 +128,6 @@ foreach (array_slice($items, 0, -1) as $it) { if ((int) $it['is_checked'] !== 1)
 
   <?php if ($isAuditHead && $report['status'] === 'pending_signatures'): ?>
 
-  <?php if (!empty($observations)): ?>
-  <div class="wiz-card" id="frInclusionCard">
-    <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">الملاحظات المضمَّنة بالتقرير النهائي</span></div>
-    <form method="post" action="<?= base_url('dashboard/reports/api/observations-inclusion') ?>" class="fr-decision-panel">
-      <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-      <input type="hidden" name="mission_id" value="<?= (int) $mission['id'] ?>">
-      <div class="fr-inclusion-list">
-        <?php foreach ($observations as $o): ?>
-          <?php $included = (int) ($o['add_to_report'] ?? 1) !== 0; ?>
-          <div class="fr-inclusion-row">
-            <span class="fr-inclusion-title"><?= esc($o['title'] ?: $o['ref_code']) ?></span>
-            <div class="mr-exists-toggle">
-              <label class="mr-exists-pill yes"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="1" <?= $included ? 'checked' : '' ?>> تضاف</label>
-              <label class="mr-exists-pill no"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="0" <?= !$included ? 'checked' : '' ?>> لا تضاف</label>
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-      <div><button type="submit" class="fr-next-btn"><i data-lucide="save"></i> حفظ</button></div>
-    </form>
-  </div>
-  <?php endif; ?>
-
   <div class="wiz-card" id="frPreviewCard">
     <div class="wiz-card-head" style="justify-content:space-between;">
       <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="file-text"></i><span style="color:#fff;font-weight:700;font-size:14px;">معاينة التقرير النهائي</span></div>

@@ -192,7 +192,6 @@ class ReportController extends BaseController
             : ($stepUrl ? base_url($stepUrl) . '?mission_id=' . $missionId . '&embed=1' : null);
 
         $isAuditHead = $roleCode === 'audit_head';
-        $observations = $isAuditHead ? (new AuditNoteModel())->forMission($missionId) : [];
 
         return view('dashboard/reports/show', [
             'navItems'     => $this->navItemsForCurrentSession(),
@@ -207,14 +206,14 @@ class ReportController extends BaseController
             'isAuditHead'  => $isAuditHead,
             'expandedStep' => $expandedStep,
             'stepEmbedUrl' => $stepEmbedUrl,
-            'observations' => $observations,
         ]);
     }
 
     /**
      * POST /dashboard/reports/api/observations-inclusion — رئيس إدارة المراجعة
      * الداخلية يحدّد أي الملاحظات تُضمَّن فعليًا بمستند PDF النهائي المصدَّر
-     * (add_to_report لكل ملاحظة) -- دفعة وحدة لكل ملاحظات المهمة
+     * (add_to_report لكل ملاحظة) -- دفعة وحدة لكل ملاحظات المهمة. النموذج نفسه
+     * أصبح بصفحة "الملاحظات" (ObservationController::index) بدل التقرير النهائي
      */
     public function updateObservationsInclusion()
     {
@@ -227,7 +226,7 @@ class ReportController extends BaseController
         $flags = $this->request->getPost('add_to_report') ?? [];
         (new AuditNoteModel())->updateReportInclusion($missionId, is_array($flags) ? $flags : []);
 
-        return redirect()->to(base_url('dashboard/reports/' . $missionId) . '?step=6')->with('success', 'تم حفظ اختيار الملاحظات المضمَّنة بالتقرير.');
+        return redirect()->to(base_url('dashboard/observations') . '?mission_id=' . $missionId)->with('success', 'تم حفظ اختيار الملاحظات المضمَّنة بالتقرير.');
     }
 
     /**
