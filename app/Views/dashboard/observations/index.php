@@ -4,6 +4,10 @@
 <link rel="stylesheet" href="<?= av('assets/css/dashboard.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/wizard.css') ?>">
 <link rel="stylesheet" href="<?= av('assets/css/observations.css') ?>">
+<?php if ($showInclusionCard): ?>
+<link rel="stylesheet" href="<?= av('assets/css/finalreports.css') ?>">
+<link rel="stylesheet" href="<?= av('assets/css/missionreview.css') ?>">
+<?php endif; ?>
 <?php $this->endSection() ?>
 
 <?php $this->section('content') ?>
@@ -97,6 +101,29 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
         </div>
       <?php endif; ?>
     </div>
+
+    <?php if ($showInclusionCard): ?>
+      <div class="wiz-card" id="frInclusionCard">
+        <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">الملاحظات المضمَّنة بالتقرير النهائي</span></div>
+        <form method="post" action="<?= base_url('dashboard/reports/api/observations-inclusion') ?>" class="fr-decision-panel">
+          <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+          <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
+          <div class="fr-inclusion-list">
+            <?php foreach ($items as $o): ?>
+              <?php $included = (int) ($o['add_to_report'] ?? 1) !== 0; ?>
+              <div class="fr-inclusion-row">
+                <span class="fr-inclusion-title"><?= esc($o['title'] ?: $o['ref_code']) ?></span>
+                <div class="mr-exists-toggle">
+                  <label class="mr-exists-pill yes"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="1" <?= $included ? 'checked' : '' ?>> تضاف</label>
+                  <label class="mr-exists-pill no"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="0" <?= !$included ? 'checked' : '' ?>> لا تضاف</label>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <div><button type="submit" class="fr-next-btn"><i data-lucide="save"></i> حفظ</button></div>
+        </form>
+      </div>
+    <?php endif; ?>
 
     <?php if ($reportApproved && !empty($approvedItems)): ?>
       <div class="obs-list-card">

@@ -57,25 +57,36 @@ class ObservationController extends BaseController
         $requestedId = (int) ($this->request->getGet('mission_id') ?: 0);
         $missionId = $requestedId ?: (int) ($missions[0]['id'] ?? 0);
 
+        $roleCode = session()->get('role_code');
+        $isAuditHead = $roleCode === 'audit_head';
+
         $mission = null;
         $items = [];
         $reportApproved = false;
         $approvedItems = [];
+        $showInclusionCard = false;
         if ($missionId) {
             $mission = $this->assertMissionAccess($missionId);
             $items = (new AuditNoteModel())->forMission($missionId);
 
+            $report = (new ReportModel())->where('mission_id', $missionId)->first();
+
+            // رئيس إدارة المراجعة الداخلية فقط: يحدّد أي الملاحظات تُضمَّن بالتقرير
+            // النهائي (نفس البطاقة اللي كانت مضمَّنة بصفحة "التقرير النهائي" سابقًا،
+            // انتقلت لهنا) -- تظهر فقط أثناء نافذة مراجعته (status=pending_signatures)
+            $showInclusionCard = $isAuditHead && ($report['status'] ?? null) === 'pending_signatures' && !empty($items);
+
             // قسم "بعد اعتماد الرئيس" -- يظهر فقط لو رئيس إدارة المراجعة الداخلية
             // اعتمد التقرير النهائي لهذي المهمة فعليًا (reports.head_approved_at)،
-            // وفقط للملاحظات المضمَّنة فعليًا بالتقرير (add_to_report != 0)
-            $report = (new ReportModel())->where('mission_id', $missionId)->first();
-            $reportApproved = (bool) ($report['head_approved_at'] ?? null);
-            if ($reportApproved) {
-                $approvedItems = array_values(array_filter($items, fn($i) => (int) ($i['add_to_report'] ?? 1) !== 0));
+            // وفقط للملاحظات المضمَّنة فعليًا بالتقرير (add_to_report != 0). لا يظهر
+            // للرئيس نفسه -- هو يشوف بطاقة "تضاف/لا تضاف" فقط بدل هذا القسم
+            if (!$isAuditHead) {
+                $reportApproved = (bool) ($report['head_approved_at'] ?? null);
+                if ($reportApproved) {
+                    $approvedItems = array_values(array_filter($items, fn($i) => (int) ($i['add_to_report'] ?? 1) !== 0));
+                }
             }
         }
-
-        $roleCode = session()->get('role_code');
 
         /* embed=1 -- الصفحة مضمَّنة بـ iframe داخل مراحل اعتماد التقرير النهائي
            لغرض المعاينة فقط، فتُجبَر على عرض فقط ويُخفى تصدير PDF الخاص بها */
@@ -88,11 +99,12 @@ class ObservationController extends BaseController
             'items'             => $items,
             'readOnly'          => $this->roleFlags()['obsReadOnly'] || $embed,
             'isAuditMember'     => $roleCode === 'audit_member',
-            'isAuditHead'       => $roleCode === 'audit_head',
+            'isAuditHead'       => $isAuditHead,
             'embed'             => $embed,
             'reportApproved'    => $reportApproved,
             'approvedItems'     => $approvedItems,
             'canEditFinalReportFields' => !$this->roleFlags()['obsReadOnly'] && !$embed,
+            'showInclusionCard' => $showInclusionCard && !$embed,
         ]));
     }
 
