@@ -60,7 +60,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
               <th>موضوع الملاحظة</th>
               <th style="width:160px;">الإدارة المعنية</th>
               <th style="width:110px;">التاريخ</th>
-              <?php if (!$isAuditHead): ?><th style="width:60px;">الإجراءات</th><?php endif; ?>
+              <th style="width:60px;">الإجراءات</th>
             </tr></thead>
             <tbody>
               <?php foreach ($items as $i => $obs): ?>
@@ -75,7 +75,6 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
                   <td><span class="obs-title-cell"><?= esc($obs['title']) ?></span></td>
                   <td><span class="obs-dept-cell"><?= esc($obs['department_name'] ?? '—') ?></span></td>
                   <td><span class="obs-date-cell"><?= esc($obs['observation_date'] ?? '—') ?></span></td>
-                  <?php if (!$isAuditHead): ?>
                   <td class="obs-menu-cell">
                     <details class="obs-menu-native">
                       <summary class="obs-menu-btn"><i data-lucide="more-vertical"></i></summary>
@@ -93,7 +92,6 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
                       </div>
                     </details>
                   </td>
-                  <?php endif; ?>
                 </tr>
               <?php endforeach; ?>
             </tbody>
