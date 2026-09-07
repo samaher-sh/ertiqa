@@ -108,12 +108,12 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
           <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
           <div class="fr-inclusion-list">
             <?php foreach ($items as $o): ?>
-              <?php $included = (int) ($o['add_to_report'] ?? 1) !== 0; ?>
+              <?php $decision = $o['add_to_report'] ?? null; ?>
               <div class="fr-inclusion-row">
                 <span class="fr-inclusion-title"><?= esc($o['title'] ?: $o['ref_code']) ?></span>
                 <div class="mr-exists-toggle">
-                  <label class="mr-exists-pill yes"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="1" <?= $included ? 'checked' : '' ?>> تضاف</label>
-                  <label class="mr-exists-pill no"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="0" <?= !$included ? 'checked' : '' ?>> لا تضاف</label>
+                  <label class="mr-exists-pill yes"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="1" <?= $decision !== null && (int) $decision === 1 ? 'checked' : '' ?>> تضاف</label>
+                  <label class="mr-exists-pill no"><input type="radio" name="add_to_report[<?= (int) $o['id'] ?>]" value="0" <?= $decision !== null && (int) $decision === 0 ? 'checked' : '' ?>> لا تضاف</label>
                 </div>
               </div>
             <?php endforeach; ?>

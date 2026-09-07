@@ -440,11 +440,12 @@ class PdfController extends BaseController
         $points    = $meeting ? (new MeetingSummaryPointModel())->forMeeting($meeting['id']) : [];
         $approvals = $meeting ? (new MeetingApprovalModel())->forMeeting($meeting['id']) : [];
 
-        // add_to_report = 0 صراحة يستثني الملاحظة من المستند المصدَّر -- أي
-        // قيمة ثانية (فارغة/1) تبقى مضمَّنة افتراضيًا (نفس منطق AuditNoteModel)
+        // تُضمَّن الملاحظة بالمستند المصدَّر فقط لو رئيس إدارة المراجعة الداخلية
+        // اختار "تضاف" صراحة (add_to_report = 1) بصفحة الملاحظات -- الحالة
+        // الافتراضية (فارغة، لم يُقرَّر بعد) تُستثنى، مو تُضمَّن تلقائيًا
         $observations = array_values(array_filter(
             (new AuditNoteModel())->forMission($missionId),
-            fn ($o) => (int) ($o['add_to_report'] ?? 1) !== 0
+            fn ($o) => (int) ($o['add_to_report'] ?? 0) === 1
         ));
 
         $html = view('pdf/final-report', [

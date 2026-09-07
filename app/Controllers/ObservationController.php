@@ -77,14 +77,15 @@ class ObservationController extends BaseController
             // التقرير (بطلب مباشر: يقدر يحدد اختياره بأي وقت قبل وصول التقرير له)
             $showInclusionCard = $isAuditHead && !empty($items);
 
-            // قسم "بعد اعتماد الرئيس" -- يظهر فقط لو رئيس إدارة المراجعة الداخلية
+            // قسم "الملاحظات المعتمدة" -- يظهر فقط لو رئيس إدارة المراجعة الداخلية
             // اعتمد التقرير النهائي لهذي المهمة فعليًا (reports.head_approved_at)،
-            // وفقط للملاحظات المضمَّنة فعليًا بالتقرير (add_to_report != 0). لا يظهر
-            // للرئيس نفسه -- هو يشوف بطاقة "تضاف/لا تضاف" فقط بدل هذا القسم
+            // وفقط للملاحظات اللي اختار لها "تضاف" صراحة (add_to_report = 1) --
+            // الحالة الافتراضية (لم يُقرَّر) تُستثنى، مو تظهر تلقائيًا. لا يظهر
+            // القسم للرئيس نفسه -- هو يشوف بطاقة "تضاف/لا تضاف" فقط بدلًا منه
             if (!$isAuditHead) {
                 $reportApproved = (bool) ($report['head_approved_at'] ?? null);
                 if ($reportApproved) {
-                    $approvedItems = array_values(array_filter($items, fn($i) => (int) ($i['add_to_report'] ?? 1) !== 0));
+                    $approvedItems = array_values(array_filter($items, fn($i) => (int) ($i['add_to_report'] ?? 0) === 1));
                 }
             }
         }
