@@ -70,7 +70,7 @@ abstract class BaseController extends Controller
     /**
      * يفلتر عناصر القائمة حسب الدور — نفس منطق MAIN_NAV.filter() بالواجهة الأصلية بالضبط
      */
-    protected function navItemsForRole(bool $isPresident, bool $isHrDept, bool $isAuditHead): array
+    protected function navItemsForRole(bool $isPresident, bool $isHrDept, bool $isAuditHead, bool $isAuditMember = false): array
     {
         $all  = $this->allNavItems();
         $keys = array_keys($all);
@@ -81,6 +81,10 @@ abstract class BaseController extends Controller
             $keys = ['home', 'missionPlanning', 'documentRequests', 'meetingSchedule', 'meetingSummary', 'sentTasks', 'finalReports', 'recommendations'];
         } elseif ($isAuditHead) {
             $keys = ['home', 'observations', 'finalReports', 'recommendations', 'addUser'];
+        } elseif ($isAuditMember) {
+            // صفحة "تخطيط المهمة" المستقلة أُزيلت من سايدباره -- تبقى فقط
+            // كخطوة 3 مضمَّنة داخل معالج "بدء مهمة" (بطلب مباشر)
+            $keys = array_values(array_diff($keys, ['missionPlanning']));
         }
 
         $result = [];
@@ -102,7 +106,8 @@ abstract class BaseController extends Controller
         return $this->navItemsForRole(
             $roleCode === 'top_management',
             in_array($roleCode, ['dept_coordinator', 'dept_manager', 'specialized_manager'], true),
-            $roleCode === 'audit_head'
+            $roleCode === 'audit_head',
+            $roleCode === 'audit_member'
         );
     }
 

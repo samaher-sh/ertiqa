@@ -357,41 +357,43 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
         </div>
 
         <div class="wiz-card">
-          <div class="wiz-card-body" style="display:flex;flex-direction:column;gap:16px;">
-            <div class="wiz-field">
-              <label class="wiz-label">نبذة عن المهمة</label>
-              <textarea name="mission_brief" rows="2" class="wiz-textarea plain" placeholder="عرض تقديم عن مشروع المراجعة والإدارة الخاضعة للمراجعة"><?= esc($v('mission_brief')) ?></textarea>
-            </div>
-            <div class="wiz-field" style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
-              <div>
-                <label class="wiz-label">عمليات المراجعة السابقة</label>
-                <textarea name="previous_audits" rows="3" class="wiz-textarea plain" placeholder="رقم التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea>
-              </div>
-              <div>
-                <label class="wiz-label">تاريخ إصدار التقرير</label>
-                <input name="previous_audit_report_date" type="date" class="wiz-input plain" value="<?= esc($v('previous_audit_report_date')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
-              </div>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">ملاحظات الجهات الرقابية</label>
-              <textarea name="regulatory_notes" rows="2" class="wiz-textarea plain" placeholder="نبذة عن الملاحظات حسب توفرها."><?= esc($v('regulatory_notes')) ?></textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">أهداف المراجعة</label>
-              <textarea name="audit_objectives" rows="4" class="wiz-textarea plain" placeholder="أهداف المراجعة&#10;الهدف الأول: &#10;الهدف الثاني: &#10;..."><?= esc($v('audit_objectives')) ?></textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">نطاق المراجعة</label>
-              <textarea name="scope_included" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع يتضمن التالي: &#10;.......&#10;......."><?= esc($v('scope_included')) ?></textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">النطاق المستثنى من المراجعة</label>
-              <textarea name="scope_excluded" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع لن يشمل التالي: &#10;...&#10;..."><?= esc($v('scope_excluded')) ?></textarea>
-            </div>
-            <div class="wiz-field">
-              <label class="wiz-label">الإجراءات الفرعية المشمولة بالمراجعة</label>
-              <textarea name="sub_procedures" rows="2" class="wiz-textarea plain" placeholder="...&#10;..."><?= esc($v('sub_procedures')) ?></textarea>
-            </div>
+          <div class="wiz-table-wrap">
+            <table class="wiz-table wiz-table-fields">
+              <tbody>
+                <tr>
+                  <td class="wiz-table-row-label">نبذة عن المهمة</td>
+                  <td><textarea name="mission_brief" rows="2" class="wiz-textarea plain" placeholder="عرض تقديم عن مشروع المراجعة والإدارة الخاضعة للمراجعة"><?= esc($v('mission_brief')) ?></textarea></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">عمليات المراجعة السابقة</td>
+                  <td><textarea name="previous_audits" rows="3" class="wiz-textarea plain" placeholder="رقم التقرير&#10;نبذة عن الملاحظات"><?= esc($v('previous_audits')) ?></textarea></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">تاريخ إصدار التقرير</td>
+                  <td><input name="previous_audit_report_date" type="date" class="wiz-input plain" value="<?= esc($v('previous_audit_report_date')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">ملاحظات الجهات الرقابية</td>
+                  <td><textarea name="regulatory_notes" rows="2" class="wiz-textarea plain" placeholder="نبذة عن الملاحظات حسب توفرها."><?= esc($v('regulatory_notes')) ?></textarea></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">أهداف المراجعة</td>
+                  <td><textarea name="audit_objectives" rows="4" class="wiz-textarea plain" placeholder="أهداف المراجعة&#10;الهدف الأول: &#10;الهدف الثاني: &#10;..."><?= esc($v('audit_objectives')) ?></textarea></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">نطاق المراجعة</td>
+                  <td><textarea name="scope_included" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع يتضمن التالي: &#10;.......&#10;......."><?= esc($v('scope_included')) ?></textarea></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">النطاق المستثنى من المراجعة</td>
+                  <td><textarea name="scope_excluded" rows="3" class="wiz-textarea plain" placeholder="نطاق المشروع لن يشمل التالي: &#10;...&#10;..."><?= esc($v('scope_excluded')) ?></textarea></td>
+                </tr>
+                <tr>
+                  <td class="wiz-table-row-label">الإجراءات الفرعية المشمولة بالمراجعة</td>
+                  <td><textarea name="sub_procedures" rows="2" class="wiz-textarea plain" placeholder="...&#10;..."><?= esc($v('sub_procedures')) ?></textarea></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -427,18 +429,22 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
         <div class="wiz-card">
           <div class="wiz-card-head"><i data-lucide="check-check"></i><span style="color:#fff;font-weight:700;font-size:14px;">الاعتماد</span></div>
           <div class="wiz-card-body" style="display:flex;flex-direction:column;gap:16px;">
-            <p class="wiz-p" style="margin:0;">تم الاجتماع الداخلي فريق العمل بتاريخ (..................) كأحد مخرجات مرحلة التخطيط للمهمة، وبناء عليه تم الاتفاق على ما تم ذكره أعلاه.</p>
+            <p class="wiz-p" style="margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span>تم الاجتماع الداخلي فريق العمل بتاريخ</span>
+              <input type="date" name="team_meeting_date" class="wiz-input plain" style="width:170px;display:inline-block;" value="<?= esc($v('team_meeting_date')) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}">
+              <span>كأحد مخرجات مرحلة التخطيط للمهمة، وبناء عليه تم الاتفاق على ما تم ذكره أعلاه.</span>
+            </p>
             <div class="wiz-table-wrap">
-              <table class="wiz-table">
-                <thead><tr><th style="width:160px;"></th><th>المسمى الوظيفي</th><th>الاسم</th></tr></thead>
+              <table class="wiz-table wiz-table-spacious">
+                <thead><tr><th style="width:160px;">الإجراء</th><th>المسمى الوظيفي</th><th>الاسم</th></tr></thead>
                 <tbody>
                   <tr>
-                    <td>الاعداد</td>
+                    <td class="wiz-table-row-label">الاعداد</td>
                     <td><input type="text" name="prepared_by_title" class="wiz-input plain" value="<?= esc($v('prepared_by_title')) ?>"></td>
                     <td><input type="text" name="prepared_by_name" data-mask="letters" class="wiz-input plain" value="<?= esc($v('prepared_by_name')) ?>"></td>
                   </tr>
                   <tr>
-                    <td>الاعتماد</td>
+                    <td class="wiz-table-row-label">الاعتماد</td>
                     <td><input type="text" name="approved_by_title" class="wiz-input plain" value="<?= esc($v('approved_by_title')) ?>"></td>
                     <td><input type="text" name="approved_by_name" data-mask="letters" class="wiz-input plain" value="<?= esc($v('approved_by_name')) ?>"></td>
                   </tr>

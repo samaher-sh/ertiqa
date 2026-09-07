@@ -16,7 +16,7 @@ class MissionPlanningModel extends Model
         'target_dept_manager_name', 'participating_reviewers', 'mission_brief', 'previous_audits',
         'previous_audit_report_date', 'regulatory_notes', 'audit_objectives', 'scope_included',
         'scope_excluded', 'sub_procedures', 'prepared_by_name', 'prepared_by_title',
-        'approved_by_name', 'approved_by_title',
+        'approved_by_name', 'approved_by_title', 'team_meeting_date',
     ];
 
     public function forMission(int $missionId): ?array
