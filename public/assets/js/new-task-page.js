@@ -177,14 +177,18 @@ function bindChannelToggles() {
   });
 }
 
-/* ---------- 4) اعتماد "المراجع الرئيسي" بضغطة واحدة (بدون توقيع يدوي) ---------- */
+/* ---------- 4) اعتماد "المراجع الرئيسي" بضغطة زر واحدة (بدون توقيع يدوي) ---------- */
 function bindSignatureApproveCheckbox() {
-  const checkbox = document.getElementById("p2SigApproveCheckbox");
+  const btn = document.getElementById("p2SigApproveBtn");
   const hiddenInput = document.getElementById("p2SigSignature");
-  if (!checkbox || !hiddenInput) return;
+  if (!btn || !hiddenInput) return;
 
-  checkbox.addEventListener("change", () => {
-    hiddenInput.value = checkbox.checked ? "1" : "";
+  btn.addEventListener("click", () => {
+    const approved = !btn.classList.contains("approved");
+    btn.classList.toggle("approved", approved);
+    hiddenInput.value = approved ? "1" : "";
+    const span = btn.querySelector("span");
+    if (span) span.textContent = approved ? "تم الاعتماد" : "أعتمد اتفاقية مستوى الخدمة";
   });
 }
 

@@ -173,6 +173,75 @@ class DocumentRequestController extends BaseController
         return redirect()->to(base_url('dashboard/document-requests?mission_id=' . $missionId))->with('success', 'تمت إضافة المستند بنجاح.');
     }
 
+    /** يتحقق إن المستخدم الحالي من فريق المراجعة المسؤول عن المهمة (نفس شرط add())،
+     *  ويرجّع صف طلب المستند نفسه لو صحيح، وإلا null */
+    private function ownedRequestForCurrentUser(int $requestId): ?array
+    {
+        $requestModel = new DocumentRequestModel();
+        $docRequest = $requestModel->find($requestId);
+        if (!$docRequest) {
+            return null;
+        }
+
+        $userId = (int) session()->get('user_id');
+        $allowedIds = array_map('intval', array_column((new MissionModel())->activeMissionsForUser($userId), 'id'));
+        if (!in_array((int) $docRequest['mission_id'], $allowedIds, true)) {
+            return null;
+        }
+
+        return $docRequest;
+    }
+
+    /**
+     * POST /dashboard/document-requests/api/rename/{id} — تعديل اسم مستند مطلوب
+     * (فريق المراجعة فقط، مثل add())
+     */
+    public function rename(int $id)
+    {
+        $isJson = $this->isJsonRequest();
+        $docRequest = $this->ownedRequestForCurrentUser($id);
+        if (!$docRequest) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية تعديل هذا المستند.']);
+        }
+
+        $data = $isJson ? ($this->request->getJSON(true) ?? []) : $this->request->getPost();
+        $docName = trim((string) ($data['doc_name'] ?? ''));
+        if ($docName === '') {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'يرجى إدخال اسم المستند.']);
+        }
+
+        (new DocumentRequestModel())->update($id, ['doc_name' => $docName]);
+        (new AuditLogModel())->log((int) $docRequest['mission_id'], (int) session()->get('user_id'), 'document_request_renamed', 'document_request', $id, $docName);
+
+        return $this->response->setJSON(['success' => true, 'doc_name' => $docName]);
+    }
+
+    /**
+     * POST /dashboard/document-requests/api/delete/{id} — حذف طلب مستند بالكامل
+     * (فريق المراجعة فقط، مثل add()) -- يحذف رد الإدارة المرتبط (CASCADE بقاعدة
+     * البيانات) وأي ملفات مرفوعة له (لا يوجد FK عليها لأن related_id عمود متعدد
+     * الأغراض، فتُحذف يدويًا هنا مع الملف الفعلي على القرص)
+     */
+    public function delete(int $id)
+    {
+        $docRequest = $this->ownedRequestForCurrentUser($id);
+        if (!$docRequest) {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'ليس لديك صلاحية حذف هذا المستند.']);
+        }
+
+        $docModel = new DocumentModel();
+        foreach ($docModel->forRelated('document_request', $id) as $file) {
+            $fullPath = WRITEPATH . 'uploads/' . $file['file_path'];
+            if (is_file($fullPath)) unlink($fullPath);
+            $docModel->delete($file['id']);
+        }
+
+        (new DocumentRequestModel())->delete($id);
+        (new AuditLogModel())->log((int) $docRequest['mission_id'], (int) session()->get('user_id'), 'document_request_deleted', 'document_request', $id, $docRequest['doc_name']);
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
     /**
      * POST /dashboard/document-requests/api/submit — إرسال كل ردود المستندات دفعة وحدة
      * (multipart/form-data: responses[i][document_request_id], responses[i][exists_flag],
