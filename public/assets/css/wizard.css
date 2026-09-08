@@ -253,7 +253,7 @@ table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #
 .wiz-doc-row-del-btn{ display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:8px; border:1px solid #fecaca; background:#fff; color:#ef4444; flex-shrink:0; cursor:pointer; }
 .wiz-doc-row-del-btn:hover{ background:#fef2f2; }
 .wiz-doc-row-del-btn i, .wiz-doc-row-del-btn svg{ width:13px; height:13px; }
-.wiz-doc-cancel-btn{ padding:8px; border-radius:8px; color:#ef4444; background:#fff; border:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
+.wiz-doc-cancel-btn{ padding:8px; border-radius:8px; color:#ef4444; background:#fff; border:1px solid #fecaca; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
 .wiz-doc-cancel-btn:hover{ background:#fef2f2; }
 .wiz-doc-cancel-btn i, .wiz-doc-cancel-btn svg{ width:16px; height:16px; }
 .wiz-locked-cell{ position:relative; }
