@@ -48,6 +48,8 @@ $routes->group('dashboard', ['filter' => 'auth'], function ($routes) {
     $routes->get('document-requests',            'DocumentRequestController::index');
     $routes->get('document-requests/api/list',   'DocumentRequestController::list');
     $routes->post('document-requests/api/add',    'DocumentRequestController::add');
+    $routes->post('document-requests/api/rename/(:num)', 'DocumentRequestController::rename/$1');
+    $routes->post('document-requests/api/delete/(:num)', 'DocumentRequestController::delete/$1');
     $routes->post('document-requests/api/submit', 'DocumentRequestController::submit');
     $routes->get('target-mission',                    'MissionReviewController::index');
     $routes->get('target-mission/api/data',          'MissionReviewController::data');

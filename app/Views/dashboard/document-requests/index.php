@@ -39,6 +39,7 @@ $locked = !$selectedMissionId;
             <div style="display:flex;gap:8px;">
               <input type="text" name="doc_name" class="wiz-doc-name-input" placeholder="أدخل اسم المستند الجديد..." style="flex:1;">
               <button type="submit" class="wiz-doc-confirm-btn" title="حفظ"><i data-lucide="check"></i></button>
+              <button type="button" class="wiz-doc-cancel-btn" id="drAddCancelBtn" title="إلغاء"><i data-lucide="x"></i></button>
             </div>
           </form>
         </details>
@@ -68,7 +69,14 @@ $locked = !$selectedMissionId;
                 <?php $hasResponse = $r['exists_flag'] !== null; ?>
                 <tr>
                   <td style="text-align:center;"><span class="wiz-doc-row-num"><?= $i + 1 ?></span></td>
-                  <td><input type="text" class="wiz-doc-name-input" value="<?= esc($r['doc_name']) ?>" readonly></td>
+                  <td>
+                    <div class="wiz-doc-name-cell">
+                      <input type="text" class="wiz-doc-name-input" value="<?= esc($r['doc_name']) ?>" data-request-id="<?= (int) $r['id'] ?>" <?= $canAdd ? '' : 'readonly' ?>>
+                      <?php if ($canAdd): ?>
+                        <button type="button" class="wiz-doc-row-del-btn" data-request-id="<?= (int) $r['id'] ?>" title="حذف المستند"><i data-lucide="trash-2"></i></button>
+                      <?php endif; ?>
+                    </div>
+                  </td>
                   <td style="text-align:center;">
                     <?php if ($canSubmit): ?>
                       <input type="hidden" name="responses[<?= $i ?>][document_request_id]" value="<?= (int) $r['id'] ?>">

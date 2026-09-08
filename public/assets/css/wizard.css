@@ -151,6 +151,15 @@ table.wiz-table th{ padding:12px 20px; text-align:right; font-weight:700; font-s
 table.wiz-table th.center{ text-align:center; width:110px; }
 table.wiz-table td{ border-left:1px solid #dde7ea; border-bottom:1px solid #eef3f5; }
 
+/* توحيد شكل جداول خطوة "تخطيط المهمة" الثلاثة (البند/التفاصيل، النقاط
+   الهامة، الاعتماد): نفس تخطيط صفوف متبادلة الألوان + حقول بلا حدود ظاهرة
+   إلا وقت التركيز على الثلاثة، بدل كل جدول شكل مختلف عن الثاني */
+table.wiz-table-zebra td{ padding:10px 18px; vertical-align:middle; border-bottom:1px solid #eef3f5; }
+table.wiz-table-zebra tr:nth-child(even) td{ background:#fafcfd; }
+table.wiz-table-zebra tr:nth-child(even) td.wiz-table-row-label{ background:#f3f8fb; }
+table.wiz-table-zebra td .wiz-input, table.wiz-table-zebra td .wiz-textarea{ width:100%; background:transparent; border-color:transparent; padding:6px 4px; }
+table.wiz-table-zebra td .wiz-input:focus, table.wiz-table-zebra td .wiz-textarea:focus{ background:#fff; border-color:var(--p); box-shadow:none; }
+
 /* نسخة موسَّعة من wiz-table -- مسافات أكبر بين الخلايا (بطلب مباشر لجدول
    "الاعتماد" بخطوة تخطيط المهمة)، بدون التأثير على جداول wiz-table الثانية */
 table.wiz-table-spacious th{ padding:16px 22px; }
@@ -158,16 +167,9 @@ table.wiz-table-spacious td{ padding:16px 22px; vertical-align:middle; }
 table.wiz-table-spacious td.wiz-table-row-label{ font-weight:700; color:var(--pd); background:#f8fbfd; text-align:center; }
 
 /* جدول "البند / التفاصيل" (نبذة عن المهمة ← الإجراءات الفرعية المشمولة
-   بالمراجعة) -- عمود أول ثابت العرض للتسميات، الثاني يمتد لباقي حقول النموذج.
-   شكل جدول حقيقي (تخطيط صفوف متبادل الألوان + حقول بلا حدود ظاهرة إلا وقت
-   التركيز) بدل قائمة بطاقات نصية كبيرة، عشان يبين كجدول مضغوط لا كنموذج */
+   بالمراجعة) -- عمود أول ثابت العرض للتسميات، الثاني يمتد لباقي حقول النموذج */
 table.wiz-table-fields{ table-layout:fixed; }
-table.wiz-table-fields td{ padding:10px 18px; vertical-align:middle; border-bottom:1px solid #eef3f5; }
-table.wiz-table-fields tr:nth-child(even) td{ background:#fafcfd; }
-table.wiz-table-fields tr:nth-child(even) td.wiz-table-row-label{ background:#f3f8fb; }
 table.wiz-table-fields td.wiz-table-row-label{ width:220px; font-weight:700; font-size:12px; color:var(--pd); background:#f8fbfd; border-left:1px solid #dde7ea; }
-table.wiz-table-fields td .wiz-input, table.wiz-table-fields td .wiz-textarea{ width:100%; background:transparent; border-color:transparent; padding:6px 4px; }
-table.wiz-table-fields td .wiz-input:focus, table.wiz-table-fields td .wiz-textarea:focus{ background:#fff; border-color:var(--p); box-shadow:none; }
 table.wiz-table-fields td .wiz-textarea{ min-height:32px; }
 .wiz-sla-section-row td{ padding:12px 20px; font-weight:800; font-size:11px; background:var(--pl); color:var(--pd); border-bottom:1px solid var(--pb); border-right:3px solid var(--p); letter-spacing:.01em; }
 .wiz-sla-section-row .num{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:6px; background:var(--p); color:#fff; font-size:10px; font-weight:800; margin-left:8px; }
@@ -212,8 +214,19 @@ table.wiz-table-fields td .wiz-textarea{ min-height:32px; }
 .wiz-sig-pad-clear:hover{ background:#fef2f2; }
 .wiz-sig-pad-clear i, .wiz-sig-pad-clear svg{ width:13px; height:13px; }
 
-.wiz-sig-approve-check{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--p); cursor:pointer; }
-.wiz-sig-approve-check input{ width:18px; height:18px; accent-color:var(--p); cursor:pointer; }
+/* زر اعتماد موحّد -- يُستخدم لكلا طرفي التوقيع (المراجع الرئيسي وممثل
+   الإدارة) بنفس الشكل: زر عادي يتحول لأخضر عند الاعتماد، بدل توقيع يدوي.
+   الحالة .locked خاصة بطرف لسا ما اعتمد ولا يُملأ من هذي الشاشة */
+.wiz-approve-btn{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:44px;
+  border-radius:10px; border:1.5px solid var(--pb); background:#fff; color:var(--p);
+  font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .15s;
+}
+.wiz-approve-btn:hover{ background:var(--pl); }
+.wiz-approve-btn i, .wiz-approve-btn svg{ width:16px; height:16px; }
+.wiz-approve-btn.approved{ background:#16a34a; border-color:#16a34a; color:#fff; }
+.wiz-approve-btn.approved:hover{ background:#15803d; }
+.wiz-approve-btn.locked{ background:#f3f4f6; border-color:#e2e8f0; color:#9ca3af; cursor:not-allowed; }
 
 .wiz-disclosure{ margin:0 20px 20px; padding:16px 18px; border-radius:12px; background:var(--pl); border:1px solid var(--pb); }
 .wiz-disclosure-title{ font-size:13px; font-weight:800; color:var(--pd); margin:0 0 8px; }
@@ -228,10 +241,21 @@ table.wiz-doc-table{ width:100%; font-size:13px; border-collapse:collapse; min-w
 table.wiz-doc-table thead tr{ background:#ebf6f9; }
 table.wiz-doc-table th{ padding:14px 16px; font-weight:700; font-size:11px; color:var(--pd); border-bottom:1.5px solid var(--pb); border-left:1px solid #d8e6eb; }
 table.wiz-doc-table th.locked{ color:#b0c4c0; background:#f8fafb; text-align:center; }
-table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #e9f2f5; padding:10px; }
+table.wiz-doc-table tbody tr:nth-child(even){ background:#fafcfd; }
+table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #e9f2f5; padding:10px; vertical-align:middle; }
 .wiz-doc-row-num{ width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; background:var(--pl); color:var(--p); margin:0 auto; }
+.wiz-doc-name-cell{ display:flex; align-items:center; gap:8px; }
 .wiz-doc-name-input{ width:100%; padding:8px 12px; border-radius:12px; font-size:15px; border:1px solid var(--pb); background:var(--pl); font-family:inherit; color:#152c33; outline:none; }
 .wiz-doc-name-input.err{ border-color:#fca5a5; background:#fff5f5; }
+.wiz-doc-name-input[readonly]{ background:#f8fbfd; border-color:#e2e8f0; color:#374151; cursor:default; }
+.wiz-doc-name-input:not([readonly]){ cursor:text; }
+.wiz-doc-name-input:not([readonly]):hover, .wiz-doc-name-input:not([readonly]):focus{ border-color:var(--p); background:#fff; }
+.wiz-doc-row-del-btn{ display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:8px; border:1px solid #fecaca; background:#fff; color:#ef4444; flex-shrink:0; cursor:pointer; }
+.wiz-doc-row-del-btn:hover{ background:#fef2f2; }
+.wiz-doc-row-del-btn i, .wiz-doc-row-del-btn svg{ width:13px; height:13px; }
+.wiz-doc-cancel-btn{ padding:8px; border-radius:8px; color:#9ca3af; background:#fff; border:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
+.wiz-doc-cancel-btn:hover{ background:#f3f4f6; color:#ef4444; }
+.wiz-doc-cancel-btn i, .wiz-doc-cancel-btn svg{ width:16px; height:16px; }
 .wiz-locked-cell{ position:relative; }
 .wiz-locked-cell .inner{ opacity:.3; pointer-events:none; }
 .wiz-locked-cell .overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:12px; background:rgba(241,245,249,.85); }.wiz-locked-cell .overlay i, .wiz-locked-cell .overlay svg{ width:13px; height:13px; color:#9ca3af; }
@@ -239,7 +263,7 @@ table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #
 .wiz-upload-pill{ display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:12px; font-size:11px; font-weight:700; background:var(--pl); color:var(--p); border:1px solid var(--pb); max-width:100%; }
 .wiz-upload-pill i{ width:12px; height:12px; flex-shrink:0; }
 .wiz-upload-pill span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.wiz-upload-pill.has-file{ background:#eafff0; color:#15803d; border-color:#86efac; }
+.wiz-upload-pill.has-file{ background:var(--pl); color:var(--p); border-color:var(--pb); }
 .wiz-doc-note-input{ width:100%; padding:8px 12px; border-radius:12px; font-size:13px; border:1.5px solid #e2e8f0; background:#f8fafc; font-family:inherit; outline:none; }
 .wiz-doc-empty{ padding:56px 0; text-align:center; color:#9ca3af; font-size:13px; }.wiz-doc-empty i, .wiz-doc-empty svg{ width:34px; height:34px; color:var(--pb); margin-bottom:10px; }
 .wiz-doc-del-btn{ padding:8px; border-radius:8px; color:#fca5a5; background:none; border:none; }

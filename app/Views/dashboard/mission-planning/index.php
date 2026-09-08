@@ -84,7 +84,7 @@ foreach (($milestones ?: []) as $i => $m) {
 
       <div class="wiz-card">
         <div class="wiz-table-wrap">
-          <table class="wiz-table wiz-table-fields">
+          <table class="wiz-table wiz-table-fields wiz-table-zebra">
             <thead><tr><th style="width:220px;">البند</th><th>التفاصيل</th></tr></thead>
             <tbody>
               <tr>
@@ -127,7 +127,7 @@ foreach (($milestones ?: []) as $i => $m) {
       <div class="wiz-card">
         <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">النقاط الهامة في المراجعة</span></div>
         <div class="wiz-table-wrap">
-          <table class="wiz-table">
+          <table class="wiz-table wiz-table-zebra">
             <thead><tr>
               <th style="width:40px;">#</th><th>تخطيط المهمة</th><th style="width:150px;">التاريخ</th><th style="width:150px;">عدد الأيام المطلوبة</th><th>ملاحظة</th>
             </tr></thead>
@@ -162,7 +162,7 @@ foreach (($milestones ?: []) as $i => $m) {
             <span>كأحد مخرجات مرحلة التخطيط للمهمة، وبناء عليه تم الاتفاق على ما تم ذكره أعلاه.</span>
           </p>
           <div class="wiz-table-wrap">
-            <table class="wiz-table wiz-table-spacious">
+            <table class="wiz-table wiz-table-spacious wiz-table-zebra">
               <thead><tr><th style="width:160px;">الإجراء</th><th>المسمى الوظيفي</th><th>الاسم</th></tr></thead>
               <tbody>
                 <tr>

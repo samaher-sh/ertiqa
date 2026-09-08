@@ -290,10 +290,10 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
               </div>
               <div>
                 <p class="wiz-sig-mini-label">الاعتماد</p>
-                <label class="wiz-sig-approve-check">
-                  <input type="checkbox" id="p2SigApproveCheckbox" <?= $v('sig_signature') ? 'checked' : '' ?>>
-                  <span>أعتمد اتفاقية مستوى الخدمة</span>
-                </label>
+                <button type="button" id="p2SigApproveBtn" class="wiz-approve-btn<?= $v('sig_signature') ? ' approved' : '' ?>">
+                  <i data-lucide="check-circle-2"></i>
+                  <span><?= $v('sig_signature') ? 'تم الاعتماد' : 'أعتمد اتفاقية مستوى الخدمة' ?></span>
+                </button>
                 <input type="hidden" id="p2SigSignature" value="<?= esc($v('sig_signature')) ?>">
               </div>
             </div>
@@ -304,7 +304,13 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
               </div>
               <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span class="bar"></span></div></div>
               <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-blank-box solid"></div></div>
-              <div><p class="wiz-sig-mini-label">التوقيع</p><div class="wiz-sig-pad-card locked-pad"></div></div>
+              <div>
+                <p class="wiz-sig-mini-label">الاعتماد</p>
+                <button type="button" class="wiz-approve-btn locked" disabled>
+                  <i data-lucide="clock"></i>
+                  <span>بانتظار اعتماد الإدارة</span>
+                </button>
+              </div>
             </div>
           </div>
           <div class="wiz-disclosure">
@@ -323,7 +329,7 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
           <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div class="wiz-field">
               <label class="wiz-label">رقم المهمة</label>
-              <input name="mission_number" type="text" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="اتركه فاضيًا لتوليد رقم تلقائي" value="<?= esc($v('mission_number')) ?>">
+              <input name="mission_number" type="text" dir="ltr" style="text-align:left;" class="wiz-input plain" value="<?= esc($v('mission_number')) ?>">
             </div>
             <div class="wiz-field">
               <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
@@ -358,7 +364,7 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
 
         <div class="wiz-card">
           <div class="wiz-table-wrap">
-            <table class="wiz-table wiz-table-fields">
+            <table class="wiz-table wiz-table-fields wiz-table-zebra">
               <thead><tr><th style="width:220px;">البند</th><th>التفاصيل</th></tr></thead>
               <tbody>
                 <tr>
@@ -401,7 +407,7 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
         <div class="wiz-card">
           <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">النقاط الهامة في المراجعة</span></div>
           <div class="wiz-table-wrap">
-            <table class="wiz-table">
+            <table class="wiz-table wiz-table-zebra">
               <thead><tr>
                 <th style="width:40px;">#</th><th>تخطيط المهمة</th><th style="width:150px;">التاريخ</th><th style="width:150px;">عدد الأيام المطلوبة</th><th>ملاحظة</th>
               </tr></thead>
@@ -436,7 +442,7 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
               <span>كأحد مخرجات مرحلة التخطيط للمهمة، وبناء عليه تم الاتفاق على ما تم ذكره أعلاه.</span>
             </p>
             <div class="wiz-table-wrap">
-              <table class="wiz-table wiz-table-spacious">
+              <table class="wiz-table wiz-table-spacious wiz-table-zebra">
                 <thead><tr><th style="width:160px;">الإجراء</th><th>المسمى الوظيفي</th><th>الاسم</th></tr></thead>
                 <tbody>
                   <tr>
