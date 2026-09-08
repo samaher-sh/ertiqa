@@ -329,7 +329,7 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
           <div class="wiz-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div class="wiz-field">
               <label class="wiz-label">رقم المهمة</label>
-              <input name="mission_number" type="text" dir="ltr" style="text-align:left;" class="wiz-input plain" value="<?= esc($v('mission_number')) ?>">
+              <div class="msum-auto-field plain"><span class="val" dir="ltr" style="unicode-bidi:embed;">سيُحدَّد تلقائيًا بعد الحفظ</span></div>
             </div>
             <div class="wiz-field">
               <label class="wiz-label">الإدارة الخاضعة للمراجعة</label>
