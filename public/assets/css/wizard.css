@@ -252,10 +252,10 @@ table.wiz-doc-table td{ border-left:1px solid #d8e6eb; border-bottom:1px solid #
 .wiz-doc-name-input:not([readonly]):hover, .wiz-doc-name-input:not([readonly]):focus{ border-color:var(--p); background:#fff; }
 .wiz-doc-row-del-btn{ display:flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:8px; border:1px solid #fecaca; background:#fff; color:#ef4444; flex-shrink:0; cursor:pointer; }
 .wiz-doc-row-del-btn:hover{ background:#fef2f2; }
-.wiz-doc-row-del-btn i, .wiz-doc-row-del-btn svg{ width:13px; height:13px; }
+.wiz-doc-row-del-btn i, .wiz-doc-row-del-btn svg{ width:13px; height:13px; color:#ef4444 !important; stroke:#ef4444 !important; }
 .wiz-doc-cancel-btn{ padding:8px; border-radius:8px; color:#ef4444; background:#fff; border:1px solid #fecaca; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; }
 .wiz-doc-cancel-btn:hover{ background:#fef2f2; }
-.wiz-doc-cancel-btn i, .wiz-doc-cancel-btn svg{ width:16px; height:16px; }
+.wiz-doc-cancel-btn i, .wiz-doc-cancel-btn svg{ width:16px; height:16px; color:#ef4444 !important; stroke:#ef4444 !important; }
 .wiz-locked-cell{ position:relative; }
 .wiz-locked-cell .inner{ opacity:.3; pointer-events:none; }
 .wiz-locked-cell .overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:12px; background:rgba(241,245,249,.85); }.wiz-locked-cell .overlay i, .wiz-locked-cell .overlay svg{ width:13px; height:13px; color:#9ca3af; }
