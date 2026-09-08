@@ -226,18 +226,27 @@ class MissionController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            // نسجّل تفاصيل الخطأ الفعلي بسجلات السيرفر (غير ظاهرة للمستخدم) --
+            // نسجّل تفاصيل الخطأ الفعلي بسجلات السيرفر (غير ظاهرة للمستخدم عادةً) --
             // بالإنتاج (DBDebug=false) فشل أي استعلام هنا ما يوقف التنفيذ ولا
             // يطلع رسالة تفصيلية، فبدون هذا التسجيل ما فيه طريقة لمعرفة السبب
             // الحقيقي (مثلًا عمود ناقص بجدول لم يُحدَّث بترحيل قاعدة بيانات جديد)
-            log_message('error', 'MissionController::store — فشل حفظ المهمة: ' . json_encode($db->error()));
+            $dbError = $db->error();
+            log_message('error', 'MissionController::store — فشل حفظ المهمة: ' . json_encode($dbError));
+
+            // ببيئة التطوير فقط، نظهر تفاصيل الخطأ الفعلية بالشاشة مباشرة (بدل
+            // البحث بملفات السجل) -- يسهّل تشخيص فروقات قاعدة البيانات بين
+            // بيئات الاختبار المختلفة أثناء العمل على المشروع
+            $detail = (ENVIRONMENT === 'development' && !empty($dbError['message']))
+                ? ' [تفاصيل تقنية: ' . $dbError['message'] . ']'
+                : '';
+
             if ($isJson) {
                 return $this->response->setStatusCode(500)->setJSON([
                     'success' => false,
-                    'message' => 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.',
+                    'message' => 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.' . $detail,
                 ]);
             }
-            return redirect()->back()->withInput()->with('error', 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.');
+            return redirect()->back()->withInput()->with('error', 'حدث خطأ أثناء حفظ المهمة. حاول مرة أخرى.' . $detail);
         }
 
         $missionModel->syncCurrentStage($missionId);
