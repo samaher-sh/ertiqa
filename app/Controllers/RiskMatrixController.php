@@ -85,6 +85,12 @@ class RiskMatrixController extends BaseController
         if ($rows === null && $missionId) {
             $this->assertMissionAccess($missionId);
             $rows = (new RiskMatrixItemModel())->forMission($missionId);
+
+            // زر "إضافة مخاطر" بصفحة القائمة يوجّه هنا مباشرة كأنها بدأت إضافة
+            // خطر فعليًا -- بدل ما تحتاج تضغط "إضافة خطر" يدويًا بعد فتح الصفحة
+            if ($this->request->getGet('add_new') === '1') {
+                $rows[] = ['risk' => '', 'risk_rating' => '', 'controls' => '', 'activity_type' => ''];
+            }
         }
 
         return view('dashboard/risk-matrix/edit', $this->pageViewData([

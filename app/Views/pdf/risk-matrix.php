@@ -14,6 +14,8 @@
     .rating-medium .badge { color: #a16207; font-weight: bold; }
     .rating-low { background: #f0fdf4; }
     .rating-low .badge { color: #15803d; font-weight: bold; }
+    .rating-opportunity { background: #eff6ff; }
+    .rating-opportunity .badge { color: #1d4ed8; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -24,9 +26,9 @@
             <tr>
                 <th style="width:30px;">الرقم</th>
                 <th>المخاطر</th>
-                <th style="width:70px;">التقييم</th>
+                <th style="width:90px;">مستوى الخطر</th>
                 <th>وصف الضوابط</th>
-                <th style="width:100px;">نوع النشاط</th>
+                <th style="width:120px;">تصنيف الملاحظة</th>
             </tr>
         </thead>
         <tbody>
@@ -35,7 +37,7 @@
             <?php else: ?>
                 <?php foreach ($items as $i => $it): ?>
                     <?php
-                        $cls = $it['risk_rating'] === 'عالي' ? 'rating-high' : ($it['risk_rating'] === 'متوسط' ? 'rating-medium' : ($it['risk_rating'] === 'منخفض' ? 'rating-low' : ''));
+                        $cls = $it['risk_rating'] === 'مرتفع' ? 'rating-high' : ($it['risk_rating'] === 'متوسط' ? 'rating-medium' : ($it['risk_rating'] === 'منخفض' ? 'rating-low' : ($it['risk_rating'] === 'فرصة تحسين' ? 'rating-opportunity' : '')));
                     ?>
                     <tr class="<?= $cls ?>">
                         <td><?= $i + 1 ?></td>

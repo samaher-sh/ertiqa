@@ -37,9 +37,9 @@ class RiskMatrixItemModel extends Model
             $insertRows[] = [
                 'mission_id'    => $missionId,
                 'risk'          => $r['risk'] ?? '',
-                'risk_rating'   => in_array($r['risk_rating'] ?? '', ['عالي', 'متوسط', 'منخفض'], true) ? $r['risk_rating'] : null,
+                'risk_rating'   => in_array($r['risk_rating'] ?? '', ['مرتفع', 'متوسط', 'منخفض', 'فرصة تحسين'], true) ? $r['risk_rating'] : null,
                 'controls'      => $r['controls'] ?? '',
-                'activity_type' => $r['activity_type'] ?? '',
+                'activity_type' => in_array($r['activity_type'] ?? '', ['تشغيلي', 'مالي', 'حوكمة', 'التزام وامتثال', 'تقني', 'جودة وسلامة'], true) ? $r['activity_type'] : null,
                 'sort_order'    => $i + 1,
             ];
         }

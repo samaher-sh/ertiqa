@@ -37,13 +37,13 @@ $backUrl = base_url('dashboard/risk-matrix') . ($selectedMissionId ? '?mission_i
 
           <div id="rmRowsWrap" style="display:flex;flex-direction:column;gap:16px;">
             <?php if (empty($rows)): ?>
-              <div class="obs-empty" id="rmEmptyState"><i data-lucide="shield-alert"></i><p class="main">لا توجد صفوف بعد</p><p class="hint">اضغطي "إضافة صف" لبدء تعبئة الجدول</p></div>
+              <div class="obs-empty" id="rmEmptyState"><i data-lucide="shield-alert"></i><p class="main">لا توجد مخاطر بعد</p><p class="hint">اضغطي "إضافة خطر" لبدء تعبئة الجدول</p></div>
             <?php endif; ?>
             <?php foreach ($rows as $i => $row): ?>
               <div class="rm-edit-row" data-rm-row>
                 <div class="rm-edit-row-head">
                   <span class="rm-edit-row-num">#<?= $i + 1 ?></span>
-                  <button type="submit" name="form_action" value="remove_row" formnovalidate class="obs-menu-item danger" style="width:auto;padding:4px 10px;" onclick="document.getElementById('rmRemoveIndex').value='<?= $i ?>'"><i data-lucide="trash-2"></i> حذف الصف</button>
+                  <button type="submit" name="form_action" value="remove_row" formnovalidate class="obs-menu-item danger" style="width:auto;padding:4px 10px;" onclick="document.getElementById('rmRemoveIndex').value='<?= $i ?>'"><i data-lucide="trash-2"></i> حذف الخطر</button>
                 </div>
                 <div class="wiz-field">
                   <label class="wiz-label">المخاطر <span class="wiz-req">*</span></label>
@@ -51,17 +51,22 @@ $backUrl = base_url('dashboard/risk-matrix') . ($selectedMissionId ? '?mission_i
                 </div>
                 <div class="obs-grid-2">
                   <div class="wiz-field">
-                    <label class="wiz-label">تقييم المخاطر</label>
+                    <label class="wiz-label">مستوى الخطر</label>
                     <select name="rows[<?= $i ?>][risk_rating]" class="wiz-select">
                       <option value="">— اختر —</option>
-                      <?php foreach (['عالي', 'متوسط', 'منخفض'] as $r): ?>
+                      <?php foreach (['مرتفع', 'متوسط', 'منخفض', 'فرصة تحسين'] as $r): ?>
                         <option value="<?= $r ?>" <?= ($row['risk_rating'] ?? '') === $r ? 'selected' : '' ?>><?= $r ?></option>
                       <?php endforeach; ?>
                     </select>
                   </div>
                   <div class="wiz-field">
-                    <label class="wiz-label">نوع النشاط</label>
-                    <input type="text" name="rows[<?= $i ?>][activity_type]" class="wiz-input plain" value="<?= esc($row['activity_type'] ?? '') ?>">
+                    <label class="wiz-label">تصنيف الملاحظة</label>
+                    <select name="rows[<?= $i ?>][activity_type]" class="wiz-select">
+                      <option value="">— اختر —</option>
+                      <?php foreach (['تشغيلي', 'مالي', 'حوكمة', 'التزام وامتثال', 'تقني', 'جودة وسلامة'] as $a): ?>
+                        <option value="<?= $a ?>" <?= ($row['activity_type'] ?? '') === $a ? 'selected' : '' ?>><?= $a ?></option>
+                      <?php endforeach; ?>
+                    </select>
                   </div>
                   <div class="wiz-field" style="grid-column:1/-1;">
                     <label class="wiz-label">وصف الضوابط</label>
@@ -77,7 +82,7 @@ $backUrl = base_url('dashboard/risk-matrix') . ($selectedMissionId ? '?mission_i
           <div class="obs-divider" style="margin-top:16px;"></div>
 
           <div style="display:flex;justify-content:space-between;gap:10px;margin-top:16px;">
-            <button type="submit" name="form_action" value="add_row" formnovalidate class="wiz-btn wiz-btn-outline" id="rmAddRowBtn"><i data-lucide="plus"></i> إضافة صف</button>
+            <button type="submit" name="form_action" value="add_row" formnovalidate class="wiz-btn wiz-btn-outline" id="rmAddRowBtn"><i data-lucide="plus"></i> إضافة خطر</button>
             <button type="submit" name="form_action" value="save" class="wiz-btn wiz-btn-primary"><i data-lucide="check"></i> حفظ مصفوفة المخاطر</button>
           </div>
         </form>
