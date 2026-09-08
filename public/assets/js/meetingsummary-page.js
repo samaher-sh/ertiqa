@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fieldPrefix: "points", rowNumSelector: ".msum-point-num",
     template: index => `
       <tr data-msum-point-row>
-        <td><textarea rows="2" name="points[${index}][text]" class="wiz-textarea plain" placeholder="النقطة ${index + 1}..."></textarea></td>
+        <td><textarea rows="2" name="points[${index}][text]" class="wiz-textarea plain" placeholder="الموضوع ${index + 1}..."></textarea></td>
         <td><textarea rows="2" class="wiz-textarea" style="border:1.5px solid var(--pb);background:#f0f8fd;" name="points[${index}][statement]" placeholder="اكتب الإفادة..."></textarea></td>
         <td style="text-align:center;"><button type="button" class="msum-del-btn" data-msum-del-point><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td>
       </tr>`,

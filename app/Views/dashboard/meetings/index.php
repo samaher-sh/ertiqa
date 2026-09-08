@@ -109,14 +109,14 @@ $deptName = $mission['target_department_name'] ?? '';
         <div class="wiz-card-head" style="justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:8px;">
             <i data-lucide="message-square"></i><span style="color:#fff;font-weight:700;font-size:14px;">ملخص ما تم مناقشته خلال الاجتماع</span>
-            <?php if ($isHrUser && empty($embed)): ?><span class="msum-auto-chip" style="background:rgba(255,255,255,.2);color:#fff;border:none;"><i data-lucide="lock"></i>النقاط تلقائية</span><?php endif; ?>
+            <?php if ($isHrUser && empty($embed)): ?><span class="msum-auto-chip" style="background:rgba(255,255,255,.2);color:#fff;border:none;"><i data-lucide="lock"></i>المواضيع تلقائية</span><?php endif; ?>
           </div>
-          <?php if ($canAddRemovePoints): ?><button type="submit" name="form_action" value="add_point" formnovalidate class="msum-attach-btn" id="msumAddPointBtn" style="padding:6px 12px;font-size:12px;box-shadow:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);"><i data-lucide="plus" style="width:14px;height:14px;"></i> إضافة نقطة</button><?php endif; ?>
+          <?php if ($canAddRemovePoints): ?><button type="submit" name="form_action" value="add_point" formnovalidate class="msum-attach-btn" id="msumAddPointBtn" style="padding:6px 12px;font-size:12px;box-shadow:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);"><i data-lucide="plus" style="width:14px;height:14px;"></i> إضافة موضوع</button><?php endif; ?>
         </div>
         <div class="msum-table-wrap">
           <table class="msum-table">
             <thead><tr>
-              <th style="width:50%;">النقطة</th><th style="width:50%;">الإفادة</th>
+              <th style="width:50%;">الموضوع</th><th style="width:50%;">الإفادة</th>
               <?php if ($canAddRemovePoints): ?><th style="width:40px;"></th><?php endif; ?>
             </tr></thead>
             <tbody id="msumPointsBody">
@@ -128,7 +128,7 @@ $deptName = $mission['target_department_name'] ?? '';
                       <div class="msum-point-hr-box"><span class="msum-point-num"><?= $i + 1 ?></span><span><?= esc($text) ?></span></div>
                       <input type="hidden" name="points[<?= $i ?>][text]" value="<?= esc($text) ?>">
                     <?php else: ?>
-                      <textarea rows="2" name="points[<?= $i ?>][text]" class="wiz-textarea plain" placeholder="النقطة <?= $i + 1 ?>..." <?= $canEditPointText ? '' : 'readonly' ?>><?= esc($text) ?></textarea>
+                      <textarea rows="2" name="points[<?= $i ?>][text]" class="wiz-textarea plain" placeholder="الموضوع <?= $i + 1 ?>..." <?= $canEditPointText ? '' : 'readonly' ?>><?= esc($text) ?></textarea>
                     <?php endif; ?>
                   </td>
                   <td>
@@ -142,11 +142,11 @@ $deptName = $mission['target_department_name'] ?? '';
                   <?php if ($canAddRemovePoints): ?><td style="text-align:center;"><button type="submit" name="form_action" value="remove_point" formnovalidate class="msum-del-btn" data-msum-del-point onclick="document.getElementById('msumRemoveIndex').value='<?= $i ?>'"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button></td><?php endif; ?>
                 </tr>
               <?php endforeach; ?>
-              <?php if (empty($points)): ?><tr><td colspan="3" class="msum-empty-points">لا توجد نقاط. اضغط "إضافة نقطة" للبدء.</td></tr><?php endif; ?>
+              <?php if (empty($points)): ?><tr><td colspan="3" class="msum-empty-points">لا توجد مواضيع. اضغط "إضافة موضوع" للبدء.</td></tr><?php endif; ?>
             </tbody>
           </table>
         </div>
-        <?php $mtgHrOpinion = $meeting['hr_opinion'] ?? ''; $mtgHrReason = $meeting['hr_reason'] ?? ''; ?>
+        <?php $mtgHrOpinion = $meeting['hr_opinion'] ?? ''; ?>
         <div class="msum-point-response msum-overall-response">
           <label>الرأي</label>
           <?php if ($canEditHrResponse): ?>
@@ -158,13 +158,6 @@ $deptName = $mission['target_department_name'] ?? '';
           <?php else: ?>
             <div class="msum-opinion-readonly <?= $mtgHrOpinion ? 'has' : 'empty' ?>"><?= esc($hrOpinionLabels[$mtgHrOpinion] ?? '—') ?></div>
             <input type="hidden" name="hr_opinion" value="<?= esc($mtgHrOpinion) ?>">
-          <?php endif; ?>
-          <label>السبب</label>
-          <?php if ($canEditHrResponse): ?>
-            <input type="text" name="hr_reason" class="msum-plain-input" placeholder="اكتب السبب..." value="<?= esc($mtgHrReason) ?>">
-          <?php else: ?>
-            <div class="msum-opinion-readonly empty" style="color:<?= $mtgHrReason ? '#152c33' : '#9ca3af' ?>;"><?= esc($mtgHrReason ?: '—') ?></div>
-            <input type="hidden" name="hr_reason" value="<?= esc($mtgHrReason) ?>">
           <?php endif; ?>
         </div>
       </div>

@@ -10,9 +10,10 @@
 <?php $this->section('content') ?>
 <?php
 $classColors = [
-    'عالي'  => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'border' => '#fca5a5', 'dot' => '#ef4444'],
-    'متوسط' => ['bg' => '#fef9c3', 'text' => '#a16207', 'border' => '#fde047', 'dot' => '#eab308'],
-    'منخفض' => ['bg' => '#f0fdf4', 'text' => '#15803d', 'border' => '#86efac', 'dot' => '#22c55e'],
+    'مرتفع'      => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'border' => '#fca5a5', 'dot' => '#ef4444'],
+    'متوسط'      => ['bg' => '#fef9c3', 'text' => '#a16207', 'border' => '#fde047', 'dot' => '#eab308'],
+    'منخفض'      => ['bg' => '#f0fdf4', 'text' => '#15803d', 'border' => '#86efac', 'dot' => '#22c55e'],
+    'فرصة تحسين' => ['bg' => '#eff6ff', 'text' => '#1d4ed8', 'border' => '#93c5fd', 'dot' => '#3b82f6'],
 ];
 $flash = session()->getFlashdata('success') ?? session()->getFlashdata('error');
 $flashType = session()->getFlashdata('success') ? 'success' : 'error';
@@ -35,7 +36,7 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
         </div>
         <div class="obs-header-actions">
           <?php if (!$readOnly): ?>
-            <a class="obs-btn-add" href="<?= base_url('dashboard/risk-matrix/edit') . ($selectedMissionId ? '?mission_id=' . $selectedMissionId : '') ?>"><i data-lucide="pencil"></i> تعديل الجدول</a>
+            <a class="obs-btn-add" href="<?= base_url('dashboard/risk-matrix/edit') . ($selectedMissionId ? '?mission_id=' . $selectedMissionId . '&add_new=1' : '') ?>"><i data-lucide="plus"></i> إضافة مخاطر</a>
           <?php elseif (empty($embed)): ?>
             <span class="obs-readonly-badge"><i data-lucide="lock"></i> عرض فقط</span>
           <?php endif; ?>
@@ -57,8 +58,8 @@ $flashType = session()->getFlashdata('success') ? 'success' : 'error';
             <thead><tr>
               <th style="width:50px;">الرقم</th>
               <th>المخاطر</th>
-              <th style="width:130px;">تقييم المخاطر</th>
-              <th style="width:160px;">نوع النشاط</th>
+              <th style="width:130px;">مستوى الخطر</th>
+              <th style="width:160px;">تصنيف الملاحظة</th>
               <th>وصف الضوابط</th>
             </tr></thead>
             <tbody>

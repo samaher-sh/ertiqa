@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="rm-edit-row" data-rm-row>
         <div class="rm-edit-row-head">
           <span class="rm-edit-row-num">#${index + 1}</span>
-          <button type="button" class="obs-menu-item danger" data-remove-row-btn style="width:auto;padding:4px 10px;"><i data-lucide="trash-2"></i> حذف الصف</button>
+          <button type="button" class="obs-menu-item danger" data-remove-row-btn style="width:auto;padding:4px 10px;"><i data-lucide="trash-2"></i> حذف الخطر</button>
         </div>
         <div class="wiz-field">
           <label class="wiz-label">المخاطر <span class="wiz-req">*</span></label>
@@ -45,17 +45,26 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="obs-grid-2">
           <div class="wiz-field">
-            <label class="wiz-label">تقييم المخاطر</label>
+            <label class="wiz-label">مستوى الخطر</label>
             <select name="rows[${index}][risk_rating]" class="wiz-select">
               <option value="">— اختر —</option>
-              <option value="عالي">عالي</option>
+              <option value="مرتفع">مرتفع</option>
               <option value="متوسط">متوسط</option>
               <option value="منخفض">منخفض</option>
+              <option value="فرصة تحسين">فرصة تحسين</option>
             </select>
           </div>
           <div class="wiz-field">
-            <label class="wiz-label">نوع النشاط</label>
-            <input type="text" name="rows[${index}][activity_type]" class="wiz-input plain">
+            <label class="wiz-label">تصنيف الملاحظة</label>
+            <select name="rows[${index}][activity_type]" class="wiz-select">
+              <option value="">— اختر —</option>
+              <option value="تشغيلي">تشغيلي</option>
+              <option value="مالي">مالي</option>
+              <option value="حوكمة">حوكمة</option>
+              <option value="التزام وامتثال">التزام وامتثال</option>
+              <option value="تقني">تقني</option>
+              <option value="جودة وسلامة">جودة وسلامة</option>
+            </select>
           </div>
           <div class="wiz-field" style="grid-column:1/-1;">
             <label class="wiz-label">وصف الضوابط</label>
@@ -80,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renumberRows() {
     const rows = wrap.querySelectorAll("[data-rm-row]");
     if (rows.length === 0) {
-      wrap.innerHTML = '<div class="obs-empty" id="rmEmptyState"><i data-lucide="shield-alert"></i><p class="main">لا توجد صفوف بعد</p><p class="hint">اضغطي "إضافة صف" لبدء تعبئة الجدول</p></div>';
+      wrap.innerHTML = '<div class="obs-empty" id="rmEmptyState"><i data-lucide="shield-alert"></i><p class="main">لا توجد مخاطر بعد</p><p class="hint">اضغطي "إضافة خطر" لبدء تعبئة الجدول</p></div>';
       if (window.lucide) lucide.createIcons();
       return;
     }
