@@ -20,3 +20,22 @@
 .rm-edit-row{ border:1px solid #d8e6eb; border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:14px; background:#fafcfd; }
 .rm-edit-row-head{ display:flex; align-items:center; justify-content:space-between; }
 .rm-edit-row-num{ font-size:12px; font-weight:800; color:var(--p); }
+
+/* ===== مؤشر "تحليل بيانات المهمة" -- تحسين بصري بحت بجافاسكربت فقط (rm-ai-loading.js
+   بملف riskmatrix-page.js) يظهر لثوانٍ قليلة قبل كشف الصفوف المقترَحة تلقائيًا
+   المُرندَرة أصلًا من السيرفر؛ بدون جافاسكربت تظهر الصفوف مباشرة بلا أي تأخير */
+.rm-ai-loading{
+  position:absolute; inset:0; z-index:5; flex-direction:column; align-items:center;
+  justify-content:flex-start; padding-top:90px; gap:14px; background:#fff; border-radius:12px;
+}
+/* display:flex بس وقت الظهور -- بدونه، مساواة تحديد قوة أسلوب متصفح [hidden]
+   الافتراضي (display:none) مع صنف .rm-ai-loading العادي تخلي الأخير يفوز
+   دائمًا (ترتيب الأسبقية بالمصدر)، فيبقى العنصر ظاهرًا حتى بعد إخفائه بجافاسكربت */
+.rm-ai-loading:not([hidden]){ display:flex; }
+.rm-ai-spinner{
+  width:38px; height:38px; border-radius:50%;
+  border:3px solid var(--pb); border-top-color:var(--p);
+  animation:rm-spin .8s linear infinite;
+}
+@keyframes rm-spin{ to{ transform:rotate(360deg); } }
+.rm-ai-loading p{ margin:0; font-size:13px; font-weight:700; color:var(--pd); }

@@ -35,7 +35,14 @@ $backUrl = base_url('dashboard/risk-matrix') . ($selectedMissionId ? '?mission_i
           <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
           <input type="hidden" name="mission_id" value="<?= (int) $selectedMissionId ?>">
 
-          <div id="rmRowsWrap" style="display:flex;flex-direction:column;gap:16px;">
+          <div class="rm-ai-outer" style="position:relative;">
+            <?php if ($aiSuggested ?? false): ?>
+              <div class="rm-ai-loading" id="rmAiLoading" hidden>
+                <span class="rm-ai-spinner"></span>
+                <p>جاري تحليل بيانات المهمة...</p>
+              </div>
+            <?php endif; ?>
+          <div id="rmRowsWrap" style="display:flex;flex-direction:column;gap:16px;" <?= ($aiSuggested ?? false) ? 'data-ai-suggested="1"' : '' ?>>
             <?php if (empty($rows)): ?>
               <div class="obs-empty" id="rmEmptyState"><i data-lucide="shield-alert"></i><p class="main">لا توجد مخاطر بعد</p><p class="hint">اضغطي "إضافة خطر" لبدء تعبئة الجدول</p></div>
             <?php endif; ?>
@@ -75,6 +82,7 @@ $backUrl = base_url('dashboard/risk-matrix') . ($selectedMissionId ? '?mission_i
                 </div>
               </div>
             <?php endforeach; ?>
+          </div>
           </div>
 
           <input type="hidden" name="remove_index" id="rmRemoveIndex" value="">

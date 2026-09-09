@@ -7,6 +7,11 @@
 
    هذا الملف يعترض نفس الزرين ليصيرا فوريين بدون أي اتصال بالسيرفر (إضافة/حذف
    صف بالمتصفح مباشرة)، وزر "حفظ مصفوفة المخاطر" يبقى submit عادي حقيقي زي ما هو.
+
+   الصفوف المقترَحة تلقائيًا (RiskMatrixController::suggestRiskRows) مُرندَرة
+   من السيرفر أصلًا بنفس الطلب -- مؤشر "جاري تحليل بيانات المهمة" هنا مجرد
+   تحسين بصري بحت (يغطّي الصفوف الجاهزة لثانية ونصف قبل كشفها)، بدون جافاسكربت
+   تظهر الصفوف مباشرة بلا أي تأخير لأن عنصر المؤشر hidden افتراضيًا بالـ HTML.
    ============================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -17,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.getElementById("rmAddRowBtn");
   if (!wrap || !addBtn) return;
 
+  bindAiLoadingReveal(wrap);
   bindAutoGrowTextareas(wrap);
 
   addBtn.addEventListener("click", e => {
@@ -112,3 +118,13 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.setAttribute("data-remove-row-btn", "");
   });
 });
+
+/* ---------- مؤشر "جاري تحليل بيانات المهمة" فوق الصفوف المقترَحة تلقائيًا ---------- */
+function bindAiLoadingReveal(wrap) {
+  if (wrap.dataset.aiSuggested !== "1") return;
+  const overlay = document.getElementById("rmAiLoading");
+  if (!overlay) return;
+
+  overlay.hidden = false;
+  setTimeout(() => { overlay.hidden = true; }, 1500);
+}

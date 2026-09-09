@@ -81,6 +81,7 @@ class RiskMatrixController extends BaseController
         $missions = $this->missionsForCurrentSession();
         $missionId = (int) ($this->request->getGet('mission_id') ?: 0);
 
+        $aiSuggested = false;
         $rows = session()->getFlashdata('draftRows');
         if ($rows === null && $missionId) {
             $mission = $this->assertMissionAccess($missionId);
@@ -92,6 +93,7 @@ class RiskMatrixController extends BaseController
                 // كلمات مفتاحية بالإدارة الخاضعة للمراجعة، مو استدعاء ذكاء
                 // اصطناعي حقيقي)، بدل جدول فارغ يحتاج تعبئة يدوية كاملة
                 $rows = $this->suggestRiskRows($mission['target_department_name'] ?? '', $mission['procedure_note'] ?? '');
+                $aiSuggested = true;
             } elseif ($this->request->getGet('add_new') === '1') {
                 // زر "إضافة مخاطر" بصفحة القائمة يوجّه هنا مباشرة كأنها بدأت
                 // إضافة خطر فعليًا -- بدل ما تحتاج تضغط "إضافة خطر" يدويًا
@@ -104,6 +106,7 @@ class RiskMatrixController extends BaseController
             'missions'          => $missions,
             'selectedMissionId' => $missionId,
             'rows'              => $rows ?? [],
+            'aiSuggested'       => $aiSuggested,
         ]));
     }
 
