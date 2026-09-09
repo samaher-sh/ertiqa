@@ -23,6 +23,9 @@ $channels = [
     ['active' => $a['channel_phone'] ?? 0, 'value' => $a['channel_phone_value'] ?? '', 'icon' => 'phone', 'label' => 'الهاتف الداخلي'],
 ];
 $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['active'] === 1 && $c['value']));
+
+$agreementSubmitted = ($a['status'] ?? '') === 'submitted';
+$submittedDate = $agreementSubmitted ? substr((string) ($a['submitted_at'] ?? ''), 0, 10) : '';
 ?>
 <div class="flex flex-col gap-4">
   <?php if ($flash): ?><div class="obs-alert obs-alert-<?= $flashType ?>"><?= esc($flash) ?></div><?php endif; ?>
@@ -103,10 +106,6 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
         </div>
 
         <div class="wiz-sla-grid" style="padding:20px 24px;">
-          <div class="wiz-field">
-            <label class="wiz-label">اسم المنسّق <span class="wiz-req">*</span></label>
-            <input name="coordinator_name" type="text" data-mask="letters" class="wiz-input plain" placeholder="اسم منسّق التواصل" value="<?= esc(old('coordinator_name') ?? ($a['coordinator_name'] ?? '')) ?>" <?= $canEdit ? '' : 'readonly' ?>>
-          </div>
           <div class="wiz-field">
             <label class="wiz-label">البريد الإلكتروني للمنسّق</label>
             <input name="coordinator_email" type="email" dir="ltr" style="text-align:left;" class="wiz-input plain" placeholder="example@kamc.med.sa" value="<?= esc(old('coordinator_email') ?? ($a['coordinator_email'] ?? '')) ?>" <?= $canEdit ? '' : 'readonly' ?>>
@@ -193,12 +192,56 @@ $activeChannels = array_values(array_filter($channels, fn($c) => (int) $c['activ
             </tbody>
           </table>
         </div>
-        <?php if ($canEdit && !empty($rowsBySection)): ?>
-          <div class="dr-footer">
-            <button type="submit" class="dr-submit-btn"><i data-lucide="check"></i> حفظ الاتفاقية</button>
-          </div>
-        <?php endif; ?>
       </div>
+
+      <?php if (!empty($rowsBySection)): ?>
+        <div class="wiz-card">
+          <div class="wiz-card-head"><i data-lucide="file-text"></i><span style="color:#fff;font-weight:700;font-size:14px;">التوقيعات</span></div>
+          <div class="wiz-sig-grid" style="grid-template-columns:1fr;">
+            <div class="wiz-sig-card<?= $agreementSubmitted ? ' active' : ($canEdit ? '' : ' locked') ?>">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <p class="wiz-sig-title">ممثل الإدارة</p>
+                <?php if (!$canEdit): ?><span class="wiz-sig-locked-badge">تُملأ من قِبل الإدارة المستهدفة</span><?php endif; ?>
+              </div>
+
+              <?php if ($canEdit): ?>
+                <div>
+                  <p class="wiz-sig-mini-label">الاسم</p>
+                  <input name="coordinator_name" type="text" data-mask="letters" class="wiz-input plain" placeholder="اسم ممثل الإدارة" value="<?= esc(old('coordinator_name') ?? ($a['coordinator_name'] ?? '')) ?>">
+                </div>
+                <div>
+                  <p class="wiz-sig-mini-label">التاريخ</p>
+                  <div class="wiz-sig-name-line"><span style="font-size:12px;color:<?= $submittedDate ? '#1f2937' : '#9ca3af' ?>;"><?= $submittedDate ?: 'يُسجَّل تلقائيًا عند الاعتماد' ?></span></div>
+                </div>
+                <div>
+                  <p class="wiz-sig-mini-label">الاعتماد</p>
+                  <button type="submit" class="wiz-approve-btn<?= $agreementSubmitted ? ' approved' : '' ?>">
+                    <i data-lucide="check-circle-2"></i>
+                    <span><?= $agreementSubmitted ? 'تم الاعتماد' : 'أعتمد اتفاقية مستوى الخدمة' ?></span>
+                  </button>
+                </div>
+              <?php else: ?>
+                <div><p class="wiz-sig-mini-label">الاسم</p><div class="wiz-sig-name-line"><span><?= esc($a['coordinator_name'] ?? '') ?></span></div></div>
+                <div><p class="wiz-sig-mini-label">التاريخ</p><div class="wiz-sig-name-line"><span><?= esc($submittedDate) ?></span></div></div>
+                <div>
+                  <p class="wiz-sig-mini-label">الاعتماد</p>
+                  <?php if ($agreementSubmitted): ?>
+                    <button type="button" class="wiz-approve-btn approved" disabled>
+                      <i data-lucide="check-circle-2"></i>
+                      <span>تم الاعتماد</span>
+                    </button>
+                  <?php else: ?>
+                    <button type="button" class="wiz-approve-btn locked" disabled>
+                      <i data-lucide="clock"></i>
+                      <span>بانتظار اعتماد الإدارة</span>
+                    </button>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
     </form>
 
     <?php if (empty($embed)): ?>
