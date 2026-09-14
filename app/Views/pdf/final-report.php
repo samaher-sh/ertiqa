@@ -18,10 +18,7 @@
     /* كل قسم من الأقسام الستة يبدأ بصفحة جديدة مستقلة */
     h1.section-title { font-size: 17.5px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
     h2.sub-title { font-size: 15px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
-    /* text-align:right لا justify -- التبرير بخط Saudi المخصَّص يخلي mPDF يباعد
-       بين الحروف نفسها (بدل الكشيدة العادية) لملء عرض السطر، فتبين الكلمة
-       متفرقة الحروف بدل متصلة */
-    p.body-p { font-size: 13.5px; line-height: 1.9; text-align: right; margin: 0 0 10px; }
+    p.body-p { font-size: 13.5px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
     ul.body-list { font-size: 13.5px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
     ul.body-list li { margin-bottom: 4px; }
     table.grid { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
