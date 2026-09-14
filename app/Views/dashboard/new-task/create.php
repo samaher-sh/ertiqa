@@ -447,7 +447,7 @@ if (is_array($oldMilestones)) {
                         <span><?= esc($m['label']) ?></span>
                       <?php else: ?>
                         <div style="display:flex;align-items:center;gap:6px;">
-                          <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="+ نقطة إضافة" value="<?= esc($m['label']) ?>" style="flex:1;">
+                          <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="نقطة إضافة" value="<?= esc($m['label']) ?>" style="flex:1;">
                           <button type="button" class="wiz-doc-row-del-btn" data-remove-milestone-row title="حذف النقطة"><i data-lucide="trash-2"></i></button>
                         </div>
                       <?php endif; ?>
