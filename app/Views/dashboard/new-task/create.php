@@ -32,12 +32,28 @@ $channelsMeta = [
 $oldMilestones = old('milestones');
 $milestoneRows = [];
 foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
-    $milestoneRows[] = [
+    $milestoneRows[$i] = [
         'label' => $oldMilestones[$i]['label'] ?? $defaultLabel,
         'date'  => $oldMilestones[$i]['date'] ?? '',
         'days'  => $oldMilestones[$i]['days'] ?? '',
         'note'  => $oldMilestones[$i]['note'] ?? '',
     ];
+}
+/* صفوف "نقطة إضافية" أضافها المستخدم ديناميكيًا (زر + بجدول النقاط الهامة) فوق
+   الخمسة الافتراضية -- تُحفَظ لو رجع النموذج بخطأ تحقق بخطوة ثانية، بدل ما تُفقَد
+   صامتة لأنها خارج نطاق $milestoneDefaultLabels الثابت */
+if (is_array($oldMilestones)) {
+    $extraKeys = array_filter(array_map('intval', array_keys($oldMilestones)), fn($k) => $k >= count($milestoneDefaultLabels));
+    sort($extraKeys);
+    foreach ($extraKeys as $k) {
+        $milestoneRows[$k] = [
+            'label' => $oldMilestones[$k]['label'] ?? '',
+            'date'  => $oldMilestones[$k]['date'] ?? '',
+            'days'  => $oldMilestones[$k]['days'] ?? '',
+            'note'  => $oldMilestones[$k]['note'] ?? '',
+        ];
+    }
+    ksort($milestoneRows);
 }
 ?>
 <div class="flex flex-col gap-4">
@@ -411,16 +427,21 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
               <thead><tr>
                 <th style="width:40px;">#</th><th>تخطيط المهمة</th><th style="width:150px;">التاريخ</th><th style="width:150px;">عدد الأيام المطلوبة</th><th>ملاحظة</th>
               </tr></thead>
-              <tbody>
+              <tbody id="wizMilestonesTbody">
                 <?php foreach ($milestoneRows as $i => $m): ?>
-                  <tr>
-                    <td style="text-align:center;"><?= $i + 1 ?></td>
+                  <tr data-milestone-row>
+                    <td style="text-align:center;" class="wiz-milestone-row-num"><?= $i + 1 ?></td>
                     <td>
                       <?php if ($i < 4): ?>
                         <input type="hidden" name="milestones[<?= $i ?>][label]" value="<?= esc($m['label']) ?>">
                         <span><?= esc($m['label']) ?></span>
                       <?php else: ?>
-                        <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="نقطة إضافية..." value="<?= esc($m['label']) ?>">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                          <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="+ نقطة إضافة" value="<?= esc($m['label']) ?>" style="flex:1;">
+                          <?php if ($i >= 5): ?>
+                            <button type="button" class="wiz-doc-row-del-btn" data-remove-milestone-row title="حذف النقطة"><i data-lucide="trash-2"></i></button>
+                          <?php endif; ?>
+                        </div>
                       <?php endif; ?>
                     </td>
                     <td><input type="date" name="milestones[<?= $i ?>][date]" class="wiz-input plain" value="<?= esc($m['date']) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
@@ -428,6 +449,13 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
                     <td><input type="text" name="milestones[<?= $i ?>][note]" class="wiz-input plain" value="<?= esc($m['note']) ?>"></td>
                   </tr>
                 <?php endforeach; ?>
+                <tr id="wizAddMilestoneRow">
+                  <td colspan="5" style="text-align:center;padding:10px;">
+                    <button type="button" id="wizAddMilestoneBtn" class="wiz-add-doc-btn" style="margin:0 auto;">
+                      <i data-lucide="plus"></i> إضافة نقطة أخرى
+                    </button>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

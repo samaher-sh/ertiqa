@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   bindChannelToggles();
   bindSignatureApproveCheckbox();
   bindStepNav();
+  bindMilestoneAddRow();
 });
 
 /* ---------- 1) تنقّل الخطوات الثلاث (طلب المراجعة، اتفاقية مستوى الخدمة، تخطيط المهمة) ---------- */
@@ -254,5 +255,53 @@ function bindDraftAgreementExport() {
     } catch (e) {
       alert(e.message || "تعذّر تصدير المستند");
     }
+  });
+}
+
+/* ---------- 6) إضافة أكثر من "نقطة إضافية" بجدول النقاط الهامة (خطوة 3) ----------
+   الصف الخامس الثابت يبقى كما هو (بدون JS تشتغل بصف وحد إضافي)؛ هذا الزر
+   يضيف صفوفًا أخرى فوقه بلا حد أقصى، بنفس بنية milestones[N][...] اللي يفهمها
+   MissionPlanningMilestoneModel::replaceForPlanning() أصلًا (تتعامل مع أي عدد
+   صفوف، مو خمسة بالضبط) */
+function bindMilestoneAddRow() {
+  const tbody = document.getElementById("wizMilestonesTbody");
+  const addBtn = document.getElementById("wizAddMilestoneBtn");
+  const addRowTr = document.getElementById("wizAddMilestoneRow");
+  if (!tbody || !addBtn || !addRowTr) return;
+
+  let nextIndex = tbody.querySelectorAll("tr[data-milestone-row]").length;
+
+  function renumberRows() {
+    tbody.querySelectorAll("tr[data-milestone-row] .wiz-milestone-row-num").forEach((cell, i) => {
+      cell.textContent = i + 1;
+    });
+  }
+
+  addBtn.addEventListener("click", () => {
+    const i = nextIndex++;
+    const tr = document.createElement("tr");
+    tr.dataset.milestoneRow = "";
+    tr.innerHTML = `
+      <td style="text-align:center;" class="wiz-milestone-row-num"></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="text" name="milestones[${i}][label]" class="wiz-input plain" placeholder="+ نقطة إضافة" style="flex:1;">
+          <button type="button" class="wiz-doc-row-del-btn" data-remove-milestone-row title="حذف النقطة"><i data-lucide="trash-2"></i></button>
+        </div>
+      </td>
+      <td><input type="date" name="milestones[${i}][date]" class="wiz-input plain" onclick="try{this.showPicker&&this.showPicker()}catch(e){}"></td>
+      <td><input type="text" name="milestones[${i}][days]" class="wiz-input plain"></td>
+      <td><input type="text" name="milestones[${i}][note]" class="wiz-input plain"></td>
+    `;
+    tbody.insertBefore(tr, addRowTr);
+    renumberRows();
+    if (window.lucide) lucide.createIcons();
+  });
+
+  tbody.addEventListener("click", (e) => {
+    const delBtn = e.target.closest("[data-remove-milestone-row]");
+    if (!delBtn) return;
+    delBtn.closest("tr[data-milestone-row]").remove();
+    renumberRows();
   });
 }
