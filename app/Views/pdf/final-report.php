@@ -3,52 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    /* أحجام الخط كبّرناها بالكامل لتحسين وضوح القراءة، وألوان الجداول
-       أخذناها حرفيًا من نموذج تقرير المراجعة الرسمي بصيغة Word (كل لون
-       بهذا الملف مطابق للون نفس الجدول/الخانة بالمرجع) */
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 13px; color: #152c33; direction: rtl; }
+    /* أحجام الخط كبّرناها أكثر لتحسين وضوح القراءة، وألوان الجداول أخذناها
+       من نموذج تقرير المراجعة الرسمي بصيغة Word، مع تحسين جودة عرضها
+       (نص أبيض بارز فوق الدرجات الغامقة/المشبَّعة بدل نص غامق ضعيف التباين) */
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 14.5px; color: #152c33; direction: rtl; }
     .section-break { page-break-before: always; }
-    h1.cover-title { font-size: 18px; color: #196b7f; text-align: center; margin: 0 0 4px; }
-    h2.cover-sub { font-size: 14px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
+    h1.cover-title { font-size: 20px; color: #196b7f; text-align: center; margin: 0 0 4px; }
+    h2.cover-sub { font-size: 15.5px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
     table.info { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-    table.info td { padding: 7px 10px; border: 1px solid #d8e6eb; font-size: 12.5px; }
+    table.info td { padding: 8px 10px; border: 1px solid #d8e6eb; font-size: 13.5px; }
     table.info td.label { background: #f8fafc; font-weight: bold; width: 160px; }
     /* كل قسم من الأقسام الستة يبدأ بصفحة جديدة مستقلة */
-    h1.section-title { font-size: 16px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
-    h2.sub-title { font-size: 13.5px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
-    p.body-p { font-size: 12.5px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
-    ul.body-list { font-size: 12.5px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
+    h1.section-title { font-size: 17.5px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
+    h2.sub-title { font-size: 15px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
+    p.body-p { font-size: 13.5px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
+    ul.body-list { font-size: 13.5px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
     ul.body-list li { margin-bottom: 4px; }
     table.grid { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    table.grid th { background: #9CC2E5; color: #152c33; font-size: 12px; padding: 7px; border: 1px solid #b3d4e5; text-align: center; }
-    table.grid td { padding: 7px; border: 1px solid #d8e6eb; font-size: 12px; text-align: right; vertical-align: top; }
+    table.grid th { background: #9CC2E5; color: #152c33; font-size: 13px; padding: 8px; border: 1px solid #b3d4e5; text-align: center; }
+    table.grid td { padding: 8px; border: 1px solid #d8e6eb; font-size: 13px; text-align: right; vertical-align: top; }
     table.grid td.center { text-align: center; }
     /* رأس رمادي خاص بجدول "تعريف مستوى المخاطر" -- نفس لون هذا الجدول تحديدًا بالمرجع (مختلف عن باقي رؤوس الجداول الزرقاء) */
     table.grid.gray-header th { background: #E7E6E6; }
-    /* ألوان مستويات المخاطر -- مطابقة لألوان نفس الخانات بجدول "مستوي المخاطر" (القسم الأول) بملف الوورد */
-    th.risk-high { background: #FF0000; }
-    th.risk-med { background: #FFD966; }
-    th.risk-low { background: #70AD47; }
-    th.risk-opp { background: #5B9BD5; }
+    /* ألوان مستويات المخاطر -- مطابقة لألوان نفس الخانات بجدول "مستوي المخاطر" (القسم الأول) بملف الوورد، بنص
+       أبيض فوق الدرجات الغامقة (أحمر/أخضر/أزرق) عشان يبين واضح، وأسود فوق الأصفر الفاتح */
+    th.risk-high { background: #E8281B; color: #ffffff; }
+    th.risk-med { background: #FFD966; color: #152c33; }
+    th.risk-low { background: #4CA23A; color: #ffffff; }
+    th.risk-opp { background: #4C8FCC; color: #ffffff; }
     /* ألوان "تعريف مستوى المخاطر" (القسم الرابع) -- مطابقة لنفس الجدول بملف الوورد */
-    td.legend-high { background: #FF4136; font-weight: bold; }
-    td.legend-med { background: #FFC000; font-weight: bold; }
-    td.legend-low { background: #2DB757; font-weight: bold; }
-    td.legend-opp { background: #27ACAA; font-weight: bold; }
+    td.legend-high { background: #E8281B; color: #ffffff; font-weight: bold; }
+    td.legend-med { background: #FFC000; color: #152c33; font-weight: bold; }
+    td.legend-low { background: #24A855; color: #ffffff; font-weight: bold; }
+    td.legend-opp { background: #1E9E9C; color: #ffffff; font-weight: bold; }
     /* ألوان جدول "معايير تقييم الملاحظة" (خطر/فرصة) -- مطابقة لنفس الجدول بملف الوورد */
-    td.crit-risk { background: #FFE599; }
-    td.crit-opp { background: #F4B083; }
+    td.crit-risk { background: #FFE599; color: #152c33; }
+    td.crit-opp { background: #F4B083; color: #152c33; }
     .empty-row { text-align: center; color: #9ca3af; }
     .obs-block { border: 1px solid #b3d4e5; border-radius: 6px; margin-bottom: 14px; page-break-inside: avoid; }
     .obs-row { display: table; width: 100%; border-bottom: 1px solid #e2ecf0; }
     .obs-row:last-child { border-bottom: none; }
-    .obs-cell-label { display: table-cell; width: 200px; background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 12px; padding: 9px 10px; vertical-align: top; }
-    .obs-cell-value { display: table-cell; padding: 9px 10px; font-size: 12.5px; vertical-align: top; }
+    .obs-cell-label { display: table-cell; width: 200px; background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 13px; padding: 10px; vertical-align: top; }
+    .obs-cell-value { display: table-cell; padding: 10px; font-size: 13.5px; vertical-align: top; }
     /* قيمة "مستوى الأهمية" بكل ملاحظة تُلوَّن حسب مستواها، بنفس أسلوب مصفوفة المخاطر بملف الوورد */
-    .obs-cell-value.risk-high { background: #FF0000; font-weight: bold; }
-    .obs-cell-value.risk-med { background: #FFD966; font-weight: bold; }
-    .obs-cell-value.risk-low { background: #70AD47; font-weight: bold; }
-    .obs-cell-value.risk-opp { background: #5B9BD5; font-weight: bold; }
+    .obs-cell-value.risk-high { background: #E8281B; color: #ffffff; font-weight: bold; }
+    .obs-cell-value.risk-med { background: #FFD966; color: #152c33; font-weight: bold; }
+    .obs-cell-value.risk-low { background: #4CA23A; color: #ffffff; font-weight: bold; }
+    .obs-cell-value.risk-opp { background: #4C8FCC; color: #ffffff; font-weight: bold; }
 </style>
 </head>
 <body>
