@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    /* خط "Saudi" الرسمي (مسجَّل بـ PdfController::makeMpdf مع useSaudiFont=true)
-       بدل DejaVu Sans. أحجام الخط كبيرة لتحسين وضوح القراءة، وألوان الجداول
-       أخذناها من نموذج تقرير المراجعة الرسمي بصيغة Word، مع تحسين جودة عرضها
-       (نص أبيض بارز فوق الدرجات الغامقة/المشبَّعة بدل نص غامق ضعيف التباين)،
-       ورأس موحَّد (#9CC2E5) لكل جداول المستند بدون استثناء */
-    body { font-family: 'saudi', 'DejaVu Sans', sans-serif; font-size: 14.5px; color: #152c33; direction: rtl; }
+    /* أحجام الخط كبّرناها أكثر لتحسين وضوح القراءة، وألوان الجداول أخذناها
+       من نموذج تقرير المراجعة الرسمي بصيغة Word، مع تحسين جودة عرضها
+       (نص أبيض بارز فوق الدرجات الغامقة/المشبَّعة بدل نص غامق ضعيف التباين) */
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 14.5px; color: #152c33; direction: rtl; }
     .section-break { page-break-before: always; }
     h1.cover-title { font-size: 20px; color: #196b7f; text-align: center; margin: 0 0 4px; }
     h2.cover-sub { font-size: 15.5px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
@@ -25,6 +23,8 @@
     table.grid th { background: #9CC2E5; color: #152c33; font-size: 13px; padding: 8px; border: 1px solid #b3d4e5; text-align: center; }
     table.grid td { padding: 8px; border: 1px solid #d8e6eb; font-size: 13px; text-align: right; vertical-align: top; }
     table.grid td.center { text-align: center; }
+    /* رأس رمادي خاص بجدول "تعريف مستوى المخاطر" -- نفس لون هذا الجدول تحديدًا بالمرجع (مختلف عن باقي رؤوس الجداول الزرقاء) */
+    table.grid.gray-header th { background: #E7E6E6; }
     /* ألوان مستويات المخاطر -- مطابقة لألوان نفس الخانات بجدول "مستوي المخاطر" (القسم الأول) بملف الوورد، بنص
        أبيض فوق الدرجات الغامقة (أحمر/أخضر/أزرق) عشان يبين واضح، وأسود فوق الأصفر الفاتح */
     th.risk-high { background: #E8281B; color: #ffffff; }
@@ -187,7 +187,7 @@
         </tr>
     </table>
 
-    <table class="grid">
+    <table class="grid gray-header">
         <tr><th colspan="2">تعريف مستوي المخاطر</th></tr>
         <tr><th style="width:100px;">التقييم</th><th>الوصف</th></tr>
         <tr>
