@@ -12,21 +12,17 @@ use App\Models\MeetingApprovalModel;
 use App\Models\AuditNoteModel;
 use App\Models\ReportModel;
 use Mpdf\Mpdf;
-use Mpdf\Config\ConfigVariables;
-use Mpdf\Config\FontVariables;
 
 class PdfController extends BaseController
 {
     /**
      * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
      * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. $orientation='L'
-     * يطلع الصفحة بالعرض (نفس اتجاه نموذج "تقرير المراجعة" الرسمي) بدل الطول الافتراضي.
-     * $useSaudiFont=true يفعّل خط "Saudi" الرسمي (public/assets/fonts/saudi) بدل
-     * الافتراضي DejaVu Sans -- مستخدَم بالتقرير النهائي فقط حاليًا (طلب صريح)
+     * يطلع الصفحة بالعرض (نفس اتجاه نموذج "تقرير المراجعة" الرسمي) بدل الطول الافتراضي
      */
-    private function makeMpdf(string $orientation = 'P', bool $useSaudiFont = false): Mpdf
+    private function makeMpdf(string $orientation = 'P'): Mpdf
     {
-        $config = [
+        return new Mpdf([
             'mode'            => 'utf-8',
             'format'          => $orientation === 'L' ? 'A4-L' : 'A4',
             'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
@@ -35,20 +31,7 @@ class PdfController extends BaseController
             'margin_right'    => 15,
             'margin_top'      => 15,
             'margin_bottom'   => 15,
-        ];
-
-        if ($useSaudiFont) {
-            $defaultConfig = (new ConfigVariables())->getDefaults();
-            $defaultFontConfig = (new FontVariables())->getDefaults();
-
-            $config['fontDir'] = array_merge($defaultConfig['fontDir'], [FCPATH . 'assets/fonts/saudi']);
-            $config['fontdata'] = $defaultFontConfig['fontdata'] + [
-                'saudi' => ['R' => 'Saudi-Regular.ttf', 'B' => 'Saudi-Bold.ttf'],
-            ];
-            $config['default_font'] = 'saudi';
-        }
-
-        return new Mpdf($config);
+        ]);
     }
 
     private function streamPdf(Mpdf $mpdf, string $html, string $filename)
@@ -66,13 +49,13 @@ class PdfController extends BaseController
      * فوتر متكرر بكل صفحات المستند (ترقيم صفحات تلقائي + إشعار سرية) -- يُستخدم
      * بكل مستندات PDF المصدَّرة من السيرفر عشان تكون كلها "مرتبة" بشكل موحّد
      */
-    private function applyRunningFooter(Mpdf $mpdf, string $missionCode, string $fontFamily = 'dejavusans'): void
+    private function applyRunningFooter(Mpdf $mpdf, string $missionCode): void
     {
         // يخلي mPDF يوسّع الهامش السفلي تلقائيًا حسب الارتفاع الفعلي لمحتوى الفوتر
         // (بدل تخمين قيمة ثابتة يدويًا) عشان ما يتصادم بصريًا مع متن المستند
         $mpdf->setAutoBottomMargin = 'stretch';
         $footer = '
-            <table dir="rtl" width="100%" style="border-top:1px solid #d8e6eb;padding-top:4px;font-size:8px;color:#9ca3af;font-family:' . esc($fontFamily) . ';table-layout:fixed;">
+            <table dir="rtl" width="100%" style="border-top:1px solid #d8e6eb;padding-top:4px;font-size:8px;color:#9ca3af;font-family:dejavusans;table-layout:fixed;">
                 <tr>
                     <td width="75%" style="text-align:right;">مستند صادر من نظام ارتقاء — إدارة المراجعة الداخلية، سرّي وخاص بالمهمة ' . esc($missionCode) . '</td>
                     <td width="25%" style="text-align:left;">صفحة {PAGENO} من {nbpg}</td>
@@ -87,7 +70,7 @@ class PdfController extends BaseController
      * الخطاب الرسمي (missionLetter) عنده هيدر خاص مدموج بنص الخطاب نفسه فلا يُستخدم هنا معه
      * لتفادي تكرار الشعار مرتين
      */
-    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName, string $fontFamily = 'dejavusans'): void
+    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName): void
     {
         // نقصّ اسم الإدارة (بعضها طويل جدًا) عشان ما يتصادم بصريًا مع بقية سطر العنوان --
         // الاسم الكامل يبقى ظاهر بمتن المستند نفسه على أي حال
@@ -110,11 +93,11 @@ class PdfController extends BaseController
             <table dir="rtl" width="100%" style="border-bottom:1.5px solid #3185b3;padding-bottom:6px;">
                 <tr>
                     <td width="40" style="vertical-align:middle;"><img src="' . $logo . '"></td>
-                    <td style="vertical-align:middle;text-align:right;font-family:' . esc($fontFamily) . ';">
+                    <td style="vertical-align:middle;text-align:right;font-family:dejavusans;">
                         <span style="font-size:12px;font-weight:bold;color:#196b7f;">إدارة المراجعة الداخلية</span>
                         <span style="font-size:9px;color:#6b8c95;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
                     </td>
-                    <td style="vertical-align:middle;text-align:left;font-size:9px;color:#6b8c95;font-family:' . esc($fontFamily) . ';white-space:nowrap;">
+                    <td style="vertical-align:middle;text-align:left;font-size:9px;color:#6b8c95;font-family:dejavusans;white-space:nowrap;">
                         التاريخ: ' . date('d/m/Y') . '&nbsp;&nbsp;|&nbsp;&nbsp;رقم المهمة: ' . esc($missionCode) . '
                     </td>
                 </tr>
@@ -461,10 +444,10 @@ class PdfController extends BaseController
             'observations' => $observations,
         ]);
 
-        // نموذج "تقرير المراجعة" الرسمي بالعرض (Landscape) بدل الطول الافتراضي، وبخط "Saudi" الرسمي
-        $mpdf = $this->makeMpdf('L', true);
-        $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '', 'saudi');
-        $this->applyRunningFooter($mpdf, $mission['mission_code'], 'saudi');
+        // نموذج "تقرير المراجعة" الرسمي بالعرض (Landscape) بدل الطول الافتراضي
+        $mpdf = $this->makeMpdf('L');
+        $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '');
+        $this->applyRunningFooter($mpdf, $mission['mission_code']);
         $this->streamPdf($mpdf, $html, 'تقرير-نهائي-' . $mission['mission_code'] . '.pdf');
     }
 }
