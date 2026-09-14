@@ -23,7 +23,7 @@
         <div class="brand-text">
           <h1>ارتقاء</h1>
           <p class="subtitle">مدينة الملك عبدالله الطبية</p>
-          <p class="sub-subtitle">نظام الرقابة والمراجعة الداخلية</p>
+          <p class="sub-subtitle">نظام والمراجعة الداخلية</p>
         </div>
         <div class="divider"></div>
         <p class="description">منصة متكاملة لإدارة<br />مهام المراجعة الداخلية</p>
