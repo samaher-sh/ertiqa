@@ -259,15 +259,14 @@ function bindDraftAgreementExport() {
 }
 
 /* ---------- 6) إضافة أكثر من "نقطة إضافية" بجدول النقاط الهامة (خطوة 3) ----------
-   الصف الخامس الثابت يبقى كما هو (بدون JS تشتغل بصف وحد إضافي)؛ هذا الزر
-   يضيف صفوفًا أخرى فوقه بلا حد أقصى، بنفس بنية milestones[N][...] اللي يفهمها
-   MissionPlanningMilestoneModel::replaceForPlanning() أصلًا (تتعامل مع أي عدد
-   صفوف، مو خمسة بالضبط) */
+   الصفوف الأربعة الثابتة بس تُعرَض افتراضيًا؛ زر "+ إضافة نقطة أخرى" برأس
+   البطاقة يضيف صفوفًا حرّة بلا حد أقصى (وقابلة للحذف)، بنفس بنية
+   milestones[N][...] اللي يفهمها MissionPlanningMilestoneModel::replaceForPlanning()
+   أصلًا (تتعامل مع أي عدد صفوف، مو أربعة بالضبط) */
 function bindMilestoneAddRow() {
   const tbody = document.getElementById("wizMilestonesTbody");
   const addBtn = document.getElementById("wizAddMilestoneBtn");
-  const addRowTr = document.getElementById("wizAddMilestoneRow");
-  if (!tbody || !addBtn || !addRowTr) return;
+  if (!tbody || !addBtn) return;
 
   let nextIndex = tbody.querySelectorAll("tr[data-milestone-row]").length;
 
@@ -293,7 +292,7 @@ function bindMilestoneAddRow() {
       <td><input type="text" name="milestones[${i}][days]" class="wiz-input plain"></td>
       <td><input type="text" name="milestones[${i}][note]" class="wiz-input plain"></td>
     `;
-    tbody.insertBefore(tr, addRowTr);
+    tbody.appendChild(tr);
     renumberRows();
     if (window.lucide) lucide.createIcons();
   });

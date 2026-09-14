@@ -30,8 +30,12 @@ $channelsMeta = [
 ];
 
 $oldMilestones = old('milestones');
+/* الصفوف الأربعة الثابتة بس افتراضيًا (بعناوينها الرسمية) -- الصف الخامس الحر
+   القديم صار اختياريًا الآن: يُضاف عند الحاجة عبر زر "+ إضافة نقطة أخرى"
+   برأس البطاقة، بدل ما يُفرَض دائمًا حتى لو ما احتاجه المستخدم */
+$milestoneBaseLabels = array_slice($milestoneDefaultLabels, 0, 4);
 $milestoneRows = [];
-foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
+foreach ($milestoneBaseLabels as $i => $defaultLabel) {
     $milestoneRows[$i] = [
         'label' => $oldMilestones[$i]['label'] ?? $defaultLabel,
         'date'  => $oldMilestones[$i]['date'] ?? '',
@@ -39,11 +43,11 @@ foreach ($milestoneDefaultLabels as $i => $defaultLabel) {
         'note'  => $oldMilestones[$i]['note'] ?? '',
     ];
 }
-/* صفوف "نقطة إضافية" أضافها المستخدم ديناميكيًا (زر + بجدول النقاط الهامة) فوق
-   الخمسة الافتراضية -- تُحفَظ لو رجع النموذج بخطأ تحقق بخطوة ثانية، بدل ما تُفقَد
-   صامتة لأنها خارج نطاق $milestoneDefaultLabels الثابت */
+/* صفوف "نقطة إضافية" أضافها المستخدم ديناميكيًا (زر + برأس البطاقة) فوق
+   الأربعة الثابتة -- تُحفَظ لو رجع النموذج بخطأ تحقق بخطوة ثانية، بدل ما تُفقَد
+   صامتة لأنها خارج نطاق $milestoneBaseLabels */
 if (is_array($oldMilestones)) {
-    $extraKeys = array_filter(array_map('intval', array_keys($oldMilestones)), fn($k) => $k >= count($milestoneDefaultLabels));
+    $extraKeys = array_filter(array_map('intval', array_keys($oldMilestones)), fn($k) => $k >= count($milestoneBaseLabels));
     sort($extraKeys);
     foreach ($extraKeys as $k) {
         $milestoneRows[$k] = [
@@ -421,7 +425,13 @@ if (is_array($oldMilestones)) {
         </div>
 
         <div class="wiz-card">
-          <div class="wiz-card-head"><i data-lucide="list-checks"></i><span style="color:#fff;font-weight:700;font-size:14px;">النقاط الهامة في المراجعة</span></div>
+          <div class="wiz-card-head">
+            <i data-lucide="list-checks"></i>
+            <span style="color:#fff;font-weight:700;font-size:14px;">النقاط الهامة في المراجعة</span>
+            <button type="button" id="wizAddMilestoneBtn" class="wiz-add-doc-btn" style="margin-right:auto;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);">
+              <i data-lucide="plus"></i> إضافة نقطة أخرى
+            </button>
+          </div>
           <div class="wiz-table-wrap">
             <table class="wiz-table wiz-table-zebra">
               <thead><tr>
@@ -438,9 +448,7 @@ if (is_array($oldMilestones)) {
                       <?php else: ?>
                         <div style="display:flex;align-items:center;gap:6px;">
                           <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="+ نقطة إضافة" value="<?= esc($m['label']) ?>" style="flex:1;">
-                          <?php if ($i >= 5): ?>
-                            <button type="button" class="wiz-doc-row-del-btn" data-remove-milestone-row title="حذف النقطة"><i data-lucide="trash-2"></i></button>
-                          <?php endif; ?>
+                          <button type="button" class="wiz-doc-row-del-btn" data-remove-milestone-row title="حذف النقطة"><i data-lucide="trash-2"></i></button>
                         </div>
                       <?php endif; ?>
                     </td>
@@ -449,13 +457,6 @@ if (is_array($oldMilestones)) {
                     <td><input type="text" name="milestones[<?= $i ?>][note]" class="wiz-input plain" value="<?= esc($m['note']) ?>"></td>
                   </tr>
                 <?php endforeach; ?>
-                <tr id="wizAddMilestoneRow">
-                  <td colspan="5" style="text-align:center;padding:10px;">
-                    <button type="button" id="wizAddMilestoneBtn" class="wiz-add-doc-btn" style="margin:0 auto;">
-                      <i data-lucide="plus"></i> إضافة نقطة أخرى
-                    </button>
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
