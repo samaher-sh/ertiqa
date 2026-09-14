@@ -3,28 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; color: #152c33; direction: rtl; }
+    /* أحجام الخط كبّرناها بالكامل لتحسين وضوح القراءة، وألوان الجداول
+       أخذناها حرفيًا من نموذج تقرير المراجعة الرسمي بصيغة Word (كل لون
+       بهذا الملف مطابق للون نفس الجدول/الخانة بالمرجع) */
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 13px; color: #152c33; direction: rtl; }
     .section-break { page-break-before: always; }
-    h1.cover-title { font-size: 16px; color: #196b7f; text-align: center; margin: 0 0 4px; }
-    h2.cover-sub { font-size: 13px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
+    h1.cover-title { font-size: 18px; color: #196b7f; text-align: center; margin: 0 0 4px; }
+    h2.cover-sub { font-size: 14px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
     table.info { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-    table.info td { padding: 6px 10px; border: 1px solid #d8e6eb; font-size: 11px; }
+    table.info td { padding: 7px 10px; border: 1px solid #d8e6eb; font-size: 12.5px; }
     table.info td.label { background: #f8fafc; font-weight: bold; width: 160px; }
-    h1.section-title { font-size: 14px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; }
-    h2.sub-title { font-size: 12px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
-    p.body-p { line-height: 1.9; text-align: justify; margin: 0 0 10px; }
-    ul.body-list { margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
+    /* كل قسم من الأقسام الستة يبدأ بصفحة جديدة مستقلة */
+    h1.section-title { font-size: 16px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
+    h2.sub-title { font-size: 13.5px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
+    p.body-p { font-size: 12.5px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
+    ul.body-list { font-size: 12.5px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
     ul.body-list li { margin-bottom: 4px; }
     table.grid { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    table.grid th { background: #f0f7fa; color: #196b7f; font-size: 10px; padding: 6px; border: 1px solid #b3d4e5; text-align: center; }
-    table.grid td { padding: 6px; border: 1px solid #d8e6eb; font-size: 10px; text-align: right; vertical-align: top; }
+    table.grid th { background: #9CC2E5; color: #152c33; font-size: 12px; padding: 7px; border: 1px solid #b3d4e5; text-align: center; }
+    table.grid td { padding: 7px; border: 1px solid #d8e6eb; font-size: 12px; text-align: right; vertical-align: top; }
     table.grid td.center { text-align: center; }
+    /* رأس رمادي خاص بجدول "تعريف مستوى المخاطر" -- نفس لون هذا الجدول تحديدًا بالمرجع (مختلف عن باقي رؤوس الجداول الزرقاء) */
+    table.grid.gray-header th { background: #E7E6E6; }
+    /* ألوان مستويات المخاطر -- مطابقة لألوان نفس الخانات بجدول "مستوي المخاطر" (القسم الأول) بملف الوورد */
+    th.risk-high { background: #FF0000; }
+    th.risk-med { background: #FFD966; }
+    th.risk-low { background: #70AD47; }
+    th.risk-opp { background: #5B9BD5; }
+    /* ألوان "تعريف مستوى المخاطر" (القسم الرابع) -- مطابقة لنفس الجدول بملف الوورد */
+    td.legend-high { background: #FF4136; font-weight: bold; }
+    td.legend-med { background: #FFC000; font-weight: bold; }
+    td.legend-low { background: #2DB757; font-weight: bold; }
+    td.legend-opp { background: #27ACAA; font-weight: bold; }
+    /* ألوان جدول "معايير تقييم الملاحظة" (خطر/فرصة) -- مطابقة لنفس الجدول بملف الوورد */
+    td.crit-risk { background: #FFE599; }
+    td.crit-opp { background: #F4B083; }
     .empty-row { text-align: center; color: #9ca3af; }
     .obs-block { border: 1px solid #b3d4e5; border-radius: 6px; margin-bottom: 14px; page-break-inside: avoid; }
     .obs-row { display: table; width: 100%; border-bottom: 1px solid #e2ecf0; }
     .obs-row:last-child { border-bottom: none; }
-    .obs-cell-label { display: table-cell; width: 200px; background: #f0f7fa; color: #196b7f; font-weight: bold; font-size: 10px; padding: 8px 10px; vertical-align: top; }
-    .obs-cell-value { display: table-cell; padding: 8px 10px; font-size: 11px; vertical-align: top; }
+    .obs-cell-label { display: table-cell; width: 200px; background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 12px; padding: 9px 10px; vertical-align: top; }
+    .obs-cell-value { display: table-cell; padding: 9px 10px; font-size: 12.5px; vertical-align: top; }
+    /* قيمة "مستوى الأهمية" بكل ملاحظة تُلوَّن حسب مستواها، بنفس أسلوب مصفوفة المخاطر بملف الوورد */
+    .obs-cell-value.risk-high { background: #FF0000; font-weight: bold; }
+    .obs-cell-value.risk-med { background: #FFD966; font-weight: bold; }
+    .obs-cell-value.risk-low { background: #70AD47; font-weight: bold; }
+    .obs-cell-value.risk-opp { background: #5B9BD5; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -65,7 +89,7 @@
             <th colspan="4">مستوي المخاطر</th>
         </tr>
         <tr>
-            <th>مرتفع</th><th>متوسط</th><th>منخفض</th><th>فرص تحسين</th>
+            <th class="risk-high">مرتفع</th><th class="risk-med">متوسط</th><th class="risk-low">منخفض</th><th class="risk-opp">فرص تحسين</th>
         </tr>
         <?php if (empty($observations)): ?>
         <tr><td colspan="6" class="empty-row">لا توجد ملاحظات مضافة للتقرير</td></tr>
@@ -98,9 +122,17 @@
                 <div class="obs-cell-label">الملاحظة</div>
                 <div class="obs-cell-value"><?= nl2br(esc($o['observation_text'] ?: ($o['title'] ?: $o['ref_code']))) ?></div>
             </div>
+            <?php
+            $severityClass = [
+                'عالي'   => 'risk-high',
+                'متوسط'  => 'risk-med',
+                'منخفض'  => 'risk-low',
+                'فرصة تحسين' => 'risk-opp',
+            ][$o['risk_severity'] ?? ''] ?? '';
+            ?>
             <div class="obs-row">
                 <div class="obs-cell-label">مستوي الأهمية</div>
-                <div class="obs-cell-value"><?= esc($o['risk_severity'] ?: '—') ?></div>
+                <div class="obs-cell-value <?= $severityClass ?>"><?= esc($o['risk_severity'] ?: '—') ?></div>
             </div>
             <div class="obs-row">
                 <div class="obs-cell-label">المعيار أو النظام</div>
@@ -136,11 +168,11 @@
     <table class="grid">
         <tr><th colspan="2">معاير تقييم الملاحظة</th></tr>
         <tr>
-            <td style="width:100px;font-weight:bold;">مخاطر</td>
+            <td class="crit-risk" style="width:100px;font-weight:bold;">مخاطر</td>
             <td>الخطر المحتمل هو مصدر أذى محتمل أو حالة محتملة للتسبب في إحداث خسارة<br>الخسارة قد تكون لها عواقب تؤثر في العمليات التشغيلية والمالية والقانونية والطبية</td>
         </tr>
         <tr>
-            <td style="font-weight:bold;">فرصة</td>
+            <td class="crit-opp" style="font-weight:bold;">فرصة</td>
             <td>
                 الفرص تتضمن الملاحظات التي تزيد من الخطر:
                 <ul class="body-list">
@@ -154,23 +186,23 @@
         </tr>
     </table>
 
-    <table class="grid">
+    <table class="grid gray-header">
         <tr><th colspan="2">تعريف مستوي المخاطر</th></tr>
         <tr><th style="width:100px;">التقييم</th><th>الوصف</th></tr>
         <tr>
-            <td class="center" style="font-weight:bold;">مرتفع</td>
+            <td class="center legend-high">مرتفع</td>
             <td>أهمية مرتفعة: تمثل الملاحظة نقطة ضعف في الضوابط الرقابية ذات أولوية عالية يجب على الإدارة تكريس اهتمامها على المدى القريب لمعالجتها</td>
         </tr>
         <tr>
-            <td class="center" style="font-weight:bold;">متوسط</td>
+            <td class="center legend-med">متوسط</td>
             <td>مهم إلى حد ما: تمثل الملاحظة نقطة ضعف معتدلة في الأولوية في الضوابط الرقابية ويجب على الإدارة تكريس الاهتمام لمعالجتها</td>
         </tr>
         <tr>
-            <td class="center" style="font-weight:bold;">منخفض</td>
+            <td class="center legend-low">منخفض</td>
             <td>الأقل أولوية: تمثل الملاحظة نقطة ضعف في الضوابط الرقابية ذات أولوية منخفضة للإدارة للنظر في معالجتها وفقًا لتقديرها</td>
         </tr>
         <tr>
-            <td class="center" style="font-weight:bold;">فرصة تحسين</td>
+            <td class="center legend-opp">فرصة تحسين</td>
             <td>التنفيذ الاختياري: تمثل الملاحظة فرصة لتحسين تدفق العمليات وكفاءتها، ومع ذلك، فإن عدم تنفيذ التوصية لا يشكل أوجه قصور في التحكم</td>
         </tr>
     </table>
