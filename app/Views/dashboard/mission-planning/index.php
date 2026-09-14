@@ -140,7 +140,7 @@ foreach (($milestones ?: []) as $i => $m) {
                       <input type="hidden" name="milestones[<?= $i ?>][label]" value="<?= esc($m['label']) ?>">
                       <span><?= esc($m['label']) ?></span>
                     <?php else: ?>
-                      <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="نقطة إضافية..." value="<?= esc($m['label']) ?>" <?= $canEdit ? '' : 'readonly' ?>>
+                      <input type="text" name="milestones[<?= $i ?>][label]" class="wiz-input plain" placeholder="+ نقطة إضافة" value="<?= esc($m['label']) ?>" <?= $canEdit ? '' : 'readonly' ?>>
                     <?php endif; ?>
                   </td>
                   <td><input type="date" name="milestones[<?= $i ?>][date]" class="wiz-input plain" value="<?= esc($m['date']) ?>" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" <?= $canEdit ? '' : 'readonly' ?>></td>
