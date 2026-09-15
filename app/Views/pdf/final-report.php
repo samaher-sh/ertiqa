@@ -24,11 +24,11 @@
     ul.body-list { font-size: 15px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
     ul.body-list li { margin-bottom: 4px; }
     table.grid { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    table.grid th { background: #9CC2E5; color: #152c33; font-size: 14.5px; padding: 9px; border: 1px solid #b3d4e5; text-align: center; }
+    /* هيدر موحّد لكل جداول المستند (نفس خلفية جدول بيانات الغلاف وجدول تفاصيل
+       الملاحظات) بدل تعدد الألوان بين الأزرق المشبَّع والرمادي حسب الجدول */
+    table.grid th { background: #f8fafc; color: #196b7f; font-weight: bold; font-size: 14.5px; padding: 9px; border: 1px solid #d8e6eb; text-align: center; }
     table.grid td { padding: 9px; border: 1px solid #d8e6eb; font-size: 14.5px; text-align: right; vertical-align: top; }
     table.grid td.center { text-align: center; }
-    /* رأس رمادي خاص بجدول "تعريف مستوى المخاطر" -- نفس لون هذا الجدول تحديدًا بالمرجع (مختلف عن باقي رؤوس الجداول الزرقاء) */
-    table.grid.gray-header th { background: #E7E6E6; }
     /* ألوان مستويات المخاطر -- مطابقة لألوان نفس الخانات بجدول "مستوي المخاطر" (القسم الأول) بملف الوورد، بنص
        أبيض فوق الدرجات الغامقة (أحمر/أخضر/أزرق) عشان يبين واضح، وأسود فوق الأصفر الفاتح */
     th.risk-high { background: #E8281B; color: #ffffff; }
@@ -173,7 +173,7 @@
         </tr>
     </table>
 
-    <table class="grid gray-header">
+    <table class="grid">
         <tr><th colspan="2">تعريف مستوي المخاطر</th></tr>
         <tr><th style="width:100px;">التقييم</th><th>الوصف</th></tr>
         <tr>
