@@ -48,11 +48,13 @@
        "display:table" على divs، اللي mPDF يطلعها بارتفاع صف متضخّم وغير
        منتظم (فراغات كبيرة تحت كل قيمة قصيرة) بدل الالتزام بارتفاع المحتوى الفعلي */
     table.obs-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 14px; border: 1px solid #d8e6eb; page-break-inside: avoid; }
-    table.obs-table col.obs-label-col { width: 190px; }
     /* تفتيح خلفية عمود التصنيف (بدل الأزرق المشبَّع اللي يغطي نص الجدول) -- نفس درجة
-       خلفية جدول بيانات الغلاف (table.info) عشان يطلع مريح للعين ومتّسق مع باقي المستند */
-    table.obs-table th.obs-label { background: #f8fafc; color: #196b7f; font-weight: bold; font-size: 14px; padding: 8px 10px; text-align: right; vertical-align: middle; border: 1px solid #d8e6eb; }
-    table.obs-table td.obs-value { background: #ffffff; padding: 8px 10px; font-size: 14px; vertical-align: middle; border: 1px solid #d8e6eb; text-align: right; }
+       خلفية جدول بيانات الغلاف (table.info) عشان يطلع مريح للعين ومتّسق مع باقي المستند.
+       العرض مضبوط مباشرة على الخليتين (مو عبر <col>) -- mPDF يطبّق عرض <col> على
+       العمود المعاكس بالجداول RTL، فيطلع عمود القيمة (الكتابة الفعلية) ضيّق جدًا
+       وعمود التصنيف (كلمة وحدة قصيرة) عريض جدًا، عكس المطلوب تمامًا */
+    table.obs-table th.obs-label { width: 22%; background: #f8fafc; color: #196b7f; font-weight: bold; font-size: 14px; padding: 8px 10px; text-align: right; vertical-align: middle; border: 1px solid #d8e6eb; }
+    table.obs-table td.obs-value { width: 78%; background: #ffffff; padding: 8px 10px; font-size: 14px; vertical-align: middle; border: 1px solid #d8e6eb; text-align: right; }
     /* قيمة "مستوى الأهمية" بكل ملاحظة تُلوَّن حسب مستواها، بنفس أسلوب مصفوفة المخاطر بملف الوورد */
     table.obs-table td.obs-value.risk-high { background: #E8281B; color: #ffffff; font-weight: bold; }
     table.obs-table td.obs-value.risk-med { background: #FFD966; color: #152c33; font-weight: bold; }
@@ -135,7 +137,6 @@
         ][$o['risk_severity'] ?? ''] ?? '';
         ?>
         <table class="obs-table">
-            <col class="obs-label-col"><col>
             <tr><th class="obs-label">الملاحظة</th><td class="obs-value"><?= nl2br(esc($o['observation_text'] ?: ($o['title'] ?: $o['ref_code']))) ?></td></tr>
             <tr><th class="obs-label">مستوي الأهمية</th><td class="obs-value <?= $severityClass ?>"><?= esc($o['risk_severity'] ?: '—') ?></td></tr>
             <tr><th class="obs-label">المعيار أو النظام</th><td class="obs-value"><?= nl2br(esc($o['standard_text'] ?: '—')) ?></td></tr>
