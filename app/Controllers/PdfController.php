@@ -26,7 +26,7 @@ class PdfController extends BaseController
     {
         [$fontDir, $fontData] = $this->amiriFontConfig();
 
-        return new Mpdf([
+        $mpdf = new Mpdf([
             'mode'            => 'utf-8',
             'format'          => 'A4',
             'fontDir'         => $fontDir,
@@ -38,6 +38,9 @@ class PdfController extends BaseController
             'margin_top'      => 15,
             'margin_bottom'   => 15,
         ]);
+        $this->applyWatermark($mpdf);
+
+        return $mpdf;
     }
 
     /**
@@ -48,7 +51,7 @@ class PdfController extends BaseController
     {
         [$fontDir, $fontData] = $this->amiriFontConfig();
 
-        return new Mpdf([
+        $mpdf = new Mpdf([
             'mode'            => 'utf-8',
             'format'          => 'A3',
             'fontDir'         => $fontDir,
@@ -60,6 +63,22 @@ class PdfController extends BaseController
             'margin_top'      => 15,
             'margin_bottom'   => 15,
         ]);
+        $this->applyWatermark($mpdf);
+
+        return $mpdf;
+    }
+
+    /**
+     * خلفية شفافة (الموجات الزرقاء الرسمية) تظهر خلف نص كل صفحة -- طلب صريح من
+     * المستخدمة، نفس الصورة المستخدَمة بنموذج الخطاب الرسمي الأصلي بصيغة Word
+     * (وراء المتن مباشرة، behindDoc). watermarkImgBehind=true تخليها خلف كل
+     * محتوى الصفحة (نص/جداول)، فتظهر بس بالمساحات الفاضية
+     */
+    private function applyWatermark(Mpdf $mpdf): void
+    {
+        $mpdf->SetWatermarkImage(FCPATH . 'assets/images/kamc-watermark.jpg', 1, 'F', 'F');
+        $mpdf->showWatermarkImage = true;
+        $mpdf->watermarkImgBehind = true;
     }
 
     /**
