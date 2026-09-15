@@ -24,6 +24,15 @@ use App\Models\DocumentModel;
  * القاعدة الأولى (اسم الإدارة) تبقى الأساس، وأي قاعدة ثانية تنطبق على بقية
  * النصوص تُضاف كمخاطر إضافية (حتى حد أقصى معقول للصفوف)، عشان الاقتراح
  * يعكس فعليًا محتوى المهمة لا بس نوع الإدارة.
+ *
+ * اقتباس حقيقي من المحتوى: عشان الاقتراح ما يبقى نفس الجملة الجاهزة حرفيًا
+ * بكل مهمة (شكوى مستخدِمة حقيقية -- "الكلام مكرر")، لما تنطبق فئة معيّنة
+ * نحاول نلقط الجملة الفعلية من نص المهمة (ملاحظات الاتفاقية/حقول التخطيط/
+ * نص الملف المستخرَج) اللي فيها الكلمة المفتاحية، ونلحقها بنص الخطر
+ * كسياق مقتبس حقيقي. نص PDF المستخرَج مُستثنى من الاقتباس تحديدًا (يُستخدم
+ * للمطابقة فقط) لأن ترتيب أحرفه قد يكون معكوسًا (انظر extractFileText) --
+ * عرضه كاقتباس للمستخدم يطلع كلام مشوَّه، فنكتفي بمصادر النص الموثوقة
+ * (ملاحظات الاتفاقية، حقول التخطيط، وملفات Word).
  */
 class RiskMatrixAiEngine
 {
@@ -38,6 +47,10 @@ class RiskMatrixAiEngine
 
     /** أقصى عدد صفوف مخاطر تُقترَح دفعة وحدة */
     private const MAX_ROWS = 6;
+
+    /** طول الجملة المقتبَسة المقبول (بالأحرف) -- أقصر من كذا مو مفيد كسياق، أطول من كذا يطول الصف بلا داعٍ */
+    private const MIN_QUOTE_LEN = 12;
+    private const MAX_QUOTE_LEN = 240;
 
     private const RULES = [
         'بشري|توظيف|أداء الموظف|علاقات الموظف' => [
@@ -100,20 +113,28 @@ class RiskMatrixAiEngine
         ['risk' => 'غياب مؤشرات أداء واضحة لقياس فعالية العمليات', 'risk_rating' => 'منخفض', 'activity_type' => 'تشغيلي', 'controls' => 'تحديد مؤشرات أداء رئيسية ومتابعتها بشكل دوري'],
     ];
 
-    /** يبني نص التحليل من كل مصادر بيانات المهمة، ويطابقه مع قاموس المخاطر */
+    /** يبني نص التحليل من كل مصادر بيانات المهمة، ويطابقه مع قاموس المخاطر -- مع
+     *  اقتباس حقيقي من محتوى المهمة الفعلي بدل نص ثابت مكرر بكل مرة (انظر matchRules) */
     public function suggest(array $mission): array
     {
-        $haystack = $this->buildHaystack($mission);
-        return $this->matchRules($haystack);
+        ['haystack' => $haystack, 'quotable' => $quotable] = $this->buildAnalysis($mission);
+        return $this->matchRules($haystack, $quotable);
     }
 
-    private function buildHaystack(array $mission): string
+    /** يرجّع مصدرين: haystack (كل النصوص مجمَّعة، للمطابقة فقط) وquotable (نصوص
+     *  طويلة موثوقة الترتيب يصلح الاقتباس منها -- ملاحظات/حقول/ملفات Word، بدون
+     *  اسم الإدارة أو أسماء الملفات القصيرة، وبدون نص PDF المستخرَج) */
+    private function buildAnalysis(array $mission): array
     {
         $missionId = (int) ($mission['id'] ?? 0);
         $parts = [
             $mission['target_department_name'] ?? '',
             $mission['procedure_note'] ?? '',
         ];
+        $quotable = [];
+        if (trim((string) ($mission['procedure_note'] ?? '')) !== '') {
+            $quotable[] = $mission['procedure_note'];
+        }
 
         // اتفاقية مستوى الخدمة -- قنوات الاتصال وملاحظات الإدارة على كل بند
         $agreement = (new ServiceAgreementModel())->where('mission_id', $missionId)->first();
@@ -121,7 +142,11 @@ class RiskMatrixAiEngine
             $parts[] = $agreement['channel_email_value'] ?? '';
             $parts[] = $agreement['channel_memo_value'] ?? '';
             foreach ((new ServiceAgreementResponseModel())->forMission($missionId) as $resp) {
-                $parts[] = $resp['note'] ?? '';
+                $note = $resp['note'] ?? '';
+                $parts[] = $note;
+                if (trim((string) $note) !== '') {
+                    $quotable[] = $note;
+                }
                 if (!empty($resp['disagree'])) {
                     $parts[] = 'غير موافق';
                 }
@@ -132,7 +157,11 @@ class RiskMatrixAiEngine
         $planning = (new MissionPlanningModel())->forMission($missionId);
         if ($planning) {
             foreach (['mission_brief', 'previous_audits', 'regulatory_notes', 'audit_objectives', 'scope_included', 'scope_excluded', 'sub_procedures'] as $field) {
-                $parts[] = $planning[$field] ?? '';
+                $val = $planning[$field] ?? '';
+                $parts[] = $val;
+                if (trim((string) $val) !== '') {
+                    $quotable[] = $val;
+                }
             }
         }
 
@@ -147,24 +176,33 @@ class RiskMatrixAiEngine
                 if ($filesProcessed >= self::MAX_FILES_PROCESSED) {
                     continue;
                 }
-                $text = $this->extractFileText($file);
-                if ($text !== '') {
-                    $parts[] = $text;
+                $extracted = $this->extractFileText($file);
+                if ($extracted['match'] !== '') {
+                    $parts[] = $extracted['match'];
+                    if ($extracted['quote'] !== '') {
+                        $quotable[] = $extracted['quote'];
+                    }
                     $filesProcessed++;
                 }
             }
         }
 
-        return implode(' ', array_filter($parts, static fn ($p) => trim((string) $p) !== ''));
+        return [
+            'haystack' => implode(' ', array_filter($parts, static fn ($p) => trim((string) $p) !== '')),
+            'quotable' => $quotable,
+        ];
     }
 
     /** يستخرج النص الفعلي من ملف PDF أو Word مرفوع -- يتجاهل بصمت أي ملف فشل استخراجه
-     *  (تالف، مشفَّر، أو صورة ممسوحة ضوئيًا بلا طبقة نص) بدل ما يكسر الصفحة كاملة */
-    private function extractFileText(array $file): string
+     *  (تالف، مشفَّر، أو صورة ممسوحة ضوئيًا بلا طبقة نص) بدل ما يكسر الصفحة كاملة.
+     *  يرجّع 'match' (للمطابقة، يشمل نسخة معكوسة الأحرف لو PDF) و'quote' (للعرض
+     *  على المستخدم -- فاضي لملفات PDF لأن ترتيب أحرفها قد يكون معكوسًا، انظر أسفل) */
+    private function extractFileText(array $file): array
     {
+        $empty = ['match' => '', 'quote' => ''];
         $fullPath = WRITEPATH . 'uploads/' . ($file['file_path'] ?? '');
         if ($file['file_path'] === null || !is_file($fullPath) || filesize($fullPath) > self::MAX_FILE_BYTES) {
-            return '';
+            return $empty;
         }
 
         $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
@@ -175,22 +213,29 @@ class RiskMatrixAiEngine
                 $text = $parser->parseFile($fullPath)->getText();
                 /* استخراج النص العربي من PDF غالبًا يطلع بترتيب أحرف كل كلمة
                    معكوس (خلل معروف بمستخرِجات PDF مع نصوص RTL -- طبقة المحتوى
-                   الداخلية تخزّن الرموز بترتيب الرسم البصري لا القرائي)، فنضيف
-                   نسخة بأحرف كل كلمة معكوسة عشان تبقى مطابقة الكلمات المفتاحية
-                   شغّالة بغض النظر عن اتجاه استخراج الملف المحدَّد */
-                $text .= ' ' . $this->reverseEachWord($text);
+                   الداخلية تخزّن الرموز بترتيب الرسم البصري لا القرائي). نستخدم
+                   النص الأصلي + نسخة بأحرف كل كلمة معكوسة للمطابقة فقط (يشتغل
+                   بغض النظر عن اتجاه الاستخراج)؛ ما نعرضه كاقتباس لأنه لو كان
+                   فعلاً معكوسًا بيطلع كلام مشوَّه للمستخدم */
+                $match = $text . ' ' . $this->reverseEachWord($text);
+                $quote = '';
             } elseif ($ext === 'docx') {
-                // Word يخزّن النص بترتيبه المنطقي الصحيح دائمًا (XML عادي، مو رسم خطوط)، فما يحتاج هذا الإصلاح
+                // Word يخزّن النص بترتيبه المنطقي الصحيح دائمًا (XML عادي، مو رسم خطوط)، فيصلح للاقتباس مباشرة
                 $text = $this->extractDocxText($fullPath);
+                $match = $text;
+                $quote = $text;
             } else {
-                return '';
+                return $empty;
             }
         } catch (\Throwable $e) {
             log_message('error', 'RiskMatrixAiEngine: تعذّر استخراج نص الملف ' . $fullPath . ' — ' . $e->getMessage());
-            return '';
+            return $empty;
         }
 
-        return mb_substr(trim($text), 0, self::MAX_TEXT_PER_FILE);
+        return [
+            'match' => mb_substr(trim($match), 0, self::MAX_TEXT_PER_FILE),
+            'quote' => mb_substr(trim($quote), 0, self::MAX_TEXT_PER_FILE),
+        ];
     }
 
     /** يعكس ترتيب أحرف كل "كلمة" (مفصولة بمسافات) بنص معيّن -- يُستخدَم فقط
@@ -236,10 +281,36 @@ class RiskMatrixAiEngine
         return $dom->textContent ?? '';
     }
 
+    /** يدوّر بمصادر النص الموثوقة (quotableChunks) عن أول جملة حقيقية تطابق نفس
+     *  كلمات فئة معيّنة، بطول معقول يصلح للاقتباس -- يرجّع null لو ما لقى شي
+     *  (يبقى الخطر بنصه الثابت المعتاد بدون اقتباس، بدل جملة مبتورة أو غير مفيدة) */
+    private function extractQuote(string $pattern, array $quotableChunks): ?string
+    {
+        foreach ($quotableChunks as $chunk) {
+            $sentences = preg_split('/(?<=[.!؟])\s+|[\r\n]+/u', (string) $chunk);
+            if (!$sentences) {
+                continue;
+            }
+            foreach ($sentences as $sentence) {
+                $sentence = trim($sentence, " \t\n\r\0\x0B.,،-");
+                $len = mb_strlen($sentence);
+                if ($len < self::MIN_QUOTE_LEN || $len > self::MAX_QUOTE_LEN) {
+                    continue;
+                }
+                if (preg_match('/' . $pattern . '/u', $sentence)) {
+                    return $sentence;
+                }
+            }
+        }
+        return null;
+    }
+
     /** يطابق النص المجمَّع مع كل قواعد القاموس (مو أول قاعدة تنطبق فقط)، ويجمع
      *  صفوفها بدون تكرار حتى الحد الأقصى للصفوف -- عشان الاقتراح يعكس تنوّع
-     *  محتوى المهمة الفعلي لا نوع إدارة واحد بس */
-    private function matchRules(string $haystack): array
+     *  محتوى المهمة الفعلي لا نوع إدارة واحد بس. لو لقينا بالمحتوى الفعلي جملة
+     *  حقيقية مطابقة لنفس كلمات الفئة، نلحقها بنص الخطر كاقتباس -- بدل ما يطلع
+     *  نفس الجملة الجاهزة حرفيًا بكل مهمة تنطبق عليها نفس الفئة */
+    private function matchRules(string $haystack, array $quotableChunks): array
     {
         $matchedRows = [];
         $seenRisks = [];
@@ -248,7 +319,13 @@ class RiskMatrixAiEngine
             if (!preg_match('/' . $pattern . '/u', $haystack)) {
                 continue;
             }
+
+            $quote = $this->extractQuote($pattern, $quotableChunks);
+
             foreach ($rows as $row) {
+                if ($quote !== null) {
+                    $row['risk'] .= ' — استنادًا لما ورد ببيانات المهمة: "' . $quote . '"';
+                }
                 if (isset($seenRisks[$row['risk']])) {
                     continue;
                 }
