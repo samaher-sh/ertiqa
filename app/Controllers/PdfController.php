@@ -18,13 +18,14 @@ class PdfController extends BaseController
     /**
      * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
      * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. $orientation='L'
-     * يطلع الصفحة بالعرض (نفس اتجاه نموذج "تقرير المراجعة" الرسمي) بدل الطول الافتراضي
+     * يطلع الصفحة بالعرض بمقاس A3 (بدل A4) -- مستخدَم فقط بالتقرير النهائي، عشان
+     * قسم "تفاصيل الملاحظات والتوصيات" (بحقوله الكثيرة) يتسع بصفحة وحدة بدل ما يفيض لصفحة ثانية
      */
     private function makeMpdf(string $orientation = 'P'): Mpdf
     {
         return new Mpdf([
             'mode'            => 'utf-8',
-            'format'          => $orientation === 'L' ? 'A4-L' : 'A4',
+            'format'          => $orientation === 'L' ? 'A3-L' : 'A4',
             'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
             'directionality'  => 'rtl',
             'margin_left'     => 15,
