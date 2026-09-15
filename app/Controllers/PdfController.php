@@ -51,7 +51,9 @@ class PdfController extends BaseController
             'format'          => 'A3',
             'fontDir'         => array_merge($defaultConfig['fontDir'], [FCPATH . 'assets/fonts/amiri']),
             'fontdata'        => $defaultFontConfig['fontdata'] + [
-                'amiri' => ['R' => 'Amiri-Regular.ttf', 'B' => 'Amiri-Bold.ttf'],
+                // useOTL مطلوب صراحة عشان يشغّل جداول GSUB الخاصة بخط Amiri (اتصال الحروف
+                // بأشكالها الصحيحة أول/وسط/آخر/منفصلة) -- بدونه تطلع الحروف مفرقة/منفصلة
+                'amiri' => ['R' => 'Amiri-Regular.ttf', 'B' => 'Amiri-Bold.ttf', 'useOTL' => 0xFF],
             ],
             'default_font'    => 'amiri',
             'directionality'  => 'rtl',
