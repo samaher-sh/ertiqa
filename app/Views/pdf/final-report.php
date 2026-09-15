@@ -6,22 +6,22 @@
     /* أحجام الخط كبّرناها أكثر لتحسين وضوح القراءة، وألوان الجداول أخذناها
        من نموذج تقرير المراجعة الرسمي بصيغة Word، مع تحسين جودة عرضها
        (نص أبيض بارز فوق الدرجات الغامقة/المشبَّعة بدل نص غامق ضعيف التباين) */
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 14.5px; color: #152c33; direction: rtl; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 16px; color: #152c33; direction: rtl; }
     .section-break { page-break-before: always; }
-    h1.cover-title { font-size: 20px; color: #196b7f; text-align: center; margin: 0 0 4px; }
-    h2.cover-sub { font-size: 15.5px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
+    h1.cover-title { font-size: 22px; color: #196b7f; text-align: center; margin: 0 0 4px; }
+    h2.cover-sub { font-size: 17px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
     table.info { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-    table.info td { padding: 8px 10px; border: 1px solid #d8e6eb; font-size: 13.5px; }
+    table.info td { padding: 9px 10px; border: 1px solid #d8e6eb; font-size: 15px; }
     table.info td.label { background: #f8fafc; font-weight: bold; width: 160px; }
     /* كل قسم من الأقسام الستة يبدأ بصفحة جديدة مستقلة */
-    h1.section-title { font-size: 17.5px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
-    h2.sub-title { font-size: 15px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
-    p.body-p { font-size: 13.5px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
-    ul.body-list { font-size: 13.5px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
+    h1.section-title { font-size: 19px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
+    h2.sub-title { font-size: 16.5px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
+    p.body-p { font-size: 15px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
+    ul.body-list { font-size: 15px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
     ul.body-list li { margin-bottom: 4px; }
     table.grid { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    table.grid th { background: #9CC2E5; color: #152c33; font-size: 13px; padding: 8px; border: 1px solid #b3d4e5; text-align: center; }
-    table.grid td { padding: 8px; border: 1px solid #d8e6eb; font-size: 13px; text-align: right; vertical-align: top; }
+    table.grid th { background: #9CC2E5; color: #152c33; font-size: 14.5px; padding: 9px; border: 1px solid #b3d4e5; text-align: center; }
+    table.grid td { padding: 9px; border: 1px solid #d8e6eb; font-size: 14.5px; text-align: right; vertical-align: top; }
     table.grid td.center { text-align: center; }
     /* رأس رمادي خاص بجدول "تعريف مستوى المخاطر" -- نفس لون هذا الجدول تحديدًا بالمرجع (مختلف عن باقي رؤوس الجداول الزرقاء) */
     table.grid.gray-header th { background: #E7E6E6; }
@@ -43,8 +43,8 @@
     .obs-block { border: 1px solid #b3d4e5; border-radius: 6px; margin-bottom: 14px; page-break-inside: avoid; }
     .obs-row { display: table; width: 100%; border-bottom: 1px solid #e2ecf0; }
     .obs-row:last-child { border-bottom: none; }
-    .obs-cell-label { display: table-cell; width: 200px; background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 13px; padding: 10px; vertical-align: top; }
-    .obs-cell-value { display: table-cell; padding: 10px; font-size: 13.5px; vertical-align: top; }
+    .obs-cell-label { display: table-cell; width: 200px; background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 14.5px; padding: 10px; vertical-align: top; }
+    .obs-cell-value { display: table-cell; padding: 10px; font-size: 15px; vertical-align: top; }
     /* قيمة "مستوى الأهمية" بكل ملاحظة تُلوَّن حسب مستواها، بنفس أسلوب مصفوفة المخاطر بملف الوورد */
     .obs-cell-value.risk-high { background: #E8281B; color: #ffffff; font-weight: bold; }
     .obs-cell-value.risk-med { background: #FFD966; color: #152c33; font-weight: bold; }
