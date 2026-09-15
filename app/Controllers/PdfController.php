@@ -12,21 +12,48 @@ use App\Models\MeetingApprovalModel;
 use App\Models\AuditNoteModel;
 use App\Models\ReportModel;
 use Mpdf\Mpdf;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
 
 class PdfController extends BaseController
 {
     /**
      * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
-     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. $largeFormat=true
-     * يطلع الصفحة بمقاس A3 بالطول (Portrait) بدل A4 -- مستخدَم فقط بالتقرير النهائي،
-     * عشان قسم "تفاصيل الملاحظات والتوصيات" (بحقوله الكثيرة) يتسع بصفحة وحدة بدل ما يفيض لصفحة ثانية
+     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. خط DejaVu Sans
+     * الافتراضي -- مستخدَم بكل مستندات PDF بالنظام ما عدا التقرير النهائي (انظر makeFinalReportMpdf)
      */
-    private function makeMpdf(bool $largeFormat = false): Mpdf
+    private function makeMpdf(): Mpdf
     {
         return new Mpdf([
             'mode'            => 'utf-8',
-            'format'          => $largeFormat ? 'A3' : 'A4',
+            'format'          => 'A4',
             'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
+            'directionality'  => 'rtl',
+            'margin_left'     => 15,
+            'margin_right'    => 15,
+            'margin_top'      => 15,
+            'margin_bottom'   => 15,
+        ]);
+    }
+
+    /**
+     * إعدادات mPDF خاصة بالتقرير النهائي فقط (مو باقي مستندات PDF بالنظام):
+     * مقاس A3 بالطول (بدل A4) عشان قسم "تفاصيل الملاحظات والتوصيات" الطويل يتسع
+     * بصفحة وحدة، وخط "Amiri" (نسخ كلاسيكي أنيق -- طلب صريح لمستند رسمي) بدل DejaVu Sans
+     */
+    private function makeFinalReportMpdf(): Mpdf
+    {
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+
+        return new Mpdf([
+            'mode'            => 'utf-8',
+            'format'          => 'A3',
+            'fontDir'         => array_merge($defaultConfig['fontDir'], [FCPATH . 'assets/fonts/amiri']),
+            'fontdata'        => $defaultFontConfig['fontdata'] + [
+                'amiri' => ['R' => 'Amiri-Regular.ttf', 'B' => 'Amiri-Bold.ttf'],
+            ],
+            'default_font'    => 'amiri',
             'directionality'  => 'rtl',
             'margin_left'     => 15,
             'margin_right'    => 15,
@@ -50,13 +77,13 @@ class PdfController extends BaseController
      * فوتر متكرر بكل صفحات المستند (ترقيم صفحات تلقائي + إشعار سرية) -- يُستخدم
      * بكل مستندات PDF المصدَّرة من السيرفر عشان تكون كلها "مرتبة" بشكل موحّد
      */
-    private function applyRunningFooter(Mpdf $mpdf, string $missionCode): void
+    private function applyRunningFooter(Mpdf $mpdf, string $missionCode, string $fontFamily = 'dejavusans'): void
     {
         // يخلي mPDF يوسّع الهامش السفلي تلقائيًا حسب الارتفاع الفعلي لمحتوى الفوتر
         // (بدل تخمين قيمة ثابتة يدويًا) عشان ما يتصادم بصريًا مع متن المستند
         $mpdf->setAutoBottomMargin = 'stretch';
         $footer = '
-            <table dir="rtl" width="100%" style="border-top:1px solid #d8e6eb;padding-top:4px;font-size:8px;color:#9ca3af;font-family:dejavusans;table-layout:fixed;">
+            <table dir="rtl" width="100%" style="border-top:1px solid #d8e6eb;padding-top:4px;font-size:8px;color:#9ca3af;font-family:' . esc($fontFamily) . ';table-layout:fixed;">
                 <tr>
                     <td width="75%" style="text-align:right;">مستند صادر من نظام ارتقاء — إدارة المراجعة الداخلية، سرّي وخاص بالمهمة ' . esc($missionCode) . '</td>
                     <td width="25%" style="text-align:left;">صفحة {PAGENO} من {nbpg}</td>
@@ -71,7 +98,7 @@ class PdfController extends BaseController
      * الخطاب الرسمي (missionLetter) عنده هيدر خاص مدموج بنص الخطاب نفسه فلا يُستخدم هنا معه
      * لتفادي تكرار الشعار مرتين
      */
-    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName): void
+    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName, string $fontFamily = 'dejavusans'): void
     {
         // نقصّ اسم الإدارة (بعضها طويل جدًا) عشان ما يتصادم بصريًا مع بقية سطر العنوان --
         // الاسم الكامل يبقى ظاهر بمتن المستند نفسه على أي حال
@@ -94,11 +121,11 @@ class PdfController extends BaseController
             <table dir="rtl" width="100%" style="border-bottom:1.5px solid #3185b3;padding-bottom:6px;">
                 <tr>
                     <td width="40" style="vertical-align:middle;"><img src="' . $logo . '"></td>
-                    <td style="vertical-align:middle;text-align:right;font-family:dejavusans;">
+                    <td style="vertical-align:middle;text-align:right;font-family:' . esc($fontFamily) . ';">
                         <span style="font-size:12px;font-weight:bold;color:#196b7f;">إدارة المراجعة الداخلية</span>
                         <span style="font-size:9px;color:#6b8c95;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
                     </td>
-                    <td style="vertical-align:middle;text-align:left;font-size:9px;color:#6b8c95;font-family:dejavusans;white-space:nowrap;">
+                    <td style="vertical-align:middle;text-align:left;font-size:9px;color:#6b8c95;font-family:' . esc($fontFamily) . ';white-space:nowrap;">
                         التاريخ: ' . date('d/m/Y') . '&nbsp;&nbsp;|&nbsp;&nbsp;رقم المهمة: ' . esc($missionCode) . '
                     </td>
                 </tr>
@@ -445,10 +472,10 @@ class PdfController extends BaseController
             'observations' => $observations,
         ]);
 
-        // نموذج "تقرير المراجعة" الرسمي بمقاس A3 بالطول (Portrait) بدل A4
-        $mpdf = $this->makeMpdf(true);
-        $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '');
-        $this->applyRunningFooter($mpdf, $mission['mission_code']);
+        // نموذج "تقرير المراجعة" الرسمي بمقاس A3 بالطول (Portrait) وخط "Amiri" بدل A4/DejaVu Sans
+        $mpdf = $this->makeFinalReportMpdf();
+        $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '', 'amiri');
+        $this->applyRunningFooter($mpdf, $mission['mission_code'], 'amiri');
         $this->streamPdf($mpdf, $html, 'تقرير-نهائي-' . $mission['mission_code'] . '.pdf');
     }
 }
