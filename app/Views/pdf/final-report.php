@@ -44,16 +44,18 @@
     td.crit-risk { background: #FFE599; color: #152c33; }
     td.crit-opp { background: #F4B083; color: #152c33; }
     .empty-row { text-align: center; color: #9ca3af; }
-    .obs-block { border: 1px solid #b3d4e5; border-radius: 6px; margin-bottom: 14px; page-break-inside: avoid; }
-    .obs-row { display: table; width: 100%; border-bottom: 1px solid #e2ecf0; }
-    .obs-row:last-child { border-bottom: none; }
-    .obs-cell-label { display: table-cell; width: 200px; background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 14.5px; padding: 10px; vertical-align: top; }
-    .obs-cell-value { display: table-cell; padding: 10px; font-size: 15px; vertical-align: top; }
+    /* جدول تفاصيل الملاحظة (القسم الثالث) -- <table> حقيقي بدل خدعة CSS
+       "display:table" على divs، اللي mPDF يطلعها بارتفاع صف متضخّم وغير
+       منتظم (فراغات كبيرة تحت كل قيمة قصيرة) بدل الالتزام بارتفاع المحتوى الفعلي */
+    table.obs-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 14px; border: 1px solid #b3d4e5; page-break-inside: avoid; }
+    table.obs-table col.obs-label-col { width: 190px; }
+    table.obs-table th.obs-label { background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 14px; padding: 8px 10px; text-align: right; vertical-align: middle; border: 1px solid #b3d4e5; }
+    table.obs-table td.obs-value { padding: 8px 10px; font-size: 14px; vertical-align: middle; border: 1px solid #b3d4e5; text-align: right; }
     /* قيمة "مستوى الأهمية" بكل ملاحظة تُلوَّن حسب مستواها، بنفس أسلوب مصفوفة المخاطر بملف الوورد */
-    .obs-cell-value.risk-high { background: #E8281B; color: #ffffff; font-weight: bold; }
-    .obs-cell-value.risk-med { background: #FFD966; color: #152c33; font-weight: bold; }
-    .obs-cell-value.risk-low { background: #4CA23A; color: #ffffff; font-weight: bold; }
-    .obs-cell-value.risk-opp { background: #4C8FCC; color: #ffffff; font-weight: bold; }
+    table.obs-table td.obs-value.risk-high { background: #E8281B; color: #ffffff; font-weight: bold; }
+    table.obs-table td.obs-value.risk-med { background: #FFD966; color: #152c33; font-weight: bold; }
+    table.obs-table td.obs-value.risk-low { background: #4CA23A; color: #ffffff; font-weight: bold; }
+    table.obs-table td.obs-value.risk-opp { background: #4C8FCC; color: #ffffff; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -122,48 +124,25 @@
         <p class="body-p empty-row">لا توجد ملاحظات مضافة للتقرير</p>
     <?php else: ?>
         <?php foreach ($observations as $o): ?>
-        <div class="obs-block">
-            <div class="obs-row">
-                <div class="obs-cell-label">الملاحظة</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['observation_text'] ?: ($o['title'] ?: $o['ref_code']))) ?></div>
-            </div>
-            <?php
-            $severityClass = [
-                'عالي'   => 'risk-high',
-                'متوسط'  => 'risk-med',
-                'منخفض'  => 'risk-low',
-                'فرصة تحسين' => 'risk-opp',
-            ][$o['risk_severity'] ?? ''] ?? '';
-            ?>
-            <div class="obs-row">
-                <div class="obs-cell-label">مستوي الأهمية</div>
-                <div class="obs-cell-value <?= $severityClass ?>"><?= esc($o['risk_severity'] ?: '—') ?></div>
-            </div>
-            <div class="obs-row">
-                <div class="obs-cell-label">المعيار أو النظام</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['standard_text'] ?: '—')) ?></div>
-            </div>
-            <div class="obs-row">
-                <div class="obs-cell-label">الأثر</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['impact_text'] ?: '—')) ?></div>
-            </div>
-            <div class="obs-row">
-                <div class="obs-cell-label">التوصيات</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['recommendations_text'] ?: '—')) ?></div>
-            </div>
-            <div class="obs-row">
-                <div class="obs-cell-label">الربط بمستهدفات المدينة الطبية</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['kamc_targets_link'] ?: '—')) ?></div>
-            </div>
-            <div class="obs-row">
-                <div class="obs-cell-label">الربط بمستهدفات التحول الصحي الوطني</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['health_transformation_targets_link'] ?: '—')) ?></div>
-            </div>
-            <div class="obs-row">
-                <div class="obs-cell-label">رد الإدارة (خطة التنفيذ التوصيات)</div>
-                <div class="obs-cell-value"><?= nl2br(esc($o['dept_response_plan'] ?: '—')) ?></div>
-            </div>
-        </div>
+        <?php
+        $severityClass = [
+            'عالي'   => 'risk-high',
+            'متوسط'  => 'risk-med',
+            'منخفض'  => 'risk-low',
+            'فرصة تحسين' => 'risk-opp',
+        ][$o['risk_severity'] ?? ''] ?? '';
+        ?>
+        <table class="obs-table">
+            <col class="obs-label-col"><col>
+            <tr><th class="obs-label">الملاحظة</th><td class="obs-value"><?= nl2br(esc($o['observation_text'] ?: ($o['title'] ?: $o['ref_code']))) ?></td></tr>
+            <tr><th class="obs-label">مستوي الأهمية</th><td class="obs-value <?= $severityClass ?>"><?= esc($o['risk_severity'] ?: '—') ?></td></tr>
+            <tr><th class="obs-label">المعيار أو النظام</th><td class="obs-value"><?= nl2br(esc($o['standard_text'] ?: '—')) ?></td></tr>
+            <tr><th class="obs-label">الأثر</th><td class="obs-value"><?= nl2br(esc($o['impact_text'] ?: '—')) ?></td></tr>
+            <tr><th class="obs-label">التوصيات</th><td class="obs-value"><?= nl2br(esc($o['recommendations_text'] ?: '—')) ?></td></tr>
+            <tr><th class="obs-label">الربط بمستهدفات المدينة الطبية</th><td class="obs-value"><?= nl2br(esc($o['kamc_targets_link'] ?: '—')) ?></td></tr>
+            <tr><th class="obs-label">الربط بمستهدفات التحول الصحي الوطني</th><td class="obs-value"><?= nl2br(esc($o['health_transformation_targets_link'] ?: '—')) ?></td></tr>
+            <tr><th class="obs-label">رد الإدارة (خطة التنفيذ التوصيات)</th><td class="obs-value"><?= nl2br(esc($o['dept_response_plan'] ?: '—')) ?></td></tr>
+        </table>
         <?php endforeach; ?>
     <?php endif; ?>
 
