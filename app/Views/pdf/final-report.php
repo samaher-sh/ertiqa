@@ -47,10 +47,12 @@
     /* جدول تفاصيل الملاحظة (القسم الثالث) -- <table> حقيقي بدل خدعة CSS
        "display:table" على divs، اللي mPDF يطلعها بارتفاع صف متضخّم وغير
        منتظم (فراغات كبيرة تحت كل قيمة قصيرة) بدل الالتزام بارتفاع المحتوى الفعلي */
-    table.obs-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 14px; border: 1px solid #b3d4e5; page-break-inside: avoid; }
+    table.obs-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 14px; border: 1px solid #d8e6eb; page-break-inside: avoid; }
     table.obs-table col.obs-label-col { width: 190px; }
-    table.obs-table th.obs-label { background: #9CC2E5; color: #152c33; font-weight: bold; font-size: 14px; padding: 8px 10px; text-align: right; vertical-align: middle; border: 1px solid #b3d4e5; }
-    table.obs-table td.obs-value { padding: 8px 10px; font-size: 14px; vertical-align: middle; border: 1px solid #b3d4e5; text-align: right; }
+    /* تفتيح خلفية عمود التصنيف (بدل الأزرق المشبَّع اللي يغطي نص الجدول) -- نفس درجة
+       خلفية جدول بيانات الغلاف (table.info) عشان يطلع مريح للعين ومتّسق مع باقي المستند */
+    table.obs-table th.obs-label { background: #f8fafc; color: #196b7f; font-weight: bold; font-size: 14px; padding: 8px 10px; text-align: right; vertical-align: middle; border: 1px solid #d8e6eb; }
+    table.obs-table td.obs-value { background: #ffffff; padding: 8px 10px; font-size: 14px; vertical-align: middle; border: 1px solid #d8e6eb; text-align: right; }
     /* قيمة "مستوى الأهمية" بكل ملاحظة تُلوَّن حسب مستواها، بنفس أسلوب مصفوفة المخاطر بملف الوورد */
     table.obs-table td.obs-value.risk-high { background: #E8281B; color: #ffffff; font-weight: bold; }
     table.obs-table td.obs-value.risk-med { background: #FFD966; color: #152c33; font-weight: bold; }
