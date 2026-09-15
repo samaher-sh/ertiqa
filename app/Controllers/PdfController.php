@@ -17,15 +17,15 @@ class PdfController extends BaseController
 {
     /**
      * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
-     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. $orientation='L'
-     * يطلع الصفحة بالعرض بمقاس A3 (بدل A4) -- مستخدَم فقط بالتقرير النهائي، عشان
-     * قسم "تفاصيل الملاحظات والتوصيات" (بحقوله الكثيرة) يتسع بصفحة وحدة بدل ما يفيض لصفحة ثانية
+     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. $largeFormat=true
+     * يطلع الصفحة بمقاس A3 بالطول (Portrait) بدل A4 -- مستخدَم فقط بالتقرير النهائي،
+     * عشان قسم "تفاصيل الملاحظات والتوصيات" (بحقوله الكثيرة) يتسع بصفحة وحدة بدل ما يفيض لصفحة ثانية
      */
-    private function makeMpdf(string $orientation = 'P'): Mpdf
+    private function makeMpdf(bool $largeFormat = false): Mpdf
     {
         return new Mpdf([
             'mode'            => 'utf-8',
-            'format'          => $orientation === 'L' ? 'A3-L' : 'A4',
+            'format'          => $largeFormat ? 'A3' : 'A4',
             'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
             'directionality'  => 'rtl',
             'margin_left'     => 15,
@@ -445,8 +445,8 @@ class PdfController extends BaseController
             'observations' => $observations,
         ]);
 
-        // نموذج "تقرير المراجعة" الرسمي بالعرض (Landscape) بدل الطول الافتراضي
-        $mpdf = $this->makeMpdf('L');
+        // نموذج "تقرير المراجعة" الرسمي بمقاس A3 بالطول (Portrait) بدل A4
+        $mpdf = $this->makeMpdf(true);
         $this->applyRunningHeader($mpdf, 'التقرير النهائي', $mission['mission_code'], $targetDept['name_ar'] ?? '');
         $this->applyRunningFooter($mpdf, $mission['mission_code']);
         $this->streamPdf($mpdf, $html, 'تقرير-نهائي-' . $mission['mission_code'] . '.pdf');
