@@ -73,10 +73,21 @@ class PdfController extends BaseController
      * المستخدمة، نفس الصورة المستخدَمة بنموذج الخطاب الرسمي الأصلي بصيغة Word
      * (وراء المتن مباشرة، behindDoc). watermarkImgBehind=true تخليها خلف كل
      * محتوى الصفحة (نص/جداول)، فتظهر بس بالمساحات الفاضية
+     *
+     * الحجم/الموضع مضبوطين يدويًا (بدل 'F'/'F' التلقائي) عشان تطلع أكبر شوي:
+     * 'F' التلقائي يحصر العرض داخل هوامش الصفحة فقط، وهنا نمدد العرض لعرض
+     * الصفحة الكامل (بدون هوامش) مع حفظ نفس نسبة أبعاد الصورة الأصلية
+     * (1450×735) بالضبط -- ما فيه أي تمدد/تشويه، بس أكبر ومركزّة رأسيًا بشكل مرتب
      */
     private function applyWatermark(Mpdf $mpdf): void
     {
-        $mpdf->SetWatermarkImage(FCPATH . 'assets/images/kamc-watermark.jpg', 1, 'F', 'F');
+        $imgRatio = 735 / 1450;
+        $w = $mpdf->w;
+        $h = $w * $imgRatio;
+        $x = 0;
+        $y = ($mpdf->h - $h) / 2;
+
+        $mpdf->SetWatermarkImage(FCPATH . 'assets/images/kamc-watermark.jpg', 1, [$w, $h], [$x, $y]);
         $mpdf->showWatermarkImage = true;
         $mpdf->watermarkImgBehind = true;
     }
