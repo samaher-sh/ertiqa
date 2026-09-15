@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    /* أحجام الخط كبّرناها أكثر لتحسين وضوح القراءة، وألوان الجداول أخذناها
-       من نموذج تقرير المراجعة الرسمي بصيغة Word، مع تحسين جودة عرضها
-       (نص أبيض بارز فوق الدرجات الغامقة/المشبَّعة بدل نص غامق ضعيف التباين) */
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 16px; color: #152c33; direction: rtl; }
+    /* خط "Amiri" (نسخ كلاسيكي أنيق مناسب لمستند رسمي -- مسجَّل بـ
+       PdfController::makeFinalReportMpdf) بدل DejaVu Sans. أحجام الخط كبيرة
+       لتحسين وضوح القراءة، وألوان الجداول أخذناها من نموذج تقرير المراجعة
+       الرسمي بصيغة Word، مع تحسين جودة عرضها (نص أبيض بارز فوق الدرجات
+       الغامقة/المشبَّعة بدل نص غامق ضعيف التباين) */
+    body { font-family: 'amiri', 'DejaVu Sans', sans-serif; font-size: 16px; color: #152c33; direction: rtl; }
     .section-break { page-break-before: always; }
     h1.cover-title { font-size: 22px; color: #196b7f; text-align: center; margin: 0 0 4px; }
     h2.cover-sub { font-size: 17px; color: #3185b3; text-align: center; margin: 0 0 18px; font-weight: normal; }
