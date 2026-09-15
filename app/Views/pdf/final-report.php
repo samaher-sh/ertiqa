@@ -17,6 +17,8 @@
     table.info td.label { background: #f8fafc; font-weight: bold; width: 160px; }
     /* كل قسم من الأقسام الستة يبدأ بصفحة جديدة مستقلة */
     h1.section-title { font-size: 19px; color: #196b7f; border-bottom: 2px solid #3185b3; padding-bottom: 6px; margin: 18px 0 12px; page-break-before: always; }
+    /* القسم الأول يبقى بنفس صفحة الغلاف (بدل صفحة شبه فاضية لوحدها) -- بقية الأقسام (2-6) لسا كل وحد بصفحته المستقلة */
+    h1.section-title.no-break { page-break-before: auto; }
     h2.sub-title { font-size: 16.5px; color: #196b7f; font-weight: bold; margin: 12px 0 6px; }
     p.body-p { font-size: 15px; line-height: 1.9; text-align: justify; margin: 0 0 10px; }
     ul.body-list { font-size: 15px; margin: 0 0 10px; padding-right: 20px; line-height: 1.8; }
@@ -69,7 +71,7 @@
     </table>
 
     <!-- ========== القسم الأول (1) التعريفات والأهداف ========== -->
-    <h1 class="section-title">القسم الأول ( 1 ) التعريفات والاهداف</h1>
+    <h1 class="section-title no-break">القسم الأول ( 1 ) التعريفات والاهداف</h1>
 
     <h2 class="sub-title">مقدمة:</h2>
     <p class="body-p">يعتبر تقرير المراجعة أحد وسائل تبليغ التوصيات وفقاً للمادة الحادية عشرة الفقرة (1) "تعد الوحدة تقرير بنتائج أعمال المراجعة في نهاية كل عملية مراجعة التي تقوم بها على الإدارات الأخرى داخل الجهة، ومن تم تبليغها بتلك النتائج والتوصيات المتعلقة بها، ومتابعة التوصيات الواردة في تقاريرها للتأكد من تنفيذها "قرار مجلس الوزراء رقم ( 129 ) بتاريخ 06/ 04/1428هـ اللائحة الموحدة لوحدات المراجعة الداخلية في الأجهزة الحكومية والمؤسسات العامة .</p>
