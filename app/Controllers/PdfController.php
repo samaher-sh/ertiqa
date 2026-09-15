@@ -19,15 +19,19 @@ class PdfController extends BaseController
 {
     /**
      * يبني كائن mPDF بإعدادات صحيحة للعربي (اتجاه RTL + تشكيل الحروف المتصلة تلقائيًا)
-     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. خط DejaVu Sans
-     * الافتراضي -- مستخدَم بكل مستندات PDF بالنظام ما عدا التقرير النهائي (انظر makeFinalReportMpdf)
+     * بديل Dompdf اللي كان يطلع النص العربي معكوس/غير متصل الحروف. خط "Amiri" موحّد
+     * بكل مستندات PDF بالنظام (نفس خط التقرير النهائي، انظر amiriFontConfig)
      */
     private function makeMpdf(): Mpdf
     {
+        [$fontDir, $fontData] = $this->amiriFontConfig();
+
         return new Mpdf([
             'mode'            => 'utf-8',
             'format'          => 'A4',
-            'default_font'    => 'dejavusans', // يدعم العربي بدون أي تثبيت خط إضافي
+            'fontDir'         => $fontDir,
+            'fontdata'        => $fontData,
+            'default_font'    => 'amiri',
             'directionality'  => 'rtl',
             'margin_left'     => 15,
             'margin_right'    => 15,
@@ -38,23 +42,17 @@ class PdfController extends BaseController
 
     /**
      * إعدادات mPDF خاصة بالتقرير النهائي فقط (مو باقي مستندات PDF بالنظام):
-     * مقاس A3 بالطول (بدل A4) عشان قسم "تفاصيل الملاحظات والتوصيات" الطويل يتسع
-     * بصفحة وحدة، وخط "Amiri" (نسخ كلاسيكي أنيق -- طلب صريح لمستند رسمي) بدل DejaVu Sans
+     * مقاس A3 بالطول (بدل A4) عشان قسم "تفاصيل الملاحظات والتوصيات" الطويل يتسع بصفحة وحدة
      */
     private function makeFinalReportMpdf(): Mpdf
     {
-        $defaultConfig = (new ConfigVariables())->getDefaults();
-        $defaultFontConfig = (new FontVariables())->getDefaults();
+        [$fontDir, $fontData] = $this->amiriFontConfig();
 
         return new Mpdf([
             'mode'            => 'utf-8',
             'format'          => 'A3',
-            'fontDir'         => array_merge($defaultConfig['fontDir'], [FCPATH . 'assets/fonts/amiri']),
-            'fontdata'        => $defaultFontConfig['fontdata'] + [
-                // useOTL مطلوب صراحة عشان يشغّل جداول GSUB الخاصة بخط Amiri (اتصال الحروف
-                // بأشكالها الصحيحة أول/وسط/آخر/منفصلة) -- بدونه تطلع الحروف مفرقة/منفصلة
-                'amiri' => ['R' => 'Amiri-Regular.ttf', 'B' => 'Amiri-Bold.ttf', 'useOTL' => 0xFF],
-            ],
+            'fontDir'         => $fontDir,
+            'fontdata'        => $fontData,
             'default_font'    => 'amiri',
             'directionality'  => 'rtl',
             'margin_left'     => 15,
@@ -62,6 +60,25 @@ class PdfController extends BaseController
             'margin_top'      => 15,
             'margin_bottom'   => 15,
         ]);
+    }
+
+    /**
+     * تسجيل خط "Amiri" (نسخ كلاسيكي أنيق -- طلب صريح لمستندات رسمية) بمكتبة mPDF،
+     * مشترك بين كل مستندات PDF بالنظام (makeMpdf و makeFinalReportMpdf)
+     */
+    private function amiriFontConfig(): array
+    {
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+
+        $fontDir = array_merge($defaultConfig['fontDir'], [FCPATH . 'assets/fonts/amiri']);
+        $fontData = $defaultFontConfig['fontdata'] + [
+            // useOTL مطلوب صراحة عشان يشغّل جداول GSUB الخاصة بخط Amiri (اتصال الحروف
+            // بأشكالها الصحيحة أول/وسط/آخر/منفصلة) -- بدونه تطلع الحروف مفرقة/منفصلة
+            'amiri' => ['R' => 'Amiri-Regular.ttf', 'B' => 'Amiri-Bold.ttf', 'useOTL' => 0xFF],
+        ];
+
+        return [$fontDir, $fontData];
     }
 
     private function streamPdf(Mpdf $mpdf, string $html, string $filename)
@@ -79,7 +96,7 @@ class PdfController extends BaseController
      * فوتر متكرر بكل صفحات المستند (ترقيم صفحات تلقائي + إشعار سرية) -- يُستخدم
      * بكل مستندات PDF المصدَّرة من السيرفر عشان تكون كلها "مرتبة" بشكل موحّد
      */
-    private function applyRunningFooter(Mpdf $mpdf, string $missionCode, string $fontFamily = 'dejavusans'): void
+    private function applyRunningFooter(Mpdf $mpdf, string $missionCode, string $fontFamily = 'amiri'): void
     {
         // يخلي mPDF يوسّع الهامش السفلي تلقائيًا حسب الارتفاع الفعلي لمحتوى الفوتر
         // (بدل تخمين قيمة ثابتة يدويًا) عشان ما يتصادم بصريًا مع متن المستند
@@ -100,7 +117,7 @@ class PdfController extends BaseController
      * الخطاب الرسمي (missionLetter) عنده هيدر خاص مدموج بنص الخطاب نفسه فلا يُستخدم هنا معه
      * لتفادي تكرار الشعار مرتين
      */
-    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName, string $fontFamily = 'dejavusans'): void
+    private function applyRunningHeader(Mpdf $mpdf, string $docTitle, string $missionCode, string $deptName, string $fontFamily = 'amiri'): void
     {
         // نقصّ اسم الإدارة (بعضها طويل جدًا) عشان ما يتصادم بصريًا مع بقية سطر العنوان --
         // الاسم الكامل يبقى ظاهر بمتن المستند نفسه على أي حال

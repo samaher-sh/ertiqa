@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <style>
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 12px; color: #152c33; direction: rtl; }
+    body { font-family: 'amiri', 'DejaVu Sans', sans-serif; font-size: 12px; color: #152c33; direction: rtl; }
     .sub { font-size: 11px; color: #6b7280; margin-bottom: 14px; }
     table.rm { width: 100%; border-collapse: collapse; }
     table.rm th { background: #f0f7fa; color: #196b7f; font-size: 11px; padding: 8px; border: 1px solid #b3d4e5; text-align: right; }
