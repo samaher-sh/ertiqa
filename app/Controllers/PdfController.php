@@ -162,15 +162,16 @@ class PdfController extends BaseController
         // هيدر رسمي بخلفية بيضاء (خطاب-ستايل) بدل الشريط الملوّن السابق -- الشعار
         // الرسمي الكامل (بالاسم عربي/إنجليزي، مو الأيقونة المجرّدة فقط) بطلب صريح
         // من المستخدمة، مأخوذ من نموذج الخطاب الرسمي الأصلي بصيغة Word ومُصغَّر
-        // مسبقًا (115×44) عشان يظهر على كل صفحة بنفس طابع mission-letter.php.
-        // kamc-full-logo.png مقصوص لحجمه الفعلي بالضبط بدون سمة width -- mPDF
-        // يفشل بصمت بتصغير الصور الكبيرة داخل جدول مهما كانت نسبة التصغير، حتى 1.5x؛
-        // العرض الطبيعي 1:1 فقط يشتغل بثبات
+        // مسبقًا (172×66 -- كبّرناه بطلب صريح عشان يكون واضح ومقروء) عشان يظهر
+        // على كل صفحة بنفس طابع mission-letter.php. kamc-full-logo.png مقصوص
+        // لحجمه الفعلي بالضبط بدون سمة width -- mPDF يفشل بصمت بتصغير الصور
+        // الكبيرة داخل جدول مهما كانت نسبة التصغير، حتى 1.5x؛ العرض الطبيعي
+        // 1:1 فقط يشتغل بثبات
         $logo = FCPATH . 'assets/images/kamc-full-logo.png';
         $header = '
             <table dir="rtl" width="100%" style="border-bottom:1.5px solid #3185b3;padding-bottom:6px;">
                 <tr>
-                    <td width="120" style="vertical-align:middle;"><img src="' . $logo . '"></td>
+                    <td width="176" style="vertical-align:middle;"><img src="' . $logo . '"></td>
                     <td style="vertical-align:middle;text-align:right;font-family:' . esc($fontFamily) . ';">
                         <span style="font-size:12px;font-weight:bold;color:#196b7f;">إدارة المراجعة الداخلية</span>
                         <span style="font-size:9px;color:#6b8c95;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
