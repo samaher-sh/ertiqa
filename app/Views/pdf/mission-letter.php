@@ -24,10 +24,11 @@
 <body>
     <table class="header-table">
         <tr>
-            <!-- kamc-pdf-logo.png مقصوص لحجمه الفعلي بالضبط (32×30) بدون سمة width --
-                 mPDF يفشل بصمت بتصغير شعار kamc.png الأصلي (1005×944) داخل جدول مهما
-                 كانت نسبة التصغير، حتى 1.5x؛ العرض الطبيعي 1:1 فقط يشتغل بثبات -->
-            <td width="34"><img src="<?= FCPATH ?>assets/images/kamc-pdf-logo.png"></td>
+            <!-- الشعار الرسمي الكامل (بالاسم عربي/إنجليزي) بدل الأيقونة المجرّدة --
+                 kamc-full-logo.png مقصوص لحجمه الفعلي بالضبط (115×44) بدون سمة width --
+                 mPDF يفشل بصمت بتصغير الصور الكبيرة داخل جدول مهما كانت نسبة التصغير،
+                 حتى 1.5x؛ العرض الطبيعي 1:1 فقط يشتغل بثبات -->
+            <td width="120"><img src="<?= FCPATH ?>assets/images/kamc-full-logo.png"></td>
             <td class="header-right">إدارة المراجعة الداخلية</td>
             <td class="header-left">
                 التاريخ: <?= date('d/m/Y') ?><br>

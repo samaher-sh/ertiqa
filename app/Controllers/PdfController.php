@@ -129,17 +129,18 @@ class PdfController extends BaseController
         // الفعلي (سطرين) ما يفيض على متن المستند
         $mpdf->setAutoTopMargin = 'stretch';
 
-        // هيدر رسمي بخلفية بيضاء (خطاب-ستايل) بدل الشريط الملوّن السابق -- شعار
-        // المستشفى مباشرة بدون دائرة ملوّنة، وخط سفلي رفيع بلون هوية المنصة يفصله
-        // عن متن المستند، بنفس طابع mission-letter.php وباقي مستندات PDF بالنظام
-        // kamc-pdf-logo.png مقصوص لحجمه الفعلي بالضبط (32×30) بدون سمة width -- mPDF
-        // يفشل بصمت بتصغير شعار kamc.png الأصلي (1005×944) داخل جدول مهما كانت نسبة
-        // التصغير، حتى 1.5x؛ العرض الطبيعي 1:1 فقط يشتغل بثبات
-        $logo = FCPATH . 'assets/images/kamc-pdf-logo.png';
+        // هيدر رسمي بخلفية بيضاء (خطاب-ستايل) بدل الشريط الملوّن السابق -- الشعار
+        // الرسمي الكامل (بالاسم عربي/إنجليزي، مو الأيقونة المجرّدة فقط) بطلب صريح
+        // من المستخدمة، مأخوذ من نموذج الخطاب الرسمي الأصلي بصيغة Word ومُصغَّر
+        // مسبقًا (115×44) عشان يظهر على كل صفحة بنفس طابع mission-letter.php.
+        // kamc-full-logo.png مقصوص لحجمه الفعلي بالضبط بدون سمة width -- mPDF
+        // يفشل بصمت بتصغير الصور الكبيرة داخل جدول مهما كانت نسبة التصغير، حتى 1.5x؛
+        // العرض الطبيعي 1:1 فقط يشتغل بثبات
+        $logo = FCPATH . 'assets/images/kamc-full-logo.png';
         $header = '
             <table dir="rtl" width="100%" style="border-bottom:1.5px solid #3185b3;padding-bottom:6px;">
                 <tr>
-                    <td width="40" style="vertical-align:middle;"><img src="' . $logo . '"></td>
+                    <td width="120" style="vertical-align:middle;"><img src="' . $logo . '"></td>
                     <td style="vertical-align:middle;text-align:right;font-family:' . esc($fontFamily) . ';">
                         <span style="font-size:12px;font-weight:bold;color:#196b7f;">إدارة المراجعة الداخلية</span>
                         <span style="font-size:9px;color:#6b8c95;"> — ' . esc($docTitle) . ($deptName !== '' ? ' — ' . esc($deptName) : '') . '</span>
